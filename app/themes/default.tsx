@@ -1,5 +1,7 @@
+'use client'
 import { createTheme } from '@mui/material/styles'
 import { Noto_Sans_Thai } from 'next/font/google'
+import { ThemeProvider } from '@mui/material/styles'
 
 const font = Noto_Sans_Thai({
   weight: ['300', '400', '500', '700'],
@@ -10,18 +12,22 @@ const font = Noto_Sans_Thai({
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#f4b400',
-    },
-    secondary: {
       main: '#4c8bf5',
     },
-    // secondary: {
-    //   main: "#dd262b",
-    // },
+    secondary: {
+      main: '#f4b400',
+    },
+    // #dd262b
   },
   typography: {
     fontFamily: font.style.fontFamily,
   },
 })
 
-export default theme
+export default function DefaultTheme({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return <ThemeProvider theme={theme}>{children}</ThemeProvider>
+}
