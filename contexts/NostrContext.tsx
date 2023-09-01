@@ -7,7 +7,7 @@ import {
   useEffect,
   useMemo,
 } from 'react'
-import NDK, { NDKNip07Signer } from '@nostr-dev-kit/ndk'
+import NDK from '@nostr-dev-kit/ndk'
 
 interface Nostr {
   ndk?: NDK
@@ -17,7 +17,6 @@ const ndk = new NDK({
   explicitRelayUrls: (process.env.NEXT_PUBLIC_RELAY_URLS || '')
     .split(',')
     .filter((item) => !!item),
-  signer: new NDKNip07Signer(),
 })
 
 export const NostrContext = createContext<Nostr>({

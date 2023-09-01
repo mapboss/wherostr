@@ -27,6 +27,11 @@ export const AccountContext = createContext<Account>({
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const { ndk } = useContext(NostrContext)
   const [user, setUser] = useState<NDKUser | undefined>(undefined)
+  useEffect(() => {
+    if (ndk) {
+      ndk.signer = new NDKNip07Signer()
+    }
+  }, [ndk])
   const signIn = useCallback(async () => {
     if (ndk) {
       const signerUser = await ndk.signer?.user()
