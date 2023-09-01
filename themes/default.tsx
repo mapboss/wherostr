@@ -2,6 +2,8 @@
 import { createTheme } from '@mui/material/styles'
 import { Noto_Sans_Thai } from 'next/font/google'
 import { ThemeProvider } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
+import NextAppDirEmotionCacheProvider from './EmotionCache'
 
 const font = Noto_Sans_Thai({
   weight: ['300', '400', '500', '700'],
@@ -29,5 +31,12 @@ export default function DefaultTheme({
 }: {
   children: React.ReactNode
 }) {
-  return <ThemeProvider theme={theme}>{children}</ThemeProvider>
+  return (
+    <NextAppDirEmotionCacheProvider options={{ key: 'mui' }}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        {children}
+      </ThemeProvider>
+    </NextAppDirEmotionCacheProvider>
+  )
 }
