@@ -13,21 +13,22 @@ const UserBar = () => {
   }, [signOut])
   return (
     <div
-      className="grid items-center p-3 rounded-bl-3xl"
+      className="grid items-center p-3 rounded-bl-lg"
       style={{
-        background: 'linear-gradient(45deg,#dd262b 30%,#f4b400 90%)',
+        background: 'linear-gradient(45deg, #dd262b 30%, #ffd700 90%)',
       }}
     >
       {user ? (
         <Button
           variant="contained"
           color="secondary"
+          size="small"
           onClick={handleClickSignOut}
         >
           Sign Out
         </Button>
       ) : (
-        <Button variant="contained" onClick={handleClickSignIn}>
+        <Button variant="contained" size="small" color='primary' onClick={handleClickSignIn}>
           Sign In
         </Button>
       )}

@@ -13,13 +13,22 @@ const font = Noto_Sans_Thai({
 
 const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
-      main: '#4c8bf5',
+      main: '#0056b9',
     },
     secondary: {
-      main: '#f4b400',
+      main: '#dd262b',
     },
-    // #dd262b
+    success: {
+      main: '#008083',
+    },
+    warning: {
+      main: '#fd5901',
+    },
+    error: {
+      main: '#dd262b',
+    },
   },
   typography: {
     fontFamily: font.style.fontFamily,
