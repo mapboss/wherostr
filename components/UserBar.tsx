@@ -7,7 +7,7 @@ const UserBar = () => {
   const { user } = useContext(AccountContext)
   return (
     <div
-      className="p-2 grid items-center"
+      className="grid items-center p-3 rounded-bl-3xl"
       style={{
         background: 'linear-gradient(45deg,#dd262b 30%,#f4b400 90%)',
       }}
