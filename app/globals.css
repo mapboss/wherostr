@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.background-gradient {
+  background: linear-gradient(45deg, #dd262b 30%, #ffd700 90%) !important;
+}
+
 .MuiButton-contained {
   text-transform: none !important;
 }

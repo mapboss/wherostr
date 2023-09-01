@@ -20,6 +20,9 @@ const UserChip = ({ profile }: { profile: NDKUserProfile }) => {
 
 const UserBar = () => {
   const { user, signIn, signOut } = useContext(AccountContext)
+  const signedIn = useMemo(() => {
+    return !!user?.profile
+  }, [user])
   const handleClickSignIn = useCallback(() => {
     signIn()
   }, [signIn])
@@ -28,10 +31,9 @@ const UserBar = () => {
   }, [signOut])
   return (
     <div
-      className="grid items-center p-3 rounded-bl-lg h-16"
-      style={{
-        background: 'linear-gradient(45deg, #dd262b 30%, #ffd700 90%)',
-      }}
+      className={`grid items-center p-3 rounded-bl-3xl h-16 ${
+        signedIn ? 'background-gradient' : ''
+      }`}
     >
       {user?.profile ? (
         <div className="flex items-center">
@@ -47,8 +49,8 @@ const UserBar = () => {
         </div>
       ) : (
         <Button
+          classes={{ root: 'background-gradient !rounded-full' }}
           variant="contained"
-          color="primary"
           onClick={handleClickSignIn}
           endIcon={<Login />}
         >
