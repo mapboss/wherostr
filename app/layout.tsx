@@ -21,7 +21,7 @@ export default function RootLayout({
         <DefaultTheme>
           <NostrContextProvider>
             <AccountContextProvider>
-              <header className="absolute top-0 right-0">
+              <header className="absolute top-0 right-0 z-10">
                 <UserBar />
               </header>
               <main className="min-h-screen flex flex-col">{children}</main>
