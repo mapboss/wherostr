@@ -1,10 +1,16 @@
 'use client'
 import { AccountContext } from '@/contexts/AccountContext'
-import { Avatar } from '@mui/material'
-import { useContext } from 'react'
+import { Button } from '@mui/material'
+import { useCallback, useContext } from 'react'
 
 const UserBar = () => {
-  const { user } = useContext(AccountContext)
+  const { user, signIn, signOut } = useContext(AccountContext)
+  const handleClickSignIn = useCallback(() => {
+    signIn()
+  }, [signIn])
+  const handleClickSignOut = useCallback(() => {
+    signOut()
+  }, [signOut])
   return (
     <div
       className="grid items-center p-3 rounded-bl-3xl"
@@ -12,7 +18,19 @@ const UserBar = () => {
         background: 'linear-gradient(45deg,#dd262b 30%,#f4b400 90%)',
       }}
     >
-      <Avatar>W</Avatar>
+      {user ? (
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleClickSignOut}
+        >
+          Sign Out
+        </Button>
+      ) : (
+        <Button variant="contained" onClick={handleClickSignIn}>
+          Sign In
+        </Button>
+      )}
     </div>
   )
 }

@@ -6,15 +6,19 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useState,
 } from 'react'
-import NDK, { NDKUser } from '@nostr-dev-kit/ndk'
+import NDK, { NDKNip07Signer } from '@nostr-dev-kit/ndk'
 
 interface Nostr {
   ndk?: NDK
 }
 
-const ndk = new NDK({})
+const ndk = new NDK({
+  explicitRelayUrls: (process.env.NEXT_PUBLIC_RELAY_URLS || '')
+    .split(',')
+    .filter((item) => !!item),
+  signer: new NDKNip07Signer(),
+})
 
 export const NostrContext = createContext<Nostr>({
   ndk: undefined,

@@ -9,7 +9,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { NDKUser } from '@nostr-dev-kit/ndk'
+import { NDKNip07Signer, NDKUser } from '@nostr-dev-kit/ndk'
 import { NostrContext } from './NostrContext'
 
 interface Account {
@@ -27,24 +27,26 @@ export const AccountContext = createContext<Account>({
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const { ndk } = useContext(NostrContext)
   const [user, setUser] = useState<NDKUser | undefined>(undefined)
-  useEffect(() => {
-    console.log('ndk', ndk)
+  const signIn = useCallback(async () => {
     if (ndk) {
-      const npup = localStorage.getItem('npup')
-      if (npup) {
+      const signerUser = await ndk.signer?.user()
+      if (signerUser) {
+        const _user = ndk.getUser({
+          npub: signerUser.npub,
+        })
+        await _user.fetchProfile()
+        localStorage.setItem('npub', _user.npub)
+        setUser(_user)
       }
     }
   }, [ndk])
-  const signIn = useCallback(async () => {
-    // await signIn
-    localStorage.setItem('npup', '')
-    // setUser
-  }, [])
   const signOut = useCallback(async () => {
-    localStorage.removeItem('npup')
-    // await signOut
-    // setUser
-  }, [])
+    if (ndk) {
+      ndk.signer = new NDKNip07Signer()
+      localStorage.removeItem('npub')
+      setUser(undefined)
+    }
+  }, [ndk])
   const value = useMemo((): Account => {
     return {
       user,
@@ -52,6 +54,13 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       signOut,
     }
   }, [user, signIn, signOut])
+  useEffect(() => {
+    if (ndk) {
+      if (localStorage.getItem('npub')) {
+        signIn()
+      }
+    }
+  }, [ndk, signIn])
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
   )
