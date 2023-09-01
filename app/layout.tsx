@@ -1,7 +1,8 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { DefaultTheme } from '@app/themes'
+import { DefaultTheme } from '@/themes'
 import UserBar from '@/components/UserBar'
+import { AccountContextProvider } from '@/contexts/AccountContext'
 
 export const metadata: Metadata = {
   title: 'Wherostr',
@@ -17,10 +18,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <DefaultTheme>
-          <header className="absolute top-0 right-0">
-            <UserBar />
-          </header>
-          <main className="min-h-screen flex flex-col">{children}</main>
+          <AccountContextProvider>
+            <header className="absolute top-0 right-0">
+              <UserBar />
+            </header>
+            <main className="min-h-screen flex flex-col">{children}</main>
+          </AccountContextProvider>
         </DefaultTheme>
       </body>
     </html>

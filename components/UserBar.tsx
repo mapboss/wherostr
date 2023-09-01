@@ -1,6 +1,10 @@
+'use client'
+import { AccountContext } from '@/contexts/AccountContext'
 import { Avatar } from '@mui/material'
+import { useContext } from 'react'
 
 const UserBar = () => {
+  const { user } = useContext(AccountContext)
   return (
     <div
       className="p-2 grid items-center"
