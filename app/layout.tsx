@@ -4,6 +4,7 @@ import { DefaultTheme } from '@/themes'
 import UserBar from '@/components/UserBar'
 import { AccountContextProvider } from '@/contexts/AccountContext'
 import { NostrContextProvider } from '@/contexts/NostrContext'
+import EventContextProvider from '@/contexts/EventContext'
 
 export const metadata: Metadata = {
   title: 'Wherostr',
@@ -20,12 +21,14 @@ export default function RootLayout({
       <body>
         <DefaultTheme>
           <NostrContextProvider>
-            <AccountContextProvider>
-              <header className="absolute top-0 right-0 z-10">
-                <UserBar />
-              </header>
-              <main className="min-h-screen flex flex-col">{children}</main>
-            </AccountContextProvider>
+            <EventContextProvider>
+              <AccountContextProvider>
+                <header className="absolute top-0 right-0 z-10">
+                  <UserBar />
+                </header>
+                <main className="min-h-screen flex flex-col">{children}</main>
+              </AccountContextProvider>
+            </EventContextProvider>
           </NostrContextProvider>
         </DefaultTheme>
       </body>
