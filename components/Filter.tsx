@@ -6,10 +6,8 @@ import {
   Paper,
   TextField,
 } from '@mui/material'
-import { FC, useEffect, useMemo, useState } from 'react'
-import _ from 'lodash'
+import { FC, useState } from 'react'
 import axios, { AxiosResponse } from 'axios'
-import { useFetchQuery } from '@/hooks/useFetchQuery'
 import { SearchOutlined } from '@mui/icons-material'
 import geohash from 'latlon-geohash'
 import { NDKFilter } from '@nostr-dev-kit/ndk'
@@ -37,38 +35,39 @@ export interface SearchPayload {
 }
 
 const Filter: FC<FilterProps> = ({ className, onSearch }) => {
-  const [keyword, setKeyword] = useState<string>()
-
-  const { data, loading } = useFetchQuery([keyword], search, {
-    payload: keyword,
-    disabled: !keyword,
-  })
-
-  useEffect(() => {
-    if (loading) return
-    const place = data?.[0]
-    if (!place) {
-      onSearch?.({ keyword, places: [], filter: {} })
-      return
-    }
-    const lat = Number(place.lat)
-    const lon = Number(place.lon)
-    const g = geohash.encode(lat, lon)
-    onSearch?.({
-      places: data,
-      keyword,
-      geohash: g,
-      filter: { '#g': [g] },
-    })
-  }, [keyword, loading, data, onSearch])
-
+  const [loading, setLoading] = useState<boolean>(false)
   return (
     <Paper
       className="p-4"
       component={'form'}
-      onSubmit={(evt) => {
+      onSubmit={async (evt) => {
         evt.preventDefault()
-        setKeyword(evt.currentTarget['search'].value)
+        const keyword = evt.currentTarget['search'].value
+        if (!keyword) {
+          return
+        }
+        setLoading(true)
+        try {
+          const result = await search(keyword)
+          const place = result?.[0]
+          if (!place) {
+            onSearch?.({ keyword, places: [], filter: {} })
+            return
+          }
+          const lat = Number(place.lat)
+          const lon = Number(place.lon)
+          const g = geohash.encode(lat, lon)
+          onSearch?.({
+            places: result,
+            keyword,
+            geohash: g,
+            filter: { '#g': [g] },
+          })
+        } catch (err) {
+          console.error(err)
+        } finally {
+          setLoading(false)
+        }
       }}
     >
       <TextField
