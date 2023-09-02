@@ -1,5 +1,6 @@
 'use client'
 import { AccountContext } from '@/contexts/AccountContext'
+import { MapContext } from '@/contexts/MapContext'
 import { NostrContext } from '@/contexts/NostrContext'
 import { Login, Logout } from '@mui/icons-material'
 import {
@@ -13,7 +14,8 @@ import {
   Typography,
 } from '@mui/material'
 import { NDKEvent, NDKKind, NDKUserProfile } from '@nostr-dev-kit/ndk'
-import { FormEvent, useCallback, useContext, useMemo } from 'react'
+import Geohash from 'latlon-geohash'
+import { FormEvent, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 const UserChip = ({ profile }: { profile: NDKUserProfile }) => {
   const name = useMemo(() => profile.displayName || profile.name, [profile])
@@ -40,6 +42,21 @@ const UserChip = ({ profile }: { profile: NDKUserProfile }) => {
 
 const TempPublishForm = () => {
   const { ndk } = useContext(NostrContext)
+  const { map } = useContext(MapContext)
+  const [geohashString, setGeohashString] = useState("")
+  
+  useEffect(() => {
+    if (!map) return
+    const clickHandler = ({ lngLat }: maplibregl.MapMouseEvent) => {
+      const geohash = Geohash.encode(lngLat.lat, lngLat.lng)
+      setGeohashString(geohash)
+    }
+    map.on('click', clickHandler)
+    return () => {
+      map.off('click', clickHandler)
+    }
+  }, [map])
+
   const handleSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault()
@@ -90,6 +107,8 @@ const TempPublishForm = () => {
             name="geohash"
             label="Geohash"
             variant="standard"
+            value={geohashString}
+            onChange={(evt) => setGeohashString(evt.target.value)}
             fullWidth
             InputLabelProps={{
               shrink: true,
@@ -119,9 +138,9 @@ const UserBar = () => {
   }, [signOut])
   return (
     <div
-      className={`grid items-center p-3 rounded-bl-3xl h-16 ${
-        signedIn ? 'background-gradient' : ''
-      }`}
+    className={`grid items-center p-3 rounded-bl-3xl h-16 ${
+      signedIn ? 'background-gradient' : ''
+    }`}
     >
       {user?.profile ? (
         <div className="flex items-center">
