@@ -5,6 +5,7 @@ import UserBar from '@/components/UserBar'
 import { AccountContextProvider } from '@/contexts/AccountContext'
 import { NostrContextProvider } from '@/contexts/NostrContext'
 import EventContextProvider from '@/contexts/EventContext'
+import { MapContextProvider } from '@/contexts/MapContext'
 
 export const metadata: Metadata = {
   title: 'Wherostr',
@@ -23,10 +24,12 @@ export default function RootLayout({
           <NostrContextProvider>
             <EventContextProvider>
               <AccountContextProvider>
-                <header className="absolute top-0 right-0 z-10">
-                  <UserBar />
-                </header>
-                <main className="min-h-screen flex flex-col">{children}</main>
+                <MapContextProvider>
+                  <header className="absolute top-0 right-0 z-10">
+                    <UserBar />
+                  </header>
+                  <main className="min-h-screen flex flex-col">{children}</main>
+                </MapContextProvider>
               </AccountContextProvider>
             </EventContextProvider>
           </NostrContextProvider>
