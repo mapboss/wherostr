@@ -1,3 +1,4 @@
+'use client'
 import MainPane from '@/components/MainPane'
 import Map from '@/components/Map'
 import { MapContextProvider } from '@/contexts/MapContext'

@@ -9,6 +9,7 @@ import { useMapLibre } from '@/hooks/useMaplibre'
 const opts: Omit<maplibregl.MapOptions, 'container'> = {
   style:
     'https://api.maptiler.com/maps/streets/style.json?key=1rAf8E6L3Yobwc20LE24',
+  bounds: [97.3758964376, 5.69138418215, 105.589038527, 20.4178496363],
 }
 
 export interface MapProps extends PropsWithChildren {
