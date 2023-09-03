@@ -23,18 +23,20 @@ export async function search<TOutput = any[], TInput = string>(
   return res.data
 }
 export interface FilterProps {
+  precision?: number
   className?: string
   onSearch?: (payload?: SearchPayload) => void
 }
 
 export interface SearchPayload {
+  bbox?: [number, number, number, number]
   geohash?: string
   keyword?: string
   filter?: NDKFilter
   places?: any[]
 }
 
-const Filter: FC<FilterProps> = ({ className, onSearch }) => {
+const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
   const [loading, setLoading] = useState<boolean>(false)
   return (
     <Paper
@@ -56,8 +58,10 @@ const Filter: FC<FilterProps> = ({ className, onSearch }) => {
           }
           const lat = Number(place.lat)
           const lon = Number(place.lon)
-          const g = geohash.encode(lat, lon)
+          const g = geohash.encode(lat, lon, precision)
+          const [y1, y2, x1, x2] = place.boundingbox.map((b: string) => Number(b))
           onSearch?.({
+            bbox: [x1, y1, x2, y2],
             places: result,
             keyword,
             geohash: g,
