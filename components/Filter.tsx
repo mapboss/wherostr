@@ -3,7 +3,7 @@ import {
   CircularProgress,
   IconButton,
   InputAdornment,
-  Paper,
+  Box,
   TextField,
 } from '@mui/material'
 import { FC, useState } from 'react'
@@ -39,8 +39,8 @@ export interface SearchPayload {
 const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
   const [loading, setLoading] = useState<boolean>(false)
   return (
-    <Paper
-      className="p-4"
+    <Box
+      className="px-4 py-2"
       component={'form'}
       onSubmit={async (evt) => {
         evt.preventDefault()
@@ -93,7 +93,7 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
           ),
         }}
       />
-    </Paper>
+    </Box>
   )
 }
 

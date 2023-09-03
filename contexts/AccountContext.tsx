@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react'
 import { NDKNip07Signer, NDKUser } from '@nostr-dev-kit/ndk'
-import { NostrContext } from './NostrContext'
+import { NostrContext } from '@/contexts/NostrContext'
 
 interface Account {
   user?: NDKUser

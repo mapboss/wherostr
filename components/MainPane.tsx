@@ -1,8 +1,10 @@
-import { useContext, useEffect, useState } from 'react'
-import Filter from './Filter'
+import { useContext, useEffect, useMemo, useState } from 'react'
+import Filter from '@/components/Filter'
+import ShortTextNoteCard from '@/components/displays/ShortTextNoteCard'
 import { EventContext } from '@/contexts/EventContext'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
+import { Box, Paper } from '@mui/material'
 
 const MainPane = () => {
   const { fetchEvents, events } = useContext(EventContext)
@@ -23,13 +25,13 @@ const MainPane = () => {
   useEffect(() => {
     if (!map || !mapLoaded || !events) return
     const features = events.map((event) => {
-      const geohashes = event.getMatchingTags("g")
+      const geohashes = event.getMatchingTags('g')
       if (!geohashes.length) return
       const { g } = Object.fromEntries(geohashes)
       const { lat, lon } = Geohash.decode(g)
       const geojson = {
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [lon, lat] },
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [lon, lat] },
         id: event.id,
         properties: {
           id: event.id,
@@ -38,7 +40,7 @@ const MainPane = () => {
           created_at: event.created_at,
           kind: event.kind,
           tags: event.tags,
-        }
+        },
       }
       return geojson
     })
@@ -54,36 +56,35 @@ const MainPane = () => {
 
     try {
       map.addSource('nostr-event', {
-        type: "geojson",
-        data: { type: "FeatureCollection", features, }
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features },
       })
-    } catch (err) {
-
-    }
-
+    } catch (err) {}
 
     try {
       map.addLayer({
         id: 'nostr-event',
-        type: "circle",
-        source: "nostr-event",
+        type: 'circle',
+        source: 'nostr-event',
         paint: {
-          "circle-color": "#ff0000",
-          "circle-radius": 12
-        }
+          'circle-color': '#ff0000',
+          'circle-radius': 12,
+        },
       })
-    } catch (err) {
-
-    }
-
+    } catch (err) {}
   }, [mapLoaded, map, events])
 
+  const showEvents = useMemo(() => events?.length > 0, [events])
+
   return (
-    <div className="absolute left-0 top-0 w-80 flex flex-col">
+    <Paper
+      className={`absolute left-0 top-0 w-96 flex flex-col !rounded-none max-h-full overflow-hidden ${
+        showEvents ? 'h-full' : ''
+      }`}
+    >
       <Filter
-        className="absolute top-2 left-2"
         onSearch={(condition) => {
-          const { bbox, filter, geohash = "", places } = condition || {}
+          const { bbox, filter, geohash = '', places } = condition || {}
           const geohashFilter = []
           for (let i = 1; i < geohash.length; i++) {
             geohashFilter.push(geohash.slice(0, i + 1))
@@ -91,13 +92,18 @@ const MainPane = () => {
           console.log('condition', condition)
           bbox && map?.fitBounds(bbox)
           console.log('geohashFilter', geohashFilter)
-          fetchEvents({ "#g": geohashFilter })
+          fetchEvents({ '#g': geohashFilter })
         }}
       />
-      <div className="bg-gray-800 h-80">{events.map(event => {
-        return <div key={event.id}>{event.content}</div>
-      })}</div>
-    </div>
+      <div className="w-full h-0.5 background-gradient"></div>
+      {showEvents && (
+        <Box className="overflow-y-auto">
+          {events.map((event) => (
+            <ShortTextNoteCard key={event.id} event={event} />
+          ))}
+        </Box>
+      )}
+    </Paper>
   )
 }
 

@@ -9,10 +9,10 @@ import {
   useState,
 } from 'react'
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
-import { NostrContext } from './NostrContext'
+import { NostrContext } from '@/contexts/NostrContext'
 
 export interface EventContextProps {
-  events: NDKEvent[],
+  events: NDKEvent[]
   fetchEvents: (filter?: NDKFilter<NDKKind>) => Promise<Set<NDKEvent>>
 }
 
@@ -32,7 +32,7 @@ export const EventContextProvider: FC<PropsWithChildren> = ({ children }) => {
         setEvents(Array.from(emptyEvent))
         return emptyEvent
       }
-      return ndk.fetchEvents(filter).then(response => {
+      return ndk.fetchEvents(filter).then((response) => {
         setEvents(Array.from(response))
         return response
       })
