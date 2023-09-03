@@ -6,7 +6,7 @@ const ProfileChip = ({
   className,
   profile,
 }: {
-  className: string
+  className?: string
   profile: NDKUserProfile
 }) => {
   const name = useMemo(() => profile.displayName || profile.name, [profile])
