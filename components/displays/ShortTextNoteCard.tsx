@@ -1,44 +1,40 @@
 'use client'
-import { NostrContext } from '@/contexts/NostrContext'
-import { Box, Card, CardContent, Divider, Typography } from '@mui/material'
-import { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
-import { useContext, useEffect, useState } from 'react'
+import TextNote from '@/components/displays/TextNote'
 import ProfileChip from '@/components/ProfileChip'
+import { NostrContext } from '@/contexts/NostrContext'
+import { Box, Card, CardContent, Divider } from '@mui/material'
+import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
+import { useContext, useEffect, useState } from 'react'
 
 const ShortTextNoteCard = ({ event }: { event: NDKEvent }) => {
   const { ndk } = useContext(NostrContext)
-  const [profile, setProfile] = useState<NDKUserProfile | undefined>(undefined)
+  const [user, setUser] = useState<NDKUser | undefined>(undefined)
   useEffect(() => {
     if (ndk && event) {
       const user = ndk.getUser({
         hexpubkey: event.pubkey,
       })
       user.fetchProfile().then(() => {
-        setProfile(user.profile)
+        setUser(user)
       })
     }
   }, [ndk, event])
   return (
     <Card className="!rounded-none pt-2">
-      <Box className="flex">
-        <CardContent className="flex-1 !py-2">
-          {/* <div
-            className="w-20 h-20 bg-cover rounded-lg float-right"
-            style={{
-              backgroundImage:
-                'url(https://primal.b-cdn.net/media-cache?s=o&a=1&u=https%3A%2F%2Fm.primal.net%2FHKHZ.jpg)',
-            }}
-          /> */}
-          <Typography variant="body2" component="p">
-            {event.content}
-          </Typography>
-        </CardContent>
-      </Box>
-      {profile && (
+      {user && (
         <Box className="px-4 py-2">
-          <ProfileChip className="text-neutral-400" profile={profile} />
+          <ProfileChip
+            className="text-contrast-secondary"
+            user={user}
+            showActions
+          />
         </Box>
       )}
+      <Box className="flex">
+        <CardContent className="flex-1 !py-2 overflow-hidden">
+          <TextNote event={event} />
+        </CardContent>
+      </Box>
       <Divider className="!mt-2" />
     </Card>
   )

@@ -100,7 +100,7 @@ const MainPane = () => {
 
   return (
     <Paper
-      className={`absolute left-0 top-0 w-96 flex flex-col !rounded-none max-h-full overflow-hidden ${showEvents ? 'h-full' : ''
+      className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none max-h-full overflow-hidden${showEvents ? ' h-full' : ''
         }`}
     >
       <Filter

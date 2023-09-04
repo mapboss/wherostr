@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 .background-gradient {
-  background: linear-gradient(45deg, #dd262b 30%, #ffd700 90%) !important;
+  background: linear-gradient(45deg, #fc6a03 30%, #0395fc 90%) !important;
 }
 
-.MuiButton-contained {
+.MuiButton-root {
   text-transform: none !important;
 }

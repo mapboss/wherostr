@@ -4,6 +4,7 @@ import { MapContext } from '@/contexts/MapContext'
 import { NostrContext } from '@/contexts/NostrContext'
 import { Login, Logout } from '@mui/icons-material'
 import {
+  Box,
   Button,
   Card,
   CardActions,
@@ -120,23 +121,22 @@ const UserBar = () => {
     signOut()
   }, [signOut])
   return (
-    <div
-      className={`grid items-center p-3 rounded-bl-3xl h-16 ${
-        signedIn ? 'background-gradient' : ''
+    <Box
+      className={`grid items-center p-3 rounded-bl-3xl h-16${
+        signedIn ? ' background-gradient' : ''
       }`}
     >
       {user?.profile ? (
-        <div className="flex items-center">
-          <ProfileChip profile={user.profile} />
+        <Box className="flex items-center">
+          <ProfileChip user={user} />
           <IconButton
             classes={{ root: '!ml-2' }}
-            color="error"
             size="small"
             onClick={handleClickSignOut}
           >
             <Logout />
           </IconButton>
-        </div>
+        </Box>
       ) : (
         <Button
           classes={{ root: 'background-gradient !rounded-full' }}
@@ -148,7 +148,7 @@ const UserBar = () => {
         </Button>
       )}
       <TempPublishForm />
-    </div>
+    </Box>
   )
 }
 

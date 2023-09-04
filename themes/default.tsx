@@ -15,19 +15,28 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#0056b9',
+      main: 'rgb(252, 106, 3)',
+      contrastText: '#ffffff',
     },
     secondary: {
-      main: '#dd262b',
+      main: 'rgb(3, 149, 252)',
+      contrastText: '#ffffff',
     },
     success: {
-      main: '#008083',
+      main: 'rgb(0, 128, 131)',
+      contrastText: '#ffffff',
+    },
+    info: {
+      main: 'rgb(3, 149, 252)',
+      contrastText: '#ffffff',
     },
     warning: {
-      main: '#fd5901',
+      main: 'rgb(253, 89, 1)',
+      contrastText: '#ffffff',
     },
     error: {
-      main: '#dd262b',
+      main: 'rgb(221, 38, 43)',
+      contrastText: '#ffffff',
     },
   },
   typography: {
