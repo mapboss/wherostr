@@ -4,6 +4,7 @@ import { MapContext } from '@/contexts/MapContext'
 import { NostrContext } from '@/contexts/NostrContext'
 import { Login, Logout } from '@mui/icons-material'
 import {
+  Box,
   Button,
   Card,
   CardActions,
@@ -22,9 +23,10 @@ import {
   useState,
 } from 'react'
 import ProfileChip from '@/components/ProfileChip'
+import { EventBuilder } from '@snort/system'
 
 const TempPublishForm = () => {
-  const { ndk } = useContext(NostrContext)
+  const system = useContext(NostrContext)
   const { map } = useContext(MapContext)
   const [geohashString, setGeohashString] = useState('')
 
@@ -47,19 +49,19 @@ const TempPublishForm = () => {
         new FormData(event.currentTarget),
       )
       if (content && geohash) {
-        const tags: any = []
+        const tags: [string, string][] = []
         const _geohash = geohash.toString()
         const length = _geohash.length
         for (let i = 1; i <= length; i++) {
           tags.push(['g', _geohash.substring(0, i)])
         }
-        const ndkEvent = new NDKEvent(ndk)
-        ndkEvent.kind = NDKKind.Text
-        ndkEvent.content = content.toString()
-        ndkEvent.tags = tags
-        console.log('ndkEvent', ndkEvent)
+        const eventBuilder = new EventBuilder()
+        eventBuilder.kind(1).content(content.toString())
+        tags.forEach(tag => {
+          eventBuilder.tag(tag)
+        })
         try {
-          await ndkEvent.publish()
+          system.BroadcastEvent(eventBuilder.build())
           alert('Posted Successfully!')
         } catch (error) {
           alert('An error occurred!')
@@ -69,7 +71,7 @@ const TempPublishForm = () => {
         alert('Content or Geohash not found!')
       }
     },
-    [ndk],
+    [],
   )
   return (
     <form onSubmit={handleSubmit}>
@@ -111,7 +113,7 @@ const TempPublishForm = () => {
 const UserBar = () => {
   const { user, signIn, signOut } = useContext(AccountContext)
   const signedIn = useMemo(() => {
-    return !!user?.profile
+    return !!user
   }, [user])
   const handleClickSignIn = useCallback(() => {
     signIn()
@@ -120,23 +122,21 @@ const UserBar = () => {
     signOut()
   }, [signOut])
   return (
-    <div
-      className={`grid items-center p-3 rounded-bl-3xl h-16 ${
-        signedIn ? 'background-gradient' : ''
-      }`}
+    <Box
+      className={`grid items-center p-3 rounded-bl-3xl h-16${signedIn ? ' background-gradient' : ''
+        }`}
     >
-      {user?.profile ? (
-        <div className="flex items-center">
-          <ProfileChip profile={user.profile} />
+      {user ? (
+        <Box className="flex items-center">
+          <ProfileChip user={user} />
           <IconButton
             classes={{ root: '!ml-2' }}
-            color="error"
             size="small"
             onClick={handleClickSignOut}
           >
             <Logout />
           </IconButton>
-        </div>
+        </Box>
       ) : (
         <Button
           classes={{ root: 'background-gradient !rounded-full' }}
@@ -148,7 +148,7 @@ const UserBar = () => {
         </Button>
       )}
       <TempPublishForm />
-    </div>
+    </Box>
   )
 }
 

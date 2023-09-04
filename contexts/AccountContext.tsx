@@ -12,20 +12,22 @@ import { EventPublisher, MetadataCache } from '@snort/system'
 import { useUserProfile } from '@snort/system-react'
 
 interface Account {
+  publisher?: EventPublisher
   user?: MetadataCache
   signIn: () => Promise<void>
   signOut: () => Promise<void>
 }
 
 export const AccountContext = createContext<Account>({
+  publisher: undefined,
   user: undefined,
   signIn: async () => { },
   signOut: async () => { },
 })
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const [pubKey, setPubKey] = useState<string>()
-  const user = useUserProfile(pubKey)
+  const [publisher, setPublisher] = useState<EventPublisher>()
+  const user = useUserProfile(publisher?.pubKey)
 
   const createPublisher = useCallback(() => {
     return EventPublisher.nip7()
@@ -35,24 +37,23 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     const publisher = await createPublisher()
     if (publisher?.pubKey) {
       localStorage.setItem('npub', publisher.pubKey)
-      setPubKey(publisher.pubKey)
+      setPublisher(publisher)
     }
   }, [createPublisher])
 
   const signOut = useCallback(async () => {
     localStorage.removeItem('npub')
-    setPubKey(undefined)
-
+    setPublisher(undefined)
   }, [])
   const value = useMemo((): Account => {
     return {
+      publisher,
       user,
       signIn,
       signOut,
     }
-  }, [user, signIn, signOut])
+  }, [publisher, user, signIn, signOut])
   useEffect(() => {
-    if (!localStorage) return
     if (localStorage.getItem('npub')) {
       signIn()
     }

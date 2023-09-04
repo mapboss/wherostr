@@ -2,18 +2,10 @@
 import {
   FC,
   PropsWithChildren,
-  createContext,
-  useCallback,
-  useEffect,
-  useMemo,
 } from 'react'
 import {
   NostrSystem,
-  EventPublisher,
   UserRelaysCache,
-  RequestBuilder,
-  FlatNoteStore,
-  StoreSnapshot
 } from "@snort/system"
 
 import { SnortContext } from '@snort/system-react'

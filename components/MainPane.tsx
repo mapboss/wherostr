@@ -5,7 +5,6 @@ import { EventContext } from '@/contexts/EventContext'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import { Box, Paper } from '@mui/material'
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { LngLatBounds } from 'maplibre-gl'
 import { FlatNoteStore, RequestBuilder, TaggedNostrEvent } from '@snort/system'
 import { useRequestBuilder } from '@snort/system-react'
@@ -50,7 +49,7 @@ const MainPane = () => {
 
   useEffect(() => {
     if (!map || !mapLoaded) return
-    if (loading()) return
+    if (!loading()) return
     if (map.getLayer('nostr-event')) {
       map.removeLayer('nostr-event')
     }
@@ -61,22 +60,18 @@ const MainPane = () => {
       setEvents([])
       return
     }
-    console.log('data', data)
     const events: TaggedNostrEvent[] = []
     if (bbox) {
       const bounds = new LngLatBounds(bbox)
       const zoomBounds = new LngLatBounds()
       const features = data.map((event) => {
-        events.push(event)
-        return
-        const geohashes = [["g", ""]]
-        // const geohashes = event.getMatchingTags('g')
-        // if (!geohashes.length) {
-        //   events.push(event)
-        //   return
-        // }
-        const { g } = Object.fromEntries(geohashes)
-        const { lat, lon } = Geohash.decode(g)
+        const geohashes = getTagValues(event.tags, 'g')
+        if (!geohashes.length) {
+          events.push(event)
+          return
+        }
+        geohashes.sort((a, b) => b.length - a.length)
+        const { lat, lon } = Geohash.decode(geohashes[0])
         if (!bounds.contains({ lat, lon })) return
         events.push(event)
         const geojson = {
@@ -131,7 +126,7 @@ const MainPane = () => {
 
   return (
     <Paper
-      className={`absolute left-0 top-0 w-96 flex flex-col !rounded-none max-h-full overflow-hidden ${showEvents ? 'h-full' : ''
+      className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none max-h-full overflow-hidden${showEvents ? ' h-full' : ''
         }`}
     >
       <Filter
@@ -157,3 +152,12 @@ const MainPane = () => {
 }
 
 export default MainPane
+
+
+export function getTagValues(tags: string[][], tag: string): Array<string> {
+  return tags
+    .filter(t => t.at(0) === tag)
+    .map(t => t.at(1))
+    .filter(t => t)
+    .map(t => t as string);
+}
