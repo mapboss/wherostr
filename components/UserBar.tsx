@@ -12,7 +12,6 @@ import {
   IconButton,
   TextField,
 } from '@mui/material'
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import Geohash from 'latlon-geohash'
 import {
   FormEvent,
@@ -28,6 +27,7 @@ import { EventBuilder } from '@snort/system'
 const TempPublishForm = () => {
   const system = useContext(NostrContext)
   const { map } = useContext(MapContext)
+  const { user, publisher } = useContext(AccountContext)
   const [geohashString, setGeohashString] = useState('')
 
   useEffect(() => {
@@ -56,13 +56,27 @@ const TempPublishForm = () => {
           tags.push(['g', _geohash.substring(0, i)])
         }
         const eventBuilder = new EventBuilder()
-        eventBuilder.kind(1).content(content.toString())
+        eventBuilder.createdAt(Math.floor(Date.now() / 1000))
+          .pubKey(user!.pubkey)
+          .kind(1)
+          .content(content.toString())
         tags.forEach(tag => {
           eventBuilder.tag(tag)
         })
         try {
-          system.BroadcastEvent(eventBuilder.build())
-          alert('Posted Successfully!')
+          publisher?.generic((evb) => {
+            evb.createdAt(Math.floor(Date.now() / 1000)).pubKey(user!.pubkey)
+              .kind(1)
+              .content(content.toString())
+            tags.forEach(tag => {
+              evb.tag(tag)
+            })
+            return evb.processContent()
+          }).then(event => {
+            if (!event) return
+            system.BroadcastEvent(event)
+            alert('Posted Successfully!')
+          })
         } catch (error) {
           alert('An error occurred!')
           console.error(error)
@@ -71,7 +85,7 @@ const TempPublishForm = () => {
         alert('Content or Geohash not found!')
       }
     },
-    [],
+    [user, system],
   )
   return (
     <form onSubmit={handleSubmit}>

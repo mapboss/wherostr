@@ -1,7 +1,6 @@
 'use client'
-import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useMemo } from 'react'
-import { ParsedFragment, transformText } from '@snort/system'
+import { ParsedFragment, TaggedNostrEvent, transformText } from '@snort/system'
 import { Box, Link, Typography } from '@mui/material'
 
 const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
@@ -50,7 +49,7 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
   }
 }
 
-const Content = ({ event }: { event: NDKEvent }) => {
+const Content = ({ event }: { event: TaggedNostrEvent }) => {
   const chunks = useMemo(() => {
     return transformText(event.content, event.tags)
   }, [event])

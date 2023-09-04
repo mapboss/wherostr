@@ -36,4 +36,3 @@ export const EventContextProvider: FC<PropsWithChildren> = ({ children }) => {
   return <EventContext.Provider value={value}>{children}</EventContext.Provider>
 }
 
-export default EventContextProvider

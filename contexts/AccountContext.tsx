@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { EventPublisher, MetadataCache } from '@snort/system'
 import { useUserProfile } from '@snort/system-react'
+import dynamic from 'next/dynamic'
 
 interface Account {
   publisher?: EventPublisher
@@ -25,7 +26,7 @@ export const AccountContext = createContext<Account>({
   signOut: async () => { },
 })
 
-export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
+const AccountContextProviderComp: FC<PropsWithChildren> = ({ children }) => {
   const [publisher, setPublisher] = useState<EventPublisher>()
   const user = useUserProfile(publisher?.pubKey)
 
@@ -62,3 +63,8 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
   )
 }
+
+export const AccountContextProvider = dynamic(
+  () => new Promise<FC<PropsWithChildren>>((resolve) => resolve(AccountContextProviderComp)),
+  { ssr: false },
+)

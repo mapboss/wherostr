@@ -10,7 +10,6 @@ import { FC, useState } from 'react'
 import axios, { AxiosResponse } from 'axios'
 import { SearchOutlined } from '@mui/icons-material'
 import geohash from 'latlon-geohash'
-import { NDKFilter } from '@nostr-dev-kit/ndk'
 
 // https://nominatim.openstreetmap.org/search?<params>
 export async function search<TOutput = any[], TInput = string>(
@@ -32,7 +31,6 @@ export interface SearchPayload {
   bbox?: [number, number, number, number]
   geohash?: string
   keyword?: string
-  filter?: NDKFilter
   places?: any[]
 }
 
@@ -53,7 +51,7 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
           const result = await search(keyword)
           const place = result?.[0]
           if (!place) {
-            onSearch?.({ keyword, places: [], filter: {} })
+            onSearch?.({ keyword, places: [] })
             return
           }
           const lat = Number(place.lat)
@@ -65,7 +63,6 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
             places: result,
             keyword,
             geohash: g,
-            filter: { '#g': [g] },
           })
         } catch (err) {
           console.error(err)

@@ -6,7 +6,7 @@ import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import { Box, Paper } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
-import { FlatNoteStore, RequestBuilder, TaggedNostrEvent } from '@snort/system'
+import { RequestBuilder, FlatNoteStore, TaggedNostrEvent } from '@snort/system/dist/index'
 import { useRequestBuilder } from '@snort/system-react'
 
 const MainPane = () => {
@@ -18,14 +18,14 @@ const MainPane = () => {
   const sub = useMemo(() => {
     if (!keyword || !bbox) return null
     const qg = new RequestBuilder("query-group");
-    const filterByKeyword = new RequestBuilder("filter-keyword");
-    filterByKeyword.withFilter().kinds([1]).limit(100).search(keyword)
-    qg.add(filterByKeyword)
+    // const filterByKeyword = new RequestBuilder("filter-keyword");
+    // filterByKeyword.withFilter().kinds([1]).limit(100).search(keyword)
+    // qg.add(filterByKeyword)
     if (bbox) {
       let geohashFilter: string[] = []
       const filterByGeohash = new RequestBuilder("filter-geohash");
-      const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 2)
-      const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 2)
+      const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 3)
+      const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 3)
       geohashFilter = [bboxhash1, bboxhash2]
       geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash1)))
       geohashFilter = geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash2)))
@@ -92,12 +92,12 @@ const MainPane = () => {
       }).filter(event => !!event)
 
       if (events.length > 0) {
-        map?.easeTo({ padding: { left: 400, right: 16 }, duration: 0 })
+        map?.easeTo({ padding: { left: 656, right: 16 }, duration: 0 })
         if (!zoomBounds.isEmpty()) {
           map?.fitBounds(zoomBounds, { duration: 300, maxZoom: 14 })
         }
       } else {
-        map?.easeTo({ padding: { left: 0 } })
+        map?.easeTo({ padding: { left: 0, right: 0 } })
       }
 
       try {
