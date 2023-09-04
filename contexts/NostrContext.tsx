@@ -7,33 +7,34 @@ import {
   useEffect,
   useMemo,
 } from 'react'
-import NDK from '@nostr-dev-kit/ndk'
+import {
+  NostrSystem,
+  EventPublisher,
+  UserRelaysCache,
+  RequestBuilder,
+  FlatNoteStore,
+  StoreSnapshot
+} from "@snort/system"
 
-interface Nostr {
-  ndk?: NDK
-}
+import { SnortContext } from '@snort/system-react'
 
-const ndk = new NDK({
-  explicitRelayUrls: (process.env.NEXT_PUBLIC_RELAY_URLS || '')
-    .split(',')
-    .filter((item) => !!item),
-})
+// Provided in-memory / indexedDb cache for relays
+// You can also implement your own with "RelayCache" interface
+const RelaysCache = new UserRelaysCache();
 
-export const NostrContext = createContext<Nostr>({
-  ndk: undefined,
-})
+// Singleton instance to store all connections and access query fetching system
+const System = new NostrSystem({
+  relayCache: RelaysCache,
+  // authHandler: AuthHandler // can be left undefined if you dont care about NIP-42 Auth
+});
+
+(process.env.NEXT_PUBLIC_RELAY_URLS || '')
+  .split(',')
+  .filter((item) => !!item).forEach(item => System.ConnectToRelay(item, { read: true, write: true }))
+
+
+export const NostrContext = SnortContext
 
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const connect = useCallback(() => {
-    return ndk.connect()
-  }, [])
-  useEffect(() => {
-    connect()
-  }, [connect])
-  const value = useMemo((): Nostr => {
-    return {
-      ndk,
-    }
-  }, [])
-  return <NostrContext.Provider value={value}>{children}</NostrContext.Provider>
+  return <NostrContext.Provider value={System}>{children}</NostrContext.Provider>
 }

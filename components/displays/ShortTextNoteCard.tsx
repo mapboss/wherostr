@@ -4,20 +4,11 @@ import { Box, Card, CardContent, Divider, Typography } from '@mui/material'
 import { NDKEvent, NDKUserProfile } from '@nostr-dev-kit/ndk'
 import { useContext, useEffect, useState } from 'react'
 import ProfileChip from '@/components/ProfileChip'
+import { useUserProfile, } from '@snort/system-react'
+import { TaggedNostrEvent } from '@snort/system'
 
-const ShortTextNoteCard = ({ event }: { event: NDKEvent }) => {
-  const { ndk } = useContext(NostrContext)
-  const [profile, setProfile] = useState<NDKUserProfile | undefined>(undefined)
-  useEffect(() => {
-    if (ndk && event) {
-      const user = ndk.getUser({
-        hexpubkey: event.pubkey,
-      })
-      user.fetchProfile().then(() => {
-        setProfile(user.profile)
-      })
-    }
-  }, [ndk, event])
+const ShortTextNoteCard = ({ event }: { event: TaggedNostrEvent }) => {
+  const profile = useUserProfile(event.pubkey)
   return (
     <Card className="!rounded-none pt-2">
       <Box className="flex">
