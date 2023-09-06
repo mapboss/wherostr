@@ -15,7 +15,7 @@ const ProfileChip = ({
 }) => {
   const { user: me } = useContext(AccountContext)
   const name = useMemo(
-    () => user?.display_name || user?.name,
+    () => user?.display_name || user?.name || user?.npub,
     [user],
   )
   const isMe = useMemo(() => me?.npub === user.npub, [me, user])
@@ -28,8 +28,9 @@ const ProfileChip = ({
   )
   return (
     <Box
-      className={`grid grid-flow-col gap-2 items-center justify-between${className ? ` ${className}` : ''
-        }`}
+      className={`grid grid-flow-col gap-2 items-center justify-between${
+        className ? ` ${className}` : ''
+      }`}
     >
       <Box className="flex">
         <Avatar className="border-2" src={user?.picture} />
