@@ -56,27 +56,32 @@ const TempPublishForm = () => {
           tags.push(['g', _geohash.substring(0, i)])
         }
         const eventBuilder = new EventBuilder()
-        eventBuilder.createdAt(Math.floor(Date.now() / 1000))
+        eventBuilder
+          .createdAt(Math.floor(Date.now() / 1000))
           .pubKey(user!.pubkey)
           .kind(1)
           .content(content.toString())
-        tags.forEach(tag => {
+        tags.forEach((tag) => {
           eventBuilder.tag(tag)
         })
         try {
-          publisher?.generic((evb) => {
-            evb.createdAt(Math.floor(Date.now() / 1000)).pubKey(user!.pubkey)
-              .kind(1)
-              .content(content.toString())
-            tags.forEach(tag => {
-              evb.tag(tag)
+          publisher
+            ?.generic((evb) => {
+              evb
+                .createdAt(Math.floor(Date.now() / 1000))
+                .pubKey(user!.pubkey)
+                .kind(1)
+                .content(content.toString())
+              tags.forEach((tag) => {
+                evb.tag(tag)
+              })
+              return evb.processContent()
             })
-            return evb.processContent()
-          }).then(event => {
-            if (!event) return
-            system.BroadcastEvent(event)
-            alert('Posted Successfully!')
-          })
+            .then((event) => {
+              if (!event) return
+              system.BroadcastEvent(event)
+              alert('Posted Successfully!')
+            })
         } catch (error) {
           alert('An error occurred!')
           console.error(error)
@@ -137,23 +142,20 @@ const UserBar = () => {
   }, [signOut])
   return (
     <Box
-      className={`grid items-center p-3 rounded-bl-3xl h-16${signedIn ? ' background-gradient' : ''
-        }`}
+      className={`grid items-center py-2 px-3 rounded-bl-3xl${
+        signedIn ? ' background-gradient' : ''
+      }`}
     >
       {user ? (
-        <Box className="flex items-center">
+        <Box className="flex items-center gap-2">
           <ProfileChip user={user} />
-          <IconButton
-            classes={{ root: '!ml-2' }}
-            size="small"
-            onClick={handleClickSignOut}
-          >
+          <IconButton size="small" onClick={handleClickSignOut}>
             <Logout />
           </IconButton>
         </Box>
       ) : (
         <Button
-          classes={{ root: 'background-gradient !rounded-full' }}
+          className="background-gradient !rounded-full"
           variant="contained"
           onClick={handleClickSignIn}
           endIcon={<Login />}

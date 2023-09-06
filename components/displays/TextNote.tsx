@@ -135,7 +135,6 @@ const Content = ({ event }: { event: TaggedNostrEvent }) => {
   const chunks = useMemo(() => {
     return transformText(event.content, event.tags)
   }, [event])
-  console.log('chunks', chunks)
   return (
     <Typography
       className="whitespace-break-spaces break-words"
