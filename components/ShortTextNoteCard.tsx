@@ -11,22 +11,21 @@ import {
   IconButton,
   Typography,
 } from '@mui/material'
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useMemo } from 'react'
 import { MoreHorizOutlined } from '@mui/icons-material'
-import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
+import usePromise from 'react-use-promise'
 
 const ShortTextNoteCard = ({ event }: { event: NDKEvent }) => {
   const { ndk } = useContext(NostrContext)
-  const [user, setUser] = useState<NDKUser>()
-  useEffect(() => {
+  const [user] = usePromise(async () => {
     if (ndk && event) {
       const user = ndk.getUser({
         hexpubkey: event.pubkey,
       })
-      user.fetchProfile().then(() => {
-        setUser(user)
-      })
+      await user.fetchProfile()
+      return user
     }
   }, [ndk, event])
   const createdDate = useMemo(

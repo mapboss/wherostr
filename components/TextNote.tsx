@@ -1,5 +1,5 @@
 'use client'
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useMemo } from 'react'
 import {
   NostrPrefix,
   ParsedFragment,
@@ -8,8 +8,9 @@ import {
 } from '@snort/system'
 import { Box, Link, Typography } from '@mui/material'
 import { Fragment } from 'react'
-import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
+import usePromise from 'react-use-promise'
 
 const youtubeRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
@@ -18,15 +19,13 @@ const youtubePlaylistRegExp =
 
 const UserMentionLink = ({ id }: { id: string }) => {
   const { ndk } = useContext(NostrContext)
-  const [user, setUser] = useState<NDKUser>()
-  useEffect(() => {
+  const [user] = usePromise(async () => {
     if (ndk && id) {
       const user = ndk.getUser({
         hexpubkey: id,
       })
-      user.fetchProfile().then(() => {
-        setUser(user)
-      })
+      await user.fetchProfile()
+      return user
     }
   }, [ndk, id])
   const displayName = useMemo(
