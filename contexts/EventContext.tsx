@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { TaggedNostrEvent } from '@snort/system'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 
 export enum EventActionType {
   Create = 0,
@@ -22,24 +22,24 @@ export enum EventActionType {
 
 export interface EventAction {
   type: EventActionType
-  event?: TaggedNostrEvent
+  event?: NDKEvent
 }
 
 export interface EventContextProps {
-  events: TaggedNostrEvent[]
-  setEvents: Dispatch<SetStateAction<TaggedNostrEvent[]>>
+  events: NDKEvent[]
+  setEvents: Dispatch<SetStateAction<NDKEvent[]>>
   eventAction?: EventAction
   setEventAction: Dispatch<SetStateAction<EventAction | undefined>>
 }
 
 export const EventContext = createContext<EventContextProps>({
   events: [],
-  setEvents: () => {},
-  setEventAction: () => {},
+  setEvents: () => { },
+  setEventAction: () => { },
 })
 
 export const EventContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const [events, setEvents] = useState<TaggedNostrEvent[]>([])
+  const [events, setEvents] = useState<NDKEvent[]>([])
   const [eventAction, setEventAction] = useState<EventAction>()
   const value = useMemo((): EventContextProps => {
     return {

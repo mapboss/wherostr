@@ -4,67 +4,69 @@ import {
   PropsWithChildren,
   createContext,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react'
-import { EventPublisher, MetadataCache } from '@snort/system'
-import { useUserProfile } from '@snort/system-react'
-import dynamic from 'next/dynamic'
+import { NDKNip07Signer, NDKUser } from '@nostr-dev-kit/ndk'
+import { NostrContext } from '@/contexts/NostrContext'
 
 interface Account {
-  publisher?: EventPublisher
-  user?: MetadataCache
+  user?: NDKUser
   signIn: () => Promise<void>
   signOut: () => Promise<void>
 }
 
 export const AccountContext = createContext<Account>({
-  publisher: undefined,
   user: undefined,
   signIn: async () => { },
   signOut: async () => { },
 })
 
-const AccountContextProviderComp: FC<PropsWithChildren> = ({ children }) => {
-  const [publisher, setPublisher] = useState<EventPublisher>()
-  const user = useUserProfile(publisher?.pubKey)
-
-  const createPublisher = useCallback(() => {
-    return EventPublisher.nip7()
-  }, [])
-
-  const signIn = useCallback(async () => {
-    const publisher = await createPublisher()
-    if (publisher?.pubKey) {
-      localStorage.setItem('npub', publisher.pubKey)
-      setPublisher(publisher)
+export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
+  const { ndk } = useContext(NostrContext)
+  const [user, setUser] = useState<NDKUser | undefined>(undefined)
+  useEffect(() => {
+    if (ndk) {
+      ndk.signer = new NDKNip07Signer()
     }
-  }, [createPublisher])
-
+  }, [ndk])
+  const signIn = useCallback(async () => {
+    if (ndk) {
+      const signerUser = await ndk.signer?.user()
+      if (signerUser) {
+        const _user = ndk.getUser({
+          npub: signerUser.npub,
+        })
+        await _user.fetchProfile()
+        localStorage.setItem('npub', _user.npub)
+        setUser(_user)
+      }
+    }
+  }, [ndk])
   const signOut = useCallback(async () => {
-    localStorage.removeItem('npub')
-    setPublisher(undefined)
-  }, [])
+    if (ndk) {
+      ndk.signer = new NDKNip07Signer()
+      localStorage.removeItem('npub')
+      setUser(undefined)
+    }
+  }, [ndk])
   const value = useMemo((): Account => {
     return {
-      publisher,
       user,
       signIn,
       signOut,
     }
-  }, [publisher, user, signIn, signOut])
+  }, [user, signIn, signOut])
   useEffect(() => {
-    if (localStorage.getItem('npub')) {
-      signIn()
+    if (ndk) {
+      if (localStorage.getItem('npub')) {
+        signIn()
+      }
     }
-  }, [signIn])
+  }, [ndk, signIn])
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
   )
 }
-
-export const AccountContextProvider = dynamic(
-  () => new Promise<FC<PropsWithChildren>>((resolve) => resolve(AccountContextProviderComp)),
-  { ssr: false },
-)

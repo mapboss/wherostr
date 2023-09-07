@@ -6,67 +6,66 @@ import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import { Box, Paper } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
-import { RequestBuilder, FlatNoteStore, TaggedNostrEvent } from '@snort/system/dist/index'
-import { useRequestBuilder } from '@snort/system-react'
+import { NostrContext } from '@/contexts/NostrContext'
+import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 
 const MainPane = () => {
   const { map } = useContext(MapContext)
+  const { ndk } = useContext(NostrContext)
   const { events, setEvents } = useContext(EventContext)
   const [mapLoaded, setMapLoaded] = useState(false)
-  const [payload, setPayload] = useState<SearchPayload>({})
-  const requestBuilder = useMemo(() => {
+
+  // useEffect(() => {
+  //   const { bbox, keyword } = payload
+  //   if (!ndk) return
+  //   if (!keyword || !bbox) return
+  //   let geohashFilter: string[] = []
+  //   const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 3)
+  //   const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 3)
+  //   geohashFilter = [bboxhash1, bboxhash2]
+  //   geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash1)))
+  //   geohashFilter = geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash2)))
+  //   ndk.fetchEvents([{
+  //     kinds: [NDKKind.Text], "#g": geohashFilter
+  //   }])
+  // }, [ndk, payload]);
+
+
+  const fetchEvents = useCallback(async (payload: SearchPayload = {}) => {
     const { bbox, keyword } = payload
-    if (!keyword || !bbox) return null
-    const qg = new RequestBuilder("query-group");
-    // const filterByKeyword = new RequestBuilder("filter-keyword");
-    // filterByKeyword.withFilter().kinds([1]).limit(100).search(keyword)
-    // qg.add(filterByKeyword)
-
-    let geohashFilter: string[] = []
-    const filterByGeohash = new RequestBuilder("filter-geohash");
-    const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 3)
-    const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 3)
-    geohashFilter = [bboxhash1, bboxhash2]
-    geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash1)))
-    geohashFilter = geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash2)))
-    filterByGeohash.withFilter().kinds([1]).limit(100).tag("g", geohashFilter)
-    qg.add(filterByGeohash)
-    return qg
-
-    // let geohashFilter: string[] = []
-    // const filterByGeohash = new RequestBuilder("filter-geohash");
-    // const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 3)
-    // const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 3)
-    // geohashFilter = [bboxhash1, bboxhash2]
-    // geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash1)))
-    // geohashFilter = geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash2)))
-    // filterByGeohash.withFilter().kinds([1]).limit(100).tag("g", geohashFilter)
-    // return filterByGeohash
-  }, [payload]);
-
-  const data = useRequestBuilder<FlatNoteStore>(FlatNoteStore, requestBuilder)
-
-  const bounds = useMemo(() => payload.bbox ? new LngLatBounds(payload.bbox) : undefined, [payload.bbox])
-
-  useEffect(() => {
-    if (!data.data) {
+    let filter: NDKFilter = { kinds: [NDKKind.Text] }
+    if (bbox) {
+      let geohashFilter: string[] = []
+      const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 3)
+      const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 3)
+      geohashFilter = [bboxhash1, bboxhash2]
+      geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash1)))
+      geohashFilter = geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash2)))
+      filter["#g"] = geohashFilter
+    } else {
+      filter.search = keyword
+    }
+    const data = await ndk?.fetchEvents(filter, { closeOnEose: true })
+    if (!data) {
       setEvents([])
       return
     }
-    if (!bounds) {
-      setEvents(data.data.slice(0))
+    if (!bbox) {
+      setEvents(Array.from(data))
       return
     }
-    const items = data.data.filter((event) => {
-      const geohashes = getTagValues(event.tags, 'g')
+    const bounds = new LngLatBounds(bbox)
+    const items: NDKEvent[] = []
+    data.forEach(d => {
+      const geohashes = getTagValues(d.tags, 'g')
       if (!geohashes.length) return false
       geohashes.sort((a, b) => b.length - a.length)
       const { lat, lon } = Geohash.decode(geohashes[0])
       if (!bounds.contains({ lat, lon })) return false
-      return true
+      items.push(d)
     })
     setEvents(items)
-  }, [data, bounds, setEvents])
+  }, [ndk])
 
   const mouseEnterHandler = useCallback((ev: maplibregl.MapMouseEvent) => {
     const style = ev.target.getCanvas().style
@@ -172,12 +171,7 @@ const MainPane = () => {
     >
       <Filter
         onSearch={(condition) => {
-          console.log('condition', condition)
-          if (condition) {
-            setPayload(condition)
-          } else {
-            setPayload({})
-          }
+          fetchEvents(condition)
         }}
       />
       <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
