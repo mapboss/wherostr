@@ -9,9 +9,9 @@ const ProfileChip = ({ user }: { user: MetadataCache }) => {
     [user],
   )
   return (
-    <Box className="flex">
+    <Box className="flex overflow-hidden">
       <Avatar className="border-2" src={user?.picture} />
-      <Box className="flex flex-col pl-2 max-w-xs">
+      <Box className="flex flex-col pl-2 max-w-xs overflow-hidden">
         <Typography
           className="overflow-hidden whitespace-nowrap text-ellipsis"
           variant="subtitle2"

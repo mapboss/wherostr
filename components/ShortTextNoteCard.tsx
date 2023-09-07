@@ -1,7 +1,7 @@
 'use client'
-import NoteActionBar from '@/components/displays/NoteActionBar'
-import TextNote from '@/components/displays/TextNote'
+import NoteActionBar from '@/components/NoteActionBar'
 import ProfileChip from '@/components/ProfileChip'
+import TextNote from '@/components/TextNote'
 import TimeFromNow from '@/components/TimeFromNow'
 import {
   Box,
@@ -24,7 +24,7 @@ const ShortTextNoteCard = ({ event }: { event: TaggedNostrEvent }) => {
       {user && (
         <Box className="px-4 pt-3 flex items-center gap-2 text-contrast-secondary">
           <ProfileChip user={user} />
-          <Box className="grow flex justify-end">
+          <Box className="grow flex justify-end shrink-0">
             <Typography variant="caption">
               <TimeFromNow date={createdDate} />
             </Typography>

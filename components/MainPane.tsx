@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
 import Filter, { SearchPayload } from '@/components/Filter'
-import ShortTextNoteCard from '@/components/displays/ShortTextNoteCard'
+import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import { EventContext } from '@/contexts/EventContext'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
@@ -126,7 +126,7 @@ const MainPane = () => {
 
   return (
     <Paper
-      className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none max-h-full overflow-hidden${showEvents ? ' h-full' : ''
+      className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none overflow-hidden${showEvents ? ' h-full' : ''
         }`}
     >
       <Filter
@@ -139,7 +139,7 @@ const MainPane = () => {
           }
         }}
       />
-      <div className="w-full h-0.5 background-gradient"></div>
+      <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
       {showEvents && (
         <Box className="overflow-y-auto">
           {events?.map((event) => (
