@@ -1,30 +1,41 @@
 'use client'
-import { useMemo } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import {
-  NostrLink,
   NostrPrefix,
   ParsedFragment,
-  TaggedNostrEvent,
   transformText,
   tryParseNostrLink,
 } from '@snort/system'
 import { Box, Link, Typography } from '@mui/material'
 import { Fragment } from 'react'
-import { useUserProfile } from '@snort/system-react'
+import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
+import { NostrContext } from '@/contexts/NostrContext'
 
 const youtubeRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
 const youtubePlaylistRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:(?:playlist|embed)(?:\?|.+&)list=))([^#\&\?]*).*/
 
-const UserMentionLink = ({ nostrLink }: { nostrLink: NostrLink }) => {
-  const user = useUserProfile(nostrLink.id)
-  const displayName = useMemo(() => {
-    return user?.display_name || user?.name || user?.npub
-  }, [user])
+const UserMentionLink = ({ id }: { id: string }) => {
+  const { ndk } = useContext(NostrContext)
+  const [user, setUser] = useState<NDKUser>()
+  useEffect(() => {
+    if (ndk && id) {
+      const user = ndk.getUser({
+        hexpubkey: id,
+      })
+      user.fetchProfile().then(() => {
+        setUser(user)
+      })
+    }
+  }, [ndk, id])
+  const displayName = useMemo(
+    () => user?.profile?.displayName || user?.profile?.name || user?.npub,
+    [user],
+  )
   return (
     <Link
-      href={nostrLink.id}
+      href={id}
       target="_blank"
       component="a"
       underline="hover"
@@ -83,7 +94,7 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
         switch (nostrLink?.type) {
           case NostrPrefix.PublicKey:
           case NostrPrefix.Profile:
-            return <UserMentionLink nostrLink={nostrLink} />
+            return <UserMentionLink id={nostrLink.id} />
           case NostrPrefix.Note:
           case NostrPrefix.Event:
           case NostrPrefix.Address:
@@ -131,7 +142,7 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
   }
 }
 
-const Content = ({ event }: { event: TaggedNostrEvent }) => {
+const Content = ({ event }: { event: NDKEvent }) => {
   const chunks = useMemo(() => {
     return transformText(event.content, event.tags)
   }, [event])

@@ -11,24 +11,40 @@ import {
   IconButton,
   Typography,
 } from '@mui/material'
-import { useUserProfile } from '@snort/system-react'
-import { TaggedNostrEvent } from '@snort/system'
-import { useMemo } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { MoreHorizOutlined } from '@mui/icons-material'
+import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
+import { NostrContext } from '@/contexts/NostrContext'
 
-const ShortTextNoteCard = ({ event }: { event: TaggedNostrEvent }) => {
-  const user = useUserProfile(event.pubkey)
-  const createdDate = useMemo(() => new Date(event.created_at * 1000), [event])
+const ShortTextNoteCard = ({ event }: { event: NDKEvent }) => {
+  const { ndk } = useContext(NostrContext)
+  const [user, setUser] = useState<NDKUser>()
+  useEffect(() => {
+    if (ndk && event) {
+      const user = ndk.getUser({
+        hexpubkey: event.pubkey,
+      })
+      user.fetchProfile().then(() => {
+        setUser(user)
+      })
+    }
+  }, [ndk, event])
+  const createdDate = useMemo(
+    () => (event.created_at ? new Date(event.created_at * 1000) : undefined),
+    [event],
+  )
   return (
     <Card className="!rounded-none">
       {user && (
         <Box className="px-4 pt-3 flex items-center gap-2 text-contrast-secondary">
           <ProfileChip user={user} />
-          <Box className="grow flex justify-end shrink-0">
-            <Typography variant="caption">
-              <TimeFromNow date={createdDate} />
-            </Typography>
-          </Box>
+          {createdDate && (
+            <Box className="grow flex justify-end shrink-0">
+              <Typography variant="caption">
+                <TimeFromNow date={createdDate} />
+              </Typography>
+            </Box>
+          )}
           <IconButton className="!text-contrast-secondary" size="small">
             <MoreHorizOutlined />
           </IconButton>

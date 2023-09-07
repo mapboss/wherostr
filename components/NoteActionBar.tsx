@@ -1,5 +1,4 @@
 'use client'
-import { TaggedNostrEvent } from '@snort/system'
 import { Box, IconButton, Typography } from '@mui/material'
 import {
   CommentOutlined,
@@ -10,8 +9,9 @@ import {
 } from '@mui/icons-material'
 import { useCallback, useContext } from 'react'
 import { EventActionType, EventContext } from '@/contexts/EventContext'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 
-const NoteActionBar = ({ event }: { event: TaggedNostrEvent }) => {
+const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   const { setEventAction } = useContext(EventContext)
   const handleClickAction = useCallback(
     (type: EventActionType) => () => {

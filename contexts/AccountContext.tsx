@@ -20,13 +20,13 @@ interface Account {
 
 export const AccountContext = createContext<Account>({
   user: undefined,
-  signIn: async () => { },
-  signOut: async () => { },
+  signIn: async () => {},
+  signOut: async () => {},
 })
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const { ndk } = useContext(NostrContext)
-  const [user, setUser] = useState<NDKUser | undefined>(undefined)
+  const [user, setUser] = useState<NDKUser>()
   useEffect(() => {
     if (ndk) {
       ndk.signer = new NDKNip07Signer()
