@@ -11,6 +11,7 @@ import { Fragment } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
+import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 
 const youtubeRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
@@ -42,6 +43,20 @@ const UserMentionLink = ({ id }: { id: string }) => {
     >
       @{displayName}
     </Link>
+  )
+}
+
+const QuotedEvent = ({ id }: { id: string }) => {
+  const { ndk } = useContext(NostrContext)
+  const [event] = usePromise(async () => {
+    if (ndk && id) {
+      return await ndk.fetchEvent(id)
+    }
+  }, [ndk, id])
+  return (
+    <Box className="my-2 border border-secondary-dark rounded-lg overflow-hidden">
+      {event && <ShortTextNoteCard event={event} actionBar={false} />}
+    </Box>
   )
 }
 
@@ -94,8 +109,9 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
           case NostrPrefix.PublicKey:
           case NostrPrefix.Profile:
             return <UserMentionLink id={nostrLink.id} />
-          case NostrPrefix.Note:
           case NostrPrefix.Event:
+            return <QuotedEvent id={nostrLink.id} />
+          case NostrPrefix.Note:
           case NostrPrefix.Address:
             return (
               <Link

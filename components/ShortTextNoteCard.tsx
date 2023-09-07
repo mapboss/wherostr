@@ -17,7 +17,13 @@ import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
 
-const ShortTextNoteCard = ({ event }: { event: NDKEvent }) => {
+const ShortTextNoteCard = ({
+  event,
+  actionBar = true,
+}: {
+  event: NDKEvent
+  actionBar?: boolean
+}) => {
   const { ndk } = useContext(NostrContext)
   const [user] = usePromise(async () => {
     if (ndk && event) {
@@ -52,9 +58,11 @@ const ShortTextNoteCard = ({ event }: { event: NDKEvent }) => {
       <Box className="flex">
         <CardContent className="flex-1 !pt-3 !pb-0 overflow-hidden">
           <TextNote event={event} />
-          <Box className="mt-2">
-            <NoteActionBar event={event} />
-          </Box>
+          {actionBar && (
+            <Box className="mt-2">
+              <NoteActionBar event={event} />
+            </Box>
+          )}
         </CardContent>
       </Box>
       <Divider className="!mt-3" />
