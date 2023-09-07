@@ -9,6 +9,7 @@ import {
 } from "@snort/system"
 
 import { SnortContext } from '@snort/system-react'
+export { SnortContext as NostrContext } from '@snort/system-react'
 
 // Provided in-memory / indexedDb cache for relays
 // You can also implement your own with "RelayCache" interface
@@ -24,9 +25,6 @@ const System = new NostrSystem({
   .split(',')
   .filter((item) => !!item).forEach(item => System.ConnectToRelay(item, { read: true, write: true }))
 
-
-export const NostrContext = SnortContext
-
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  return <NostrContext.Provider value={System}>{children}</NostrContext.Provider>
+  return <SnortContext.Provider value={System}>{children}</SnortContext.Provider>
 }
