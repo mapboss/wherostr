@@ -15,22 +15,6 @@ const MainPane = () => {
   const { events, setEvents } = useContext(EventContext)
   const [mapLoaded, setMapLoaded] = useState(false)
 
-  // useEffect(() => {
-  //   const { bbox, keyword } = payload
-  //   if (!ndk) return
-  //   if (!keyword || !bbox) return
-  //   let geohashFilter: string[] = []
-  //   const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 3)
-  //   const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 3)
-  //   geohashFilter = [bboxhash1, bboxhash2]
-  //   geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash1)))
-  //   geohashFilter = geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash2)))
-  //   ndk.fetchEvents([{
-  //     kinds: [NDKKind.Text], "#g": geohashFilter
-  //   }])
-  // }, [ndk, payload]);
-
-
   const fetchEvents = useCallback(async (payload: SearchPayload = {}) => {
     const { bbox, keyword } = payload
     let filter: NDKFilter = { kinds: [NDKKind.Text] }
@@ -45,7 +29,7 @@ const MainPane = () => {
     } else {
       filter.search = keyword
     }
-    const data = await ndk?.fetchEvents(filter, { closeOnEose: true })
+    const data = await ndk?.fetchEvents(filter)
     if (!data) {
       setEvents([])
       return
@@ -169,11 +153,7 @@ const MainPane = () => {
       className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none overflow-hidden${showEvents ? ' h-full' : ''
         }`}
     >
-      <Filter
-        onSearch={(condition) => {
-          fetchEvents(condition)
-        }}
-      />
+      <Filter onSearch={fetchEvents} />
       <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
       {showEvents && (
         <Box className="overflow-y-auto">
