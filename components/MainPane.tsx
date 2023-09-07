@@ -9,64 +9,75 @@ import { LngLatBounds } from 'maplibre-gl'
 import { NostrContext } from '@/contexts/NostrContext'
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 
+const sortDescending = (a: NDKEvent, b: NDKEvent) =>
+  (b.created_at || 0) - (a.created_at || 0)
 const MainPane = () => {
   const { map } = useContext(MapContext)
   const { ndk } = useContext(NostrContext)
   const { events, setEvents } = useContext(EventContext)
   const [mapLoaded, setMapLoaded] = useState(false)
 
-  const fetchEvents = useCallback(async (payload: SearchPayload = {}) => {
-    const { bbox, keyword } = payload
-    let filter: NDKFilter = { kinds: [NDKKind.Text] }
-    if (bbox) {
-      let geohashFilter: string[] = []
-      const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 3)
-      const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 3)
-      geohashFilter = [bboxhash1, bboxhash2]
-      geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash1)))
-      geohashFilter = geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash2)))
-      filter["#g"] = geohashFilter
-    } else {
-      filter.search = keyword
-    }
-    const data = await ndk?.fetchEvents(filter)
-    if (!data) {
-      setEvents([])
-      return
-    }
-    if (!bbox) {
-      setEvents(Array.from(data))
-      return
-    }
-    const bounds = new LngLatBounds(bbox)
-    const items: NDKEvent[] = []
-    data.forEach(d => {
-      const geohashes = getTagValues(d.tags, 'g')
-      if (!geohashes.length) return false
-      geohashes.sort((a, b) => b.length - a.length)
-      const { lat, lon } = Geohash.decode(geohashes[0])
-      if (!bounds.contains({ lat, lon })) return false
-      items.push(d)
-    })
-    setEvents(items)
-  }, [ndk])
+  const fetchEvents = useCallback(
+    async (payload: SearchPayload = {}) => {
+      const { bbox, keyword } = payload
+      let filter: NDKFilter = { kinds: [NDKKind.Text] }
+      if (bbox) {
+        let geohashFilter: string[] = []
+        const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 1)
+        const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 1)
+        geohashFilter = [bboxhash1, bboxhash2]
+        geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash1)))
+        geohashFilter = geohashFilter.concat(
+          Object.values(Geohash.neighbours(bboxhash2)),
+        )
+        filter['#g'] = geohashFilter
+      } else {
+        filter.search = keyword
+      }
+      const data = await ndk?.fetchEvents(filter)
+      if (!data) {
+        setEvents([])
+        return
+      }
+      if (!bbox) {
+        setEvents(Array.from(data).sort(sortDescending))
+        return
+      }
+      const bounds = new LngLatBounds(bbox)
+      const items: NDKEvent[] = []
+      data.forEach((d) => {
+        const geohashes = getTagValues(d.tags, 'g')
+        if (!geohashes.length) return false
+        geohashes.sort((a, b) => b.length - a.length)
+        const { lat, lon } = Geohash.decode(geohashes[0])
+        if (!bounds.contains({ lat, lon })) return false
+        items.push(d)
+      })
+      setEvents(items.sort(sortDescending))
+    },
+    [ndk, setEvents],
+  )
 
   const mouseEnterHandler = useCallback((ev: maplibregl.MapMouseEvent) => {
     const style = ev.target.getCanvas().style
-    style.cursor = "pointer"
+    style.cursor = 'pointer'
   }, [])
 
   const mouseOutHandler = useCallback((ev: maplibregl.MapMouseEvent) => {
     const style = ev.target.getCanvas().style
-    style.cursor = ""
+    style.cursor = ''
   }, [])
 
-
-  const clickHandler = useCallback((ev: maplibregl.MapMouseEvent & {
-    features?: maplibregl.MapGeoJSONFeature[] | undefined;
-  } & Object) => {
-    console.log('ev.features', ev.features)
-  }, [])
+  const clickHandler = useCallback(
+    (
+      ev: maplibregl.MapMouseEvent & {
+        features?: maplibregl.MapGeoJSONFeature[] | undefined
+      } & Object,
+    ) => {
+      console.log('ev.features', ev.features)
+    },
+    [],
+  )
 
   useEffect(() => {
     if (!map) return
@@ -95,27 +106,29 @@ const MainPane = () => {
     }
 
     const zoomBounds = new LngLatBounds()
-    const features = events.map((event) => {
-      const geohashes = getTagValues(event.tags, 'g')
-      geohashes.sort((a, b) => b.length - a.length)
-      const { lat, lon } = Geohash.decode(geohashes[0])
-      events.push(event)
-      const geojson = {
-        type: 'Feature',
-        geometry: { type: 'Point', coordinates: [lon, lat] },
-        id: event.id,
-        properties: {
+    const features = events
+      .map((event) => {
+        const geohashes = getTagValues(event.tags, 'g')
+        geohashes.sort((a, b) => b.length - a.length)
+        const { lat, lon } = Geohash.decode(geohashes[0])
+        events.push(event)
+        const geojson = {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [lon, lat] },
           id: event.id,
-          content: event.content,
-          author: event.pubkey,
-          created_at: event.created_at,
-          kind: event.kind,
-          tags: event.tags,
-        },
-      }
-      zoomBounds.extend({ lon, lat })
-      return geojson
-    }).filter(event => !!event)
+          properties: {
+            id: event.id,
+            content: event.content,
+            author: event.pubkey,
+            created_at: event.created_at,
+            kind: event.kind,
+            tags: event.tags,
+          },
+        }
+        zoomBounds.extend({ lon, lat })
+        return geojson
+      })
+      .filter((event) => !!event)
 
     if (events.length > 0) {
       map?.easeTo({ padding: { left: 656, right: 16 }, duration: 0 })
@@ -131,7 +144,7 @@ const MainPane = () => {
         type: 'geojson',
         data: { type: 'FeatureCollection', features },
       })
-    } catch (err) { }
+    } catch (err) {}
 
     try {
       map?.addLayer({
@@ -143,15 +156,16 @@ const MainPane = () => {
           'circle-radius': 12,
         },
       })
-    } catch (err) { }
+    } catch (err) {}
   }, [events, map, mapLoaded])
 
   const showEvents = useMemo(() => !!events?.length, [events])
 
   return (
     <Paper
-      className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none overflow-hidden${showEvents ? ' h-full' : ''
-        }`}
+      className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none overflow-hidden${
+        showEvents ? ' h-full' : ''
+      }`}
     >
       <Filter onSearch={fetchEvents} />
       <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
@@ -168,11 +182,10 @@ const MainPane = () => {
 
 export default MainPane
 
-
 export function getTagValues(tags: string[][], tag: string): Array<string> {
   return tags
-    .filter(t => t.at(0) === tag)
-    .map(t => t.at(1))
-    .filter(t => t)
-    .map(t => t as string);
+    .filter((t) => t.at(0) === tag)
+    .map((t) => t.at(1))
+    .filter((t) => t)
+    .map((t) => t as string)
 }
