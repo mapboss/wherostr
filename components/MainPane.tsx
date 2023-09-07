@@ -7,56 +7,75 @@ import Geohash from 'latlon-geohash'
 import { Box, Paper } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
 import { NostrContext } from '@/contexts/NostrContext'
-import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
+import {
+  NDKEvent,
+  NDKFilter,
+  NDKKind,
+  NDKSubscriptionCacheUsage,
+} from '@nostr-dev-kit/ndk'
+import usePromise from 'react-use-promise'
 
-const sortDescending = (a: NDKEvent, b: NDKEvent) =>
+const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
+
 const MainPane = () => {
   const { map } = useContext(MapContext)
   const { ndk } = useContext(NostrContext)
   const { events, setEvents } = useContext(EventContext)
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [payload, setPayload] = useState<SearchPayload>({})
 
-  const fetchEvents = useCallback(
-    async (payload: SearchPayload = {}) => {
-      const { bbox, keyword } = payload
-      let filter: NDKFilter = { kinds: [NDKKind.Text] }
-      if (bbox) {
-        let geohashFilter: string[] = []
-        const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 1)
-        const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 1)
-        geohashFilter = [bboxhash1, bboxhash2]
-        geohashFilter.concat(Object.values(Geohash.neighbours(bboxhash1)))
-        geohashFilter = geohashFilter.concat(
-          Object.values(Geohash.neighbours(bboxhash2)),
-        )
-        filter['#g'] = geohashFilter
-      } else {
-        filter.search = keyword
-      }
-      const data = await ndk?.fetchEvents(filter)
-      if (!data) {
-        setEvents([])
-        return
-      }
-      if (!bbox) {
-        setEvents(Array.from(data).sort(sortDescending))
-        return
-      }
-      const bounds = new LngLatBounds(bbox)
-      const items: NDKEvent[] = []
-      data.forEach((d) => {
-        const geohashes = getTagValues(d.tags, 'g')
-        if (!geohashes.length) return false
-        geohashes.sort((a, b) => b.length - a.length)
-        const { lat, lon } = Geohash.decode(geohashes[0])
-        if (!bounds.contains({ lat, lon })) return false
-        items.push(d)
-      })
-      setEvents(items.sort(sortDescending))
-    },
-    [ndk, setEvents],
-  )
+  const [geoData, geoError, geoStat] = usePromise(async () => {
+    const bbox = payload.bbox
+    if (!ndk || !bbox) return new Set<NDKEvent>()
+    let geohashFilter: Set<string>
+    const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 1)
+    const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 1)
+    const bboxhash3 = Geohash.encode(bbox[1], bbox[2], 1)
+    const bboxhash4 = Geohash.encode(bbox[3], bbox[0], 1)
+    geohashFilter = new Set([bboxhash1, bboxhash2, bboxhash3, bboxhash4])
+    const result = await ndk.fetchEvents(
+      { kinds: [NDKKind.Text], '#g': Array.from(geohashFilter) },
+      {
+        cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+        closeOnEose: true,
+      },
+    )
+    const bounds = new LngLatBounds(bbox)
+    const data = new Set<NDKEvent>()
+    result.forEach((d) => {
+      const geohashes = d.getMatchingTags('g')
+      if (!geohashes.length) return
+      geohashes.sort((a, b) => b[1].length - a[1].length)
+      if (!geohashes[0]) return
+      const { lat, lon } = Geohash.decode(geohashes[0][1])
+      if (!bounds.contains({ lat, lon })) return
+      data.add(d)
+    })
+    return data
+  }, [payload.bbox])
+
+  const [tagData, tagError, tagStat] = usePromise(async () => {
+    const keyword = payload.keyword
+    if (!ndk || !keyword) return new Set<NDKEvent>()
+
+    return ndk.fetchEvents(
+      { kinds: [NDKKind.Text], '#t': keyword.split(' ') },
+      {
+        cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+        closeOnEose: true,
+      },
+    )
+  }, [payload.keyword])
+
+  useEffect(() => {
+    if (tagStat === 'pending' || geoStat === 'pending') return
+    if (!tagData || !geoData) return
+    geoData.forEach((d) => {
+      tagData.add(d)
+    })
+    setEvents(Array.from(tagData).sort(handleSortDescending))
+  }, [geoData, tagData, tagStat, geoStat, setEvents])
 
   const mouseEnterHandler = useCallback((ev: maplibregl.MapMouseEvent) => {
     const style = ev.target.getCanvas().style
@@ -84,11 +103,13 @@ const MainPane = () => {
     const handler = (evt: maplibregl.MapLibreEvent) => {
       setMapLoaded(true)
     }
+    console.log('on.style.load')
     map.on('style.load', handler)
     map.on('mouseenter', 'nostr-event', mouseEnterHandler)
     map.on('mouseout', 'nostr-event', mouseOutHandler)
     map.on('click', 'nostr-event', clickHandler)
     return () => {
+      console.log('off.style.load')
       map.off('style.load', handler)
       map.off('mouseenter', mouseEnterHandler)
       map.off('mouseout', mouseOutHandler)
@@ -108,10 +129,12 @@ const MainPane = () => {
     const zoomBounds = new LngLatBounds()
     const features = events
       .map((event) => {
-        const geohashes = getTagValues(event.tags, 'g')
-        geohashes.sort((a, b) => b.length - a.length)
-        const { lat, lon } = Geohash.decode(geohashes[0])
-        events.push(event)
+        const geohashes = event.getMatchingTags('g')
+        if (!geohashes.length) return
+        geohashes.sort((a, b) => b[1].length - a[1].length)
+        if (!geohashes[0]) return
+        const { lat, lon } = Geohash.decode(geohashes[0][1])
+        if (!lat || !lon) return
         const geojson = {
           type: 'Feature',
           geometry: { type: 'Point', coordinates: [lon, lat] },
@@ -130,10 +153,14 @@ const MainPane = () => {
       })
       .filter((event) => !!event)
 
-    if (events.length > 0) {
-      map?.easeTo({ padding: { left: 656, right: 16 }, duration: 0 })
+    if (features.length > 0) {
+      // map?.easeTo({ padding: { left: 656, right: 16 }, duration: 300 })
       if (!zoomBounds.isEmpty()) {
-        map?.fitBounds(zoomBounds, { duration: 300, maxZoom: 14 })
+        map?.fitBounds(zoomBounds, {
+          duration: 1000,
+          maxZoom: 14,
+          padding: { left: 656, right: 16 },
+        })
       }
     } else {
       map?.easeTo({ padding: { left: 0, right: 0 } })
@@ -167,12 +194,12 @@ const MainPane = () => {
         showEvents ? ' h-full' : ''
       }`}
     >
-      <Filter onSearch={fetchEvents} />
+      <Filter onSearch={(payload) => setPayload(payload || {})} />
       <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
       {showEvents && (
         <Box className="overflow-y-auto">
-          {events?.map((event) => (
-            <ShortTextNoteCard key={event.id} event={event} />
+          {events?.map((event, i) => (
+            <ShortTextNoteCard key={i} event={event} />
           ))}
         </Box>
       )}
