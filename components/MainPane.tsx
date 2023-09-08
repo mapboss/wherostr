@@ -26,23 +26,38 @@ const MainPane = () => {
   const [mapLoaded, setMapLoaded] = useState(false)
   const [payload, setPayload] = useState<SearchPayload>({})
 
-  const [geoData, geoError, geoStat] = usePromise(async () => {
+  useEffect(() => {
+    setEvents([])
+  }, [payload, setEvents])
+
+  const bounds = useMemo(() => new LngLatBounds(payload.bbox), [payload.bbox])
+
+  const geohashFilter = useMemo(() => {
+    if (!payload.bbox) return
     const bbox = payload.bbox
-    if (!ndk || !bbox) return new Set<NDKEvent>()
     let geohashFilter: Set<string>
     const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 1)
     const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 1)
     const bboxhash3 = Geohash.encode(bbox[1], bbox[2], 1)
     const bboxhash4 = Geohash.encode(bbox[3], bbox[0], 1)
     geohashFilter = new Set([bboxhash1, bboxhash2, bboxhash3, bboxhash4])
-    const result = await ndk.fetchEvents(
-      { kinds: [NDKKind.Text], '#g': Array.from(geohashFilter) },
-      {
-        cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-        closeOnEose: true,
-      },
+    return { kinds: [NDKKind.Text], '#g': Array.from(geohashFilter) }
+  }, [payload.bbox])
+
+  const tagsFilter = useMemo(() => {
+    if (!payload.keyword) return
+    const tags = new Set(
+      payload.keyword.split(/\\s|,/).map((d) => d.trim().toLowerCase()),
     )
-    const bounds = new LngLatBounds(bbox)
+    return { kinds: [NDKKind.Text], '#t': Array.from(tags) }
+  }, [payload.keyword])
+
+  const [geoData, geoError, geoStat] = usePromise(async () => {
+    if (!ndk || !geohashFilter || bounds.isEmpty()) return new Set<NDKEvent>()
+    const result = await ndk.fetchEvents(geohashFilter, {
+      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      closeOnEose: true,
+    })
     const data = new Set<NDKEvent>()
     result.forEach((d) => {
       const geohashes = d.getMatchingTags('g')
@@ -54,20 +69,15 @@ const MainPane = () => {
       data.add(d)
     })
     return data
-  }, [payload.bbox])
+  }, [bounds, geohashFilter])
 
   const [tagData, tagError, tagStat] = usePromise(async () => {
-    const keyword = payload.keyword
-    if (!ndk || !keyword) return new Set<NDKEvent>()
-
-    return ndk.fetchEvents(
-      { kinds: [NDKKind.Text], '#t': keyword.split(' ') },
-      {
-        cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-        closeOnEose: true,
-      },
-    )
-  }, [payload.keyword])
+    if (!ndk || !tagsFilter) return new Set<NDKEvent>()
+    return ndk.fetchEvents(tagsFilter, {
+      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      closeOnEose: true,
+    })
+  }, [tagsFilter])
 
   useEffect(() => {
     if (tagStat === 'pending' || geoStat === 'pending') return
@@ -104,13 +114,11 @@ const MainPane = () => {
     const handler = (evt: maplibregl.MapLibreEvent) => {
       setMapLoaded(true)
     }
-    console.log('on.style.load')
     map.on('style.load', handler)
     map.on('mouseenter', 'nostr-event', mouseEnterHandler)
     map.on('mouseout', 'nostr-event', mouseOutHandler)
     map.on('click', 'nostr-event', clickHandler)
     return () => {
-      console.log('off.style.load')
       map.off('style.load', handler)
       map.off('mouseenter', mouseEnterHandler)
       map.off('mouseout', mouseOutHandler)
@@ -160,7 +168,7 @@ const MainPane = () => {
         map?.fitBounds(zoomBounds, {
           duration: 1000,
           maxZoom: 14,
-          padding: { left: 656, right: 16 },
+          padding: { left: 656, right: 16, top: 16, bottom: 16 },
         })
       }
     } else {
