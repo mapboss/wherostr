@@ -67,7 +67,7 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
 
   return (
     <Box
-      className="px-4 py-2"
+      className={className}
       component={'form'}
       onSubmit={async (evt) => {
         evt.preventDefault()

@@ -2,10 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: rgba(252, 106, 3, 0.5);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(252, 106, 3, 0.8);
+}
+
 .background-gradient {
   background: linear-gradient(45deg, #fc6a03 30%, #0395fc 90%) !important;
 }
 
 .MuiButton-root {
   text-transform: none !important;
+}
+
+.MuiOutlinedInput-root {
+  border-radius: 1rem !important;
 }

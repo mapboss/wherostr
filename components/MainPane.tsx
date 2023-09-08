@@ -1,19 +1,20 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import EventActionModal from '@/components/EventActionModal'
 import Filter, { SearchPayload } from '@/components/Filter'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
-import { EventContext } from '@/contexts/EventContext'
+import { EventActionType, EventContext } from '@/contexts/EventContext'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
-import { Box, Paper } from '@mui/material'
+import { Box, IconButton, Paper, Tooltip } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
 import { NostrContext } from '@/contexts/NostrContext'
 import {
   NDKEvent,
-  NDKFilter,
   NDKKind,
   NDKSubscriptionCacheUsage,
 } from '@nostr-dev-kit/ndk'
 import usePromise from 'react-use-promise'
+import { Draw } from '@mui/icons-material'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -187,20 +188,45 @@ const MainPane = () => {
   }, [events, map, mapLoaded])
 
   const showEvents = useMemo(() => !!events?.length, [events])
-
+  const { eventAction } = useContext(EventContext)
+  const { setEventAction } = useContext(EventContext)
+  const handleClickPost = useCallback(() => {
+    setEventAction({
+      type: EventActionType.Create,
+    })
+  }, [setEventAction])
   return (
     <Paper
       className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none overflow-hidden${
-        showEvents ? ' h-full' : ''
+        eventAction || showEvents ? ' h-full' : ''
       }`}
     >
-      <Filter onSearch={(payload) => setPayload(payload || {})} />
+      <Box className="px-4 py-2 flex gap-4 items-center">
+        <Filter
+          className="grow"
+          onSearch={(payload) => setPayload(payload || {})}
+        />
+        <Tooltip title="Post">
+          <IconButton
+            className="background-gradient"
+            size="large"
+            onClick={handleClickPost}
+          >
+            <Draw />
+          </IconButton>
+        </Tooltip>
+      </Box>
       <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
       {showEvents && (
         <Box className="overflow-y-auto">
           {events?.map((event, i) => (
             <ShortTextNoteCard key={i} event={event} />
           ))}
+        </Box>
+      )}
+      {eventAction && (
+        <Box className="absolute left-0 top-0 w-[640px] h-full p-8 backdrop-blur">
+          <EventActionModal />
         </Box>
       )}
     </Paper>
