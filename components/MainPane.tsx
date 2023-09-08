@@ -22,7 +22,8 @@ const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
 const MainPane = () => {
   const { map } = useContext(MapContext)
   const { ndk } = useContext(NostrContext)
-  const { events, setEvents } = useContext(EventContext)
+  const { events, eventAction, setEvents, setEventAction } =
+    useContext(EventContext)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [payload, setPayload] = useState<SearchPayload>({})
 
@@ -44,16 +45,16 @@ const MainPane = () => {
     return {
       kinds: [NDKKind.Text],
       '#g': Array.from(geohashFilter),
-      limit: 100,
+      limit: 50,
     }
   }, [payload.bbox])
 
   const tagsFilter = useMemo(() => {
     if (!payload.keyword) return
     const tags = new Set(
-      payload.keyword.split(/\\s|,/).map((d) => d.trim().toLowerCase()),
+      payload.keyword.split(/\s|,/).map((d) => d.trim().toLowerCase()),
     )
-    return { kinds: [NDKKind.Text], '#t': Array.from(tags), limit: 100 }
+    return { kinds: [NDKKind.Text], '#t': Array.from(tags), limit: 50 }
   }, [payload.keyword])
 
   const [geoData, geoError, geoStat] = usePromise(async () => {
@@ -201,13 +202,21 @@ const MainPane = () => {
   }, [events, map, mapLoaded])
 
   const showEvents = useMemo(() => !!events?.length, [events])
-  const { eventAction } = useContext(EventContext)
-  const { setEventAction } = useContext(EventContext)
   const handleClickPost = useCallback(() => {
     setEventAction({
       type: EventActionType.Create,
     })
   }, [setEventAction])
+
+  const eventElemets = useMemo(
+    () =>
+      events
+        ? events.map((event, i) => (
+            <ShortTextNoteCard key={event.id} event={event} />
+          ))
+        : null,
+    [events],
+  )
   return (
     <Paper
       className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none overflow-hidden${
@@ -230,13 +239,7 @@ const MainPane = () => {
         </Tooltip>
       </Box>
       <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
-      {showEvents && (
-        <Box className="overflow-y-auto">
-          {events?.map((event, i) => (
-            <ShortTextNoteCard key={i} event={event} />
-          ))}
-        </Box>
-      )}
+      {showEvents && <Box className="overflow-y-auto">{eventElemets}</Box>}
       {eventAction && (
         <Box className="absolute left-0 top-0 w-[640px] h-full p-8 backdrop-blur">
           <EventActionModal />
