@@ -11,6 +11,9 @@ import axios, { AxiosResponse } from 'axios'
 import { SearchOutlined } from '@mui/icons-material'
 import usePromise from 'react-use-promise'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import bbox from '@turf/bbox'
+import bboxPolygon from '@turf/bbox-polygon'
+import buffer from '@turf/buffer'
 
 // https://nominatim.openstreetmap.org/search?<params>
 export async function search<TOutput = any[], TInput = string>(
@@ -45,15 +48,20 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
     if (!keyword) return {}
     const result = await search(keyword)
     const place = result?.[0]
-    if (!place) {
+    if (!place?.boundingbox) {
       return { keyword, places: [] }
     }
     // const lat = Number(place.lat)
     // const lon = Number(place.lon)
     // const g = geohash.encode(lat, lon, precision)
     const [y1, y2, x1, x2] = place.boundingbox.map((b: string) => Number(b))
+    console.log([x1, y1, x2, y2])
+    const polygon = buffer(bboxPolygon([x1, y1, x2, y2]), 1, {
+      units: 'kilometers',
+    })
+    const bounds = bbox(polygon)
     return {
-      bbox: [x1, y1, x2, y2],
+      bbox: bounds as SearchPayload['bbox'],
       keyword,
       // geohash: g,
       // places: data,

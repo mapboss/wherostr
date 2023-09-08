@@ -39,7 +39,11 @@ const MainPane = () => {
     const bboxhash3 = Geohash.encode(bbox[1], bbox[2], 1)
     const bboxhash4 = Geohash.encode(bbox[3], bbox[0], 1)
     geohashFilter = new Set([bboxhash1, bboxhash2, bboxhash3, bboxhash4])
-    return { kinds: [NDKKind.Text], '#g': Array.from(geohashFilter) }
+    return {
+      kinds: [NDKKind.Text],
+      '#g': Array.from(geohashFilter),
+      limit: 100,
+    }
   }, [payload.bbox])
 
   const tagsFilter = useMemo(() => {
@@ -47,7 +51,7 @@ const MainPane = () => {
     const tags = new Set(
       payload.keyword.split(/\\s|,/).map((d) => d.trim().toLowerCase()),
     )
-    return { kinds: [NDKKind.Text], '#t': Array.from(tags) }
+    return { kinds: [NDKKind.Text], '#t': Array.from(tags), limit: 100 }
   }, [payload.keyword])
 
   const [geoData, geoError, geoStat] = usePromise(async () => {
@@ -80,6 +84,7 @@ const MainPane = () => {
   useEffect(() => {
     if (tagStat === 'pending' || geoStat === 'pending') return
     if (!tagData || !geoData) return
+    console.log('tagData', tagData)
     geoData.forEach((d) => {
       tagData.add(d)
     })
