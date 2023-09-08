@@ -14,7 +14,8 @@ import {
   NDKSubscriptionCacheUsage,
 } from '@nostr-dev-kit/ndk'
 import usePromise from 'react-use-promise'
-import { Draw } from '@mui/icons-material'
+import { Draw, LocationOn } from '@mui/icons-material'
+import pin from '@/public/pin.svg'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -140,6 +141,30 @@ const MainPane = () => {
     if (map.getSource('nostr-event')) {
       map.removeSource('nostr-event')
     }
+    const img = new Image()
+    img.onload = () => map.addImage('pin', img)
+    img.src = pin.src
+
+    console.log('pin', pin)
+
+    map.addSource('nostr-event', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+    })
+    map.addLayer({
+      id: 'nostr-event',
+      type: 'symbol',
+      source: 'nostr-event',
+      layout: {
+        'icon-image': 'pin',
+        'icon-size': 0.25,
+        'icon-offset': [0, -64],
+      },
+    })
+  }, [mapLoaded, map])
+
+  useEffect(() => {
+    if (!map) return
 
     const zoomBounds = new LngLatBounds()
     const features = events
@@ -150,6 +175,8 @@ const MainPane = () => {
         if (!geohashes[0]) return
         const { lat, lon } = Geohash.decode(geohashes[0][1])
         if (!lat || !lon) return
+        const userImage = event.author.profile?.image
+        console.log('userImage', userImage)
         const geojson = {
           type: 'Feature',
           geometry: { type: 'Point', coordinates: [lon, lat] },
@@ -161,6 +188,7 @@ const MainPane = () => {
             created_at: event.created_at,
             kind: event.kind,
             tags: event.tags,
+            userImage,
           },
         }
         zoomBounds.extend({ lon, lat })
@@ -182,24 +210,12 @@ const MainPane = () => {
     }
 
     try {
-      map?.addSource('nostr-event', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features },
+      ;(map.getSource('nostr-event') as any)?.setData({
+        type: 'FeatureCollection',
+        features,
       })
     } catch (err) {}
-
-    try {
-      map?.addLayer({
-        id: 'nostr-event',
-        type: 'circle',
-        source: 'nostr-event',
-        paint: {
-          'circle-color': '#ff0000',
-          'circle-radius': 12,
-        },
-      })
-    } catch (err) {}
-  }, [events, map, mapLoaded])
+  }, [events, map])
 
   const showEvents = useMemo(() => !!events?.length, [events])
   const handleClickPost = useCallback(() => {
