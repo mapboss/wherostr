@@ -13,6 +13,7 @@ import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import { FormatQuoteOutlined } from '@mui/icons-material'
+import NextLink from 'next/link'
 
 const youtubeRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
@@ -126,7 +127,7 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
                 underline="hover"
                 color="primary"
               >
-                #{npub}
+                {npub}
               </Link>
             )
         }
@@ -144,9 +145,11 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
       )
     case 'hashtag':
       return (
-        <Link href="#" underline="hover" color="secondary">
-          #{content}
-        </Link>
+        <NextLink href={`/?keyword=${content}`}>
+          <Link underline="hover" color="secondary" component="span">
+            #{content}
+          </Link>
+        </NextLink>
       )
     // case 'custom_emoji':
     //   return `custom_emoji: ${content}`
