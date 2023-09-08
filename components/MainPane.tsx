@@ -88,7 +88,6 @@ const MainPane = () => {
   useEffect(() => {
     if (tagStat === 'pending' || geoStat === 'pending') return
     if (!tagData || !geoData) return
-    console.log('tagData', tagData)
     geoData.forEach((d) => {
       tagData.add(d)
     })
@@ -145,8 +144,6 @@ const MainPane = () => {
     img.onload = () => map.addImage('pin', img)
     img.src = pin.src
 
-    console.log('pin', pin)
-
     map.addSource('nostr-event', {
       type: 'geojson',
       data: { type: 'FeatureCollection', features: [] },
@@ -176,7 +173,6 @@ const MainPane = () => {
         const { lat, lon } = Geohash.decode(geohashes[0][1])
         if (!lat || !lon) return
         const userImage = event.author.profile?.image
-        console.log('userImage', userImage)
         const geojson = {
           type: 'Feature',
           geometry: { type: 'Point', coordinates: [lon, lat] },

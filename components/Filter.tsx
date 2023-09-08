@@ -55,7 +55,6 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
     // const lon = Number(place.lon)
     // const g = geohash.encode(lat, lon, precision)
     const [y1, y2, x1, x2] = place.boundingbox.map((b: string) => Number(b))
-    console.log([x1, y1, x2, y2])
     const polygon = buffer(bboxPolygon([x1, y1, x2, y2]), 1, {
       units: 'kilometers',
     })
