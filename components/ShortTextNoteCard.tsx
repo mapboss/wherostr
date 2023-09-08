@@ -19,10 +19,10 @@ import usePromise from 'react-use-promise'
 
 const ShortTextNoteCard = ({
   event,
-  actionBar = true,
+  hideAction,
 }: {
   event: NDKEvent
-  actionBar?: boolean
+  hideAction?: boolean
 }) => {
   const { ndk } = useContext(NostrContext)
   const [user] = usePromise(async () => {
@@ -50,15 +50,17 @@ const ShortTextNoteCard = ({
               </Typography>
             </Box>
           )}
-          <IconButton className="!text-contrast-secondary" size="small">
-            <MoreHorizOutlined />
-          </IconButton>
+          {!hideAction && (
+            <IconButton size="small">
+              <MoreHorizOutlined />
+            </IconButton>
+          )}
         </Box>
       )}
       <Box className="flex">
         <CardContent className="flex-1 !pt-3 !pb-0 overflow-hidden">
           <TextNote event={event} />
-          {actionBar && (
+          {!hideAction && (
             <Box className="mt-2">
               <NoteActionBar event={event} />
             </Box>

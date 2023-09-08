@@ -34,8 +34,8 @@ export interface EventContextProps {
 
 export const EventContext = createContext<EventContextProps>({
   events: [],
-  setEvents: () => { },
-  setEventAction: () => { },
+  setEvents: () => {},
+  setEventAction: () => {},
 })
 
 export const EventContextProvider: FC<PropsWithChildren> = ({ children }) => {

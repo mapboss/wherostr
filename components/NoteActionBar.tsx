@@ -1,5 +1,5 @@
 'use client'
-import { Box, IconButton, Typography } from '@mui/material'
+import { Box, IconButton, Tooltip, Typography } from '@mui/material'
 import {
   CommentOutlined,
   ElectricBoltOutlined,
@@ -99,54 +99,52 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   return (
     <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-2">
       <Box className="flex flex-row gap-2 items-center">
-        <IconButton
-          className="flex !text-contrast-secondary"
-          size="small"
-          onClick={handleClickAction(EventActionType.React)}
-        >
-          <EmojiEmotionsOutlined />
-        </IconButton>
+        <Tooltip title="React">
+          <IconButton size="small">
+            <EmojiEmotionsOutlined />
+          </IconButton>
+        </Tooltip>
         <Typography variant="caption">{reactionAmount}</Typography>
       </Box>
       <Box className="flex flex-row gap-2 items-center">
-        <IconButton
-          className="flex !text-contrast-secondary"
-          size="small"
-          onClick={handleClickAction(EventActionType.Repost)}
-        >
-          <RepeatOutlined />
-        </IconButton>
+        <Tooltip title="Repost">
+          <IconButton
+            size="small"
+            onClick={handleClickAction(EventActionType.Repost)}
+          >
+            <RepeatOutlined />
+          </IconButton>
+        </Tooltip>
         <Typography variant="caption">{repostAmount}</Typography>
       </Box>
       <Box className="flex flex-row gap-2 items-center">
-        <IconButton
-          className="flex !text-contrast-secondary"
-          size="small"
-          onClick={handleClickAction(EventActionType.Quote)}
-        >
-          <FormatQuoteOutlined />
-        </IconButton>
+        <Tooltip title="Quote">
+          <IconButton
+            size="small"
+            onClick={handleClickAction(EventActionType.Quote)}
+          >
+            <FormatQuoteOutlined />
+          </IconButton>
+        </Tooltip>
         <Typography variant="caption">{quoteAmount}</Typography>
       </Box>
       <Box className="flex flex-row gap-2 items-center">
-        <IconButton
-          className="flex !text-contrast-secondary"
-          size="small"
-          onClick={handleClickAction(EventActionType.Comment)}
-        >
-          <CommentOutlined />
-        </IconButton>
+        <Tooltip title="Comment">
+          <IconButton
+            size="small"
+            onClick={handleClickAction(EventActionType.Comment)}
+          >
+            <CommentOutlined />
+          </IconButton>
+        </Tooltip>
         <Typography variant="caption">{commentAmount}</Typography>
       </Box>
       <Box className="flex flex-row gap-2 items-center">
-        <IconButton
-          className="flex"
-          color="primary"
-          size="small"
-          onClick={handleClickAction(EventActionType.Zap)}
-        >
-          <ElectricBoltOutlined />
-        </IconButton>
+        <Tooltip title="Zap">
+          <IconButton color="primary" size="small">
+            <ElectricBoltOutlined />
+          </IconButton>
+        </Tooltip>
         <Typography variant="caption">{zapAmount}</Typography>
       </Box>
     </Box>

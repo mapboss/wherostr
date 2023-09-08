@@ -12,6 +12,7 @@ import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
+import { FormatQuoteOutlined } from '@mui/icons-material'
 
 const youtubeRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
@@ -54,8 +55,12 @@ const QuotedEvent = ({ id }: { id: string }) => {
     }
   }, [ndk, id])
   return (
-    <Box className="my-2 border border-secondary-dark rounded-lg overflow-hidden">
-      {event && <ShortTextNoteCard event={event} actionBar={false} />}
+    <Box className="relative my-2 max-h-80 border-2 border-secondary-dark rounded-2xl overflow-hidden">
+      {event && <ShortTextNoteCard event={event} hideAction />}
+      <Box className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-[#000000] to-50%" />
+      <Box className="absolute right-0 bottom-0 border-t-2 border-l-2 border-secondary-dark p-2 rounded-tl-2xl text-contrast-secondary">
+        <FormatQuoteOutlined />
+      </Box>
     </Box>
   )
 }
@@ -65,19 +70,19 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
     case 'media':
       if (mimeType?.startsWith('image/')) {
         return (
-          <Box className="rounded-lg overflow-hidden">
+          <Box className="rounded-2xl overflow-hidden">
             <img className="object-contain w-full" src={content} />
           </Box>
         )
       } else if (mimeType?.startsWith('audio/')) {
         return (
-          <Box className="rounded-lg overflow-hidden">
+          <Box className="rounded-2xl overflow-hidden">
             <audio className="w-full" src={content} controls />
           </Box>
         )
       } else if (mimeType?.startsWith('video/')) {
         return (
-          <Box className="rounded-lg overflow-hidden">
+          <Box className="rounded-2xl overflow-hidden">
             <video className="w-full" src={content} controls />
           </Box>
         )
@@ -87,7 +92,7 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
       if (youtubeId) {
         return (
           <iframe
-            className="border-none rounded-lg overflow-hidden w-full aspect-video"
+            className="border-none rounded-2xl overflow-hidden w-full aspect-video"
             src={`https://www.youtube.com/embed/${youtubeId}`}
           />
         )
@@ -96,7 +101,7 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
       if (youtubePlaylistId) {
         return (
           <iframe
-            className="border-none rounded-lg overflow-hidden w-full aspect-video"
+            className="border-none rounded-2xl overflow-hidden w-full aspect-video"
             src={`https://www.youtube.com/embed?listType=playlist&list=${youtubePlaylistId}`}
           />
         )
