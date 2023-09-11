@@ -1,4 +1,3 @@
-import '@/app/globals.css'
 import type { Metadata } from 'next'
 import UserBar from '@/components/UserBar'
 import { EventContextProvider } from '@/contexts/EventContext'
