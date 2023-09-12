@@ -12,9 +12,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <DefaultTheme>
-          <NostrContextProvider>
-            <AccountContextProvider>{children}</AccountContextProvider>
-          </NostrContextProvider>
+          <NostrContextProvider>{children}</NostrContextProvider>
         </DefaultTheme>
       </body>
     </html>

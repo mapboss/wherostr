@@ -1,16 +1,11 @@
 'use client'
-import {
-  FC,
-  PropsWithChildren,
-  createContext,
-  useCallback,
-  useEffect,
-  useMemo,
-} from 'react'
+import { FC, PropsWithChildren, createContext, useMemo } from 'react'
 import NDK from '@nostr-dev-kit/ndk'
+import usePromise from 'react-use-promise'
 
 interface Nostr {
-  ndk?: NDK
+  ndk: NDK
+  connected: boolean
 }
 
 const ndk = new NDK({
@@ -20,20 +15,20 @@ const ndk = new NDK({
 })
 
 export const NostrContext = createContext<Nostr>({
-  ndk: undefined,
+  ndk,
+  connected: false,
 })
 
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const connect = useCallback(() => {
-    return ndk.connect()
+  const [connected = false, error, state] = usePromise(async () => {
+    await ndk.connect()
+    return true
   }, [])
-  useEffect(() => {
-    connect()
-  }, [connect])
   const value = useMemo((): Nostr => {
     return {
+      connected,
       ndk,
     }
-  }, [])
+  }, [connected])
   return <NostrContext.Provider value={value}>{children}</NostrContext.Provider>
 }
