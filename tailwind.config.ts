@@ -19,9 +19,9 @@ const config: Config = {
         dark: 'rgb(2, 104, 176)',
       },
       success: {
-        DEFAULT: 'rgb(0, 128, 131)',
-        light: 'rgb(51, 153, 155)',
-        dark: 'rgb(0, 89, 91)',
+        DEFAULT: 'rgb(0, 221, 131)',
+        light: 'rgb(51, 227, 155)',
+        dark: 'rgb(0, 154, 91)',
       },
       info: {
         DEFAULT: 'rgb(3, 149, 252)',

@@ -9,13 +9,14 @@ import {
   Paper,
   TextField,
 } from '@mui/material'
-import { useCallback, useContext, useEffect } from 'react'
+import { useCallback, useContext, useEffect, useMemo } from 'react'
 import {
-  CloseOutlined,
-  CommentOutlined,
-  FormatQuoteOutlined,
-  PlaceOutlined,
-  RepeatOutlined,
+  Close,
+  Comment,
+  ElectricBolt,
+  FormatQuote,
+  Place,
+  Repeat,
 } from '@mui/icons-material'
 import { NostrContext } from '@/contexts/NostrContext'
 import { AccountContext } from '@/contexts/AccountContext'
@@ -25,6 +26,10 @@ import { useForm } from 'react-hook-form'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import { NostrPrefix, createNostrLink, transformText } from '@snort/system'
+import numeral from 'numeral'
+import { requestProvider } from 'webln'
+
+const amountFormat = '0,0.[0]a'
 
 const CreateEventForm = ({
   type,
@@ -57,26 +62,26 @@ const CreateEventForm = ({
   const _handleSubmit = useCallback(
     async (data: any) => {
       const { content, geohash } = data
-      const event = new NDKEvent(ndk)
-      event.content = content
-      event.tags = []
+      const newEvent = new NDKEvent(ndk)
+      newEvent.content = content
+      newEvent.tags = []
       switch (type) {
         case EventActionType.Create:
-          event.kind = NDKKind.Text
+          newEvent.kind = NDKKind.Text
           break
         case EventActionType.Repost:
-          event.content = JSON.stringify(relatedEvents[0].rawEvent())
-          event.kind = NDKKind.Repost
+          newEvent.content = JSON.stringify(relatedEvents[0].rawEvent())
+          newEvent.kind = NDKKind.Repost
           break
         case EventActionType.Quote:
-          event.kind = NDKKind.Text
+          newEvent.kind = NDKKind.Text
           break
         case EventActionType.Comment:
-          event.kind = NDKKind.Text
+          newEvent.kind = NDKKind.Text
           break
       }
       if (type === EventActionType.Quote && relatedEvents.length > 0) {
-        event.content = `${event.content}\n${relatedEvents
+        newEvent.content = `${newEvent.content}\n${relatedEvents
           .map(
             ({ id, relay }) =>
               `nostr:${createNostrLink(
@@ -87,7 +92,7 @@ const CreateEventForm = ({
           )
           .join('\n')}`
       }
-      event.tags = event.tags.concat(
+      newEvent.tags = newEvent.tags.concat(
         relatedEvents.map(({ id, relay }) => [
           'e',
           id,
@@ -104,10 +109,10 @@ const CreateEventForm = ({
       if (geohash) {
         const length = geohash.length
         for (let i = 1; i <= length; i++) {
-          event.tags.push(['g', geohash.substring(0, i)])
+          newEvent.tags.push(['g', geohash.substring(0, i)])
         }
       }
-      await event.publish()
+      await newEvent.publish()
       setEventAction(undefined)
     },
     [ndk, relatedEvents, setEventAction, type],
@@ -115,11 +120,11 @@ const CreateEventForm = ({
   const renderActionTypeIcon = useCallback(() => {
     switch (type) {
       case EventActionType.Repost:
-        return <RepeatOutlined />
+        return <Repeat />
       case EventActionType.Quote:
-        return <FormatQuoteOutlined />
+        return <FormatQuote />
       case EventActionType.Comment:
-        return <CommentOutlined />
+        return <Comment />
       default:
         return undefined
     }
@@ -146,7 +151,7 @@ const CreateEventForm = ({
                 readOnly: true,
                 startAdornment: (
                   <InputAdornment position="start">
-                    <PlaceOutlined />
+                    <Place />
                   </InputAdornment>
                 ),
                 endAdornment: geohashValue && (
@@ -154,7 +159,7 @@ const CreateEventForm = ({
                     size="small"
                     onClick={handleClickClear('geohash')}
                   >
-                    <CloseOutlined />
+                    <Close />
                   </IconButton>
                 ),
               }}
@@ -167,16 +172,120 @@ const CreateEventForm = ({
             key={index}
             className="relative max-h-80 border-2 border-secondary-dark rounded-2xl overflow-hidden"
           >
-            <ShortTextNoteCard event={item} hideAction />
-            <Box className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-[#000000] to-50%" />
+            <ShortTextNoteCard
+              event={item}
+              action={false}
+              relatedNoteVariant="link"
+            />
+            <Box className="absolute top-0 left-0 w-full h-full min-h-[320px] bg-gradient-to-t from-[#000000] to-50%" />
             <Box className="absolute right-0 bottom-0 border-t-2 border-l-2 border-secondary-dark p-2 rounded-tl-2xl text-contrast-secondary">
               {renderActionTypeIcon()}
             </Box>
           </Box>
         ))}
         <Box className="flex justify-end">
-          <Button variant="contained" size="small" type="submit">
+          <Button variant="contained" type="submit">
             {type === EventActionType.Repost ? 'Repost' : 'Post'}
+          </Button>
+        </Box>
+      </Box>
+    </form>
+  )
+}
+
+const ZapEventForm = ({ event }: { event: NDKEvent }) => {
+  const { setEventAction } = useContext(EventContext)
+  const { register, handleSubmit, setValue, watch } = useForm()
+  const _amountValue = watch('amount')
+  const _handleSubmit = useCallback(
+    async (data: any) => {
+      const { amount, comment } = data
+      const pr = await event.zap(amount * 1000, comment || undefined)
+      if (pr) {
+        await (await requestProvider()).sendPayment(pr)
+        alert('Zapped')
+        setEventAction(undefined)
+      }
+    },
+    [event, setEventAction],
+  )
+  const amountValue = useMemo(
+    () => (_amountValue ? numeral(_amountValue).format(amountFormat) : '?'),
+    [_amountValue],
+  )
+  const amountOptions = useMemo(
+    () => [50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
+    [],
+  )
+  const handleClickAmount = useCallback(
+    (amount: Number) => () => {
+      setValue('amount', amount)
+    },
+    [setValue],
+  )
+  return (
+    <form onSubmit={handleSubmit(_handleSubmit)}>
+      <Box className="mt-3 grid gap-3 grid-cols-1">
+        <Box className="relative max-h-80 border-2 border-secondary-dark rounded-2xl overflow-hidden">
+          <ShortTextNoteCard
+            event={event}
+            action={false}
+            relatedNoteVariant="link"
+          />
+          <Box className="absolute top-0 left-0 w-full h-full min-h-[320px] bg-gradient-to-t from-[#000000] to-50%" />
+          <Box className="absolute right-0 bottom-0 border-t-2 border-l-2 border-secondary-dark p-2 rounded-tl-2xl text-primary">
+            <ElectricBolt />
+          </Box>
+        </Box>
+        <TextField
+          placeholder="Comment"
+          variant="outlined"
+          fullWidth
+          {...register('comment')}
+        />
+        <Box className="flex gap-2 flex-wrap justify-center">
+          {amountOptions.map((amount, index) => (
+            <Button
+              key={index}
+              color="secondary"
+              variant="outlined"
+              startIcon={<ElectricBolt className="!text-primary" />}
+              onClick={handleClickAmount(amount)}
+            >
+              {numeral(amount).format(amountFormat)}
+            </Button>
+          ))}
+        </Box>
+        <TextField
+          placeholder="Amount"
+          variant="outlined"
+          type="number"
+          fullWidth
+          required
+          InputProps={{
+            startAdornment: (
+              <InputAdornment className="!text-primary" position="start">
+                <ElectricBolt />
+              </InputAdornment>
+            ),
+            endAdornment: <InputAdornment position="end">sats</InputAdornment>,
+            inputProps: {
+              min: 1,
+            },
+          }}
+          {...register('amount', {
+            required: true,
+            valueAsNumber: true,
+            min: 1,
+          })}
+        />
+        <Box className="flex justify-end">
+          <Button
+            variant="contained"
+            type="submit"
+            startIcon={<ElectricBolt />}
+          >
+            {`Zap ${amountValue} sats`}
           </Button>
         </Box>
       </Box>
@@ -203,6 +312,10 @@ const EventActionModal = () => {
             relatedEvents={event ? [event] : undefined}
           />
         )
+      case EventActionType.Zap:
+        if (event) {
+          return <ZapEventForm event={event} />
+        }
       default:
         return undefined
     }
@@ -214,7 +327,7 @@ const EventActionModal = () => {
           <Box className="flex justify-between items-center">
             <ProfileChip user={user} />
             <IconButton size="small" onClick={handleClickCloseModal}>
-              <CloseOutlined />
+              <Close />
             </IconButton>
           </Box>
           <Box>{renderAction()}</Box>

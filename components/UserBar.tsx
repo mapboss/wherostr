@@ -31,7 +31,7 @@ const UserBar = () => {
         </Box>
       ) : (
         <Button
-          className="background-gradient !rounded-full"
+          className="background-gradient"
           variant="contained"
           onClick={handleClickSignIn}
           endIcon={<Login />}

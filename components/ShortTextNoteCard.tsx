@@ -12,17 +12,19 @@ import {
   Typography,
 } from '@mui/material'
 import { useContext, useMemo } from 'react'
-import { MoreHorizOutlined } from '@mui/icons-material'
+import { MoreVert } from '@mui/icons-material'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
 
 const ShortTextNoteCard = ({
   event,
-  hideAction,
+  action = true,
+  relatedNoteVariant = 'fraction',
 }: {
   event: NDKEvent
-  hideAction?: boolean
+  action?: boolean
+  relatedNoteVariant?: 'full' | 'fraction' | 'link'
 }) => {
   const { ndk } = useContext(NostrContext)
   const [user] = usePromise(async () => {
@@ -50,17 +52,17 @@ const ShortTextNoteCard = ({
               </Typography>
             </Box>
           )}
-          {!hideAction && (
+          {action && (
             <IconButton size="small">
-              <MoreHorizOutlined />
+              <MoreVert />
             </IconButton>
           )}
         </Box>
       )}
       <Box className="flex">
         <CardContent className="flex-1 !pt-3 !pb-0 overflow-hidden">
-          <TextNote event={event} />
-          {!hideAction && (
+          <TextNote event={event} relatedNoteVariant={relatedNoteVariant} />
+          {action && (
             <Box className="mt-2">
               <NoteActionBar event={event} />
             </Box>

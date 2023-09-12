@@ -22,6 +22,7 @@
 
 .MuiButton-root {
   text-transform: none !important;
+  border-radius: 9999px !important;
 }
 
 .MuiOutlinedInput-root {

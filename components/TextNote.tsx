@@ -12,7 +12,7 @@ import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
-import { FormatQuoteOutlined } from '@mui/icons-material'
+import { FormatQuote } from '@mui/icons-material'
 import NextLink from 'next/link'
 
 const youtubeRegExp =
@@ -48,7 +48,13 @@ const UserMentionLink = ({ id }: { id: string }) => {
   )
 }
 
-const QuotedEvent = ({ id }: { id: string }) => {
+const QuotedEvent = ({
+  id,
+  relatedNoteVariant,
+}: {
+  id: string
+  relatedNoteVariant: 'full' | 'fraction'
+}) => {
   const { ndk } = useContext(NostrContext)
   const [event] = usePromise(async () => {
     if (ndk && id) {
@@ -56,17 +62,32 @@ const QuotedEvent = ({ id }: { id: string }) => {
     }
   }, [ndk, id])
   return (
-    <Box className="relative my-2 max-h-80 border-2 border-secondary-dark rounded-2xl overflow-hidden">
-      {event && <ShortTextNoteCard event={event} hideAction />}
-      <Box className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-[#000000] to-50%" />
+    <Box
+      className={`relative my-2 border-2 border-secondary-dark rounded-2xl overflow-hidden${
+        relatedNoteVariant === 'fraction' ? ' max-h-80' : ''
+      }`}
+    >
+      {event && (
+        <ShortTextNoteCard
+          event={event}
+          action={false}
+          relatedNoteVariant="link"
+        />
+      )}
+      {relatedNoteVariant === 'fraction' && (
+        <Box className="absolute top-0 left-0 w-full h-full min-h-[320px] bg-gradient-to-t from-[#000000] to-50%" />
+      )}
       <Box className="absolute right-0 bottom-0 border-t-2 border-l-2 border-secondary-dark p-2 rounded-tl-2xl text-contrast-secondary">
-        <FormatQuoteOutlined />
+        <FormatQuote />
       </Box>
     </Box>
   )
 }
 
-const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
+const renderChunk = (
+  { type, content, mimeType }: ParsedFragment,
+  { relatedNoteVariant }: { relatedNoteVariant: 'full' | 'fraction' | 'link' },
+) => {
   switch (type) {
     case 'media':
       if (mimeType?.startsWith('image/')) {
@@ -116,18 +137,26 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
           case NostrPrefix.Profile:
             return <UserMentionLink id={nostrLink.id} />
           case NostrPrefix.Event:
-            return <QuotedEvent id={nostrLink.id} />
+            if (relatedNoteVariant !== 'link') {
+              return (
+                <QuotedEvent
+                  id={nostrLink.id}
+                  relatedNoteVariant={relatedNoteVariant}
+                />
+              )
+            }
           case NostrPrefix.Note:
           case NostrPrefix.Address:
             return (
               <Link
+                className="block text-ellipsis whitespace-nowrap overflow-hidden"
                 href={npub}
                 target="_blank"
                 component="a"
                 underline="hover"
-                color="primary"
+                color="secondary"
               >
-                {npub}
+                {content}
               </Link>
             )
         }
@@ -165,7 +194,13 @@ const renderChunk = ({ type, content, mimeType }: ParsedFragment) => {
   }
 }
 
-const Content = ({ event }: { event: NDKEvent }) => {
+const TextNote = ({
+  event,
+  relatedNoteVariant = 'fraction',
+}: {
+  event: NDKEvent
+  relatedNoteVariant?: 'full' | 'fraction' | 'link'
+}) => {
   const chunks = useMemo(() => {
     return transformText(event.content, event.tags)
   }, [event])
@@ -176,10 +211,14 @@ const Content = ({ event }: { event: NDKEvent }) => {
       component="div"
     >
       {chunks.map((chunk, index) => (
-        <Fragment key={index}>{renderChunk(chunk)}</Fragment>
+        <Fragment key={index}>
+          {renderChunk(chunk, {
+            relatedNoteVariant,
+          })}
+        </Fragment>
       ))}
     </Typography>
   )
 }
 
-export default Content
+export default TextNote

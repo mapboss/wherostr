@@ -8,7 +8,7 @@ import {
 } from '@mui/material'
 import { FC, useEffect } from 'react'
 import axios, { AxiosResponse } from 'axios'
-import { SearchOutlined } from '@mui/icons-material'
+import { Search } from '@mui/icons-material'
 import usePromise from 'react-use-promise'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import bbox from '@turf/bbox'
@@ -98,7 +98,7 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
                 <CircularProgress color="inherit" size={20} />
               ) : null}
               <IconButton>
-                <SearchOutlined />
+                <Search />
               </IconButton>
             </InputAdornment>
           ),
