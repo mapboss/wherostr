@@ -8,6 +8,7 @@ import {
   InputAdornment,
   Paper,
   TextField,
+  Typography,
 } from '@mui/material'
 import { useCallback, useContext, useEffect, useMemo } from 'react'
 import {
@@ -25,9 +26,15 @@ import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { useForm } from 'react-hook-form'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
-import { NostrPrefix, createNostrLink, transformText } from '@snort/system'
+import {
+  NostrPrefix,
+  createNostrLink,
+  transformText,
+  tryParseNostrLink,
+} from '@snort/system'
 import numeral from 'numeral'
 import { requestProvider } from 'webln'
+import usePromise from 'react-use-promise'
 
 const amountFormat = '0,0.[0]a'
 
@@ -293,6 +300,75 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
   )
 }
 
+const ShortTextNotePane = ({
+  event,
+  reposts = false,
+  quotes = false,
+  comments = false,
+}: {
+  event: NDKEvent
+  reposts: boolean
+  quotes: boolean
+  comments: boolean
+}) => {
+  const { ndk } = useContext(NostrContext)
+  const [relatedEvents] = usePromise(async () => {
+    if (ndk && event) {
+      const [repostEvents, quoteAndCommentEvents] = await Promise.all([
+        reposts
+          ? Array.from(
+              await ndk.fetchEvents({
+                kinds: [NDKKind.Repost],
+                '#e': [event.id],
+              }),
+            )
+          : [],
+        quotes || comments
+          ? Array.from(
+              await ndk.fetchEvents({
+                kinds: [NDKKind.Text],
+                '#e': [event.id],
+              }),
+            )
+          : [],
+      ])
+      const _quotes: NDKEvent[] = []
+      const _comments: NDKEvent[] = []
+      quoteAndCommentEvents.forEach((item) => {
+        const { content, tags } = item
+        const linkFound =
+          transformText(content, tags).filter(
+            ({ type, content }) =>
+              type === 'link' &&
+              content.startsWith('nostr:nevent1') &&
+              tryParseNostrLink(content)?.id === event.id,
+          ).length > 0
+        if (quotes && linkFound) {
+          _quotes.push(item)
+        } else if (comments && !linkFound) {
+          _comments.push(item)
+        }
+      })
+      return [...repostEvents, ..._quotes, ..._comments]
+    }
+  }, [ndk, event, reposts, quotes, comments])
+  const relatedEventElements = useMemo(
+    () =>
+      relatedEvents?.map((item) => (
+        <ShortTextNoteCard key={item.id} event={item} />
+      )),
+    [relatedEvents],
+  )
+  return (
+    <Box>
+      <ShortTextNoteCard event={event} />
+      <Box className="ml-4 border-l border-[rgba(255,255,255,0.12)]">
+        {relatedEventElements}
+      </Box>
+    </Box>
+  )
+}
+
 const EventActionModal = () => {
   const { user } = useContext(AccountContext)
   const { eventAction, setEventAction } = useContext(EventContext)
@@ -313,24 +389,86 @@ const EventActionModal = () => {
           />
         )
       case EventActionType.Zap:
-        if (event) {
-          return <ZapEventForm event={event} />
-        }
+        return event && <ZapEventForm event={event} />
+      case EventActionType.View:
+        return (
+          event && (
+            <ShortTextNotePane
+              event={event}
+              {...(eventAction?.options || {})}
+            />
+          )
+        )
       default:
         return undefined
     }
   }, [eventAction])
+  const title = useMemo(() => {
+    if (eventAction?.type === EventActionType.View) {
+      if (
+        [
+          eventAction.options?.reposts,
+          eventAction.options?.quotes,
+          eventAction.options?.comments,
+        ].filter((item) => !!item).length === 1
+      ) {
+        if (eventAction.options?.reposts) {
+          return (
+            <>
+              <Repeat className="mr-2" />
+              Reposts
+            </>
+          )
+        } else if (eventAction.options?.quotes) {
+          return (
+            <>
+              <FormatQuote className="mr-2" />
+              Quotes
+            </>
+          )
+        } else if (eventAction.options?.comments) {
+          return (
+            <>
+              <Comment className="mr-2" />
+              Comments
+            </>
+          )
+        }
+      } else {
+        return [
+          eventAction.options?.reposts && 'Reposts',
+          eventAction.options?.quotes && 'Quotes',
+          eventAction.options?.comments && 'Comments',
+        ]
+          .filter((item) => !!item)
+          .join(', ')
+      }
+    }
+  }, [eventAction])
   return (
-    user && (
+    user &&
+    eventAction && (
       <Box className="max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
-        <Paper className="w-full overflow-y-auto py-3 px-4 !rounded-2xl">
-          <Box className="flex justify-between items-center">
-            <ProfileChip user={user} />
+        <Paper className="w-full overflow-y-auto pt-3 !rounded-2xl">
+          <Box className="flex justify-between items-center px-4">
+            {eventAction.type === EventActionType.View ? (
+              <Typography variant="body1">{title}</Typography>
+            ) : (
+              <ProfileChip user={user} />
+            )}
             <IconButton size="small" onClick={handleClickCloseModal}>
               <Close />
             </IconButton>
           </Box>
-          <Box>{renderAction()}</Box>
+          <Box
+            className={
+              eventAction.type !== EventActionType.View
+                ? 'pb-3 px-4'
+                : undefined
+            }
+          >
+            {renderAction()}
+          </Box>
         </Paper>
       </Box>
     )

@@ -1,5 +1,5 @@
 'use client'
-import { useContext, useMemo } from 'react'
+import { useCallback, useContext, useMemo } from 'react'
 import {
   NostrPrefix,
   ParsedFragment,
@@ -14,6 +14,7 @@ import usePromise from 'react-use-promise'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import { FormatQuote } from '@mui/icons-material'
 import NextLink from 'next/link'
+import { EventActionType, EventContext } from '@/contexts/EventContext'
 
 const youtubeRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
@@ -56,16 +57,30 @@ const QuotedEvent = ({
   relatedNoteVariant: 'full' | 'fraction'
 }) => {
   const { ndk } = useContext(NostrContext)
+  const { setEventAction } = useContext(EventContext)
   const [event] = usePromise(async () => {
     if (ndk && id) {
       return await ndk.fetchEvent(id)
     }
   }, [ndk, id])
+  const handleClickNote = useCallback(() => {
+    if (event) {
+      setEventAction({
+        type: EventActionType.View,
+        event,
+        options: {
+          quotes: true,
+          comments: true,
+        },
+      })
+    }
+  }, [event, setEventAction])
   return (
     <Box
-      className={`relative my-2 border-2 border-secondary-dark rounded-2xl overflow-hidden${
+      className={`relative my-2 border-2 border-secondary-dark rounded-2xl overflow-hidden cursor-pointer${
         relatedNoteVariant === 'fraction' ? ' max-h-80' : ''
       }`}
+      onClick={handleClickNote}
     >
       {event && (
         <ShortTextNoteCard

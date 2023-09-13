@@ -18,11 +18,13 @@ export enum EventActionType {
   Comment = 4,
   React = 5,
   Zap = 6,
+  View = 7,
 }
 
 export interface EventAction {
   type: EventActionType
   event?: NDKEvent
+  options?: any
 }
 
 export interface EventContextProps {

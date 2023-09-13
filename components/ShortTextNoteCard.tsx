@@ -11,11 +11,13 @@ import {
   IconButton,
   Typography,
 } from '@mui/material'
-import { useContext, useMemo } from 'react'
-import { MoreVert } from '@mui/icons-material'
-import { NDKEvent } from '@nostr-dev-kit/ndk'
+import { useCallback, useContext, useMemo } from 'react'
+import { ArrowRightAlt, MoreVert } from '@mui/icons-material'
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
+import { EventExt } from '@snort/system'
+import { EventActionType, EventContext } from '@/contexts/EventContext'
 
 const ShortTextNoteCard = ({
   event,
@@ -40,16 +42,47 @@ const ShortTextNoteCard = ({
     () => (event.created_at ? new Date(event.created_at * 1000) : undefined),
     [event],
   )
+  const rootNote = useMemo(
+    () => event && EventExt.extractThread(event as any)?.root,
+    [event],
+  )
+  const { setEventAction } = useContext(EventContext)
+  const handleClickRootNote = useCallback(async () => {
+    if (ndk && rootNote?.value) {
+      const rootEvent = await ndk.fetchEvent(rootNote.value)
+      if (rootEvent) {
+        setEventAction({
+          type: EventActionType.View,
+          event: rootEvent,
+          options: {
+            quotes: true,
+            comments: true,
+          },
+        })
+      }
+    }
+  }, [ndk, rootNote, setEventAction])
   return (
     <Card className="!rounded-none">
       {user && (
         <Box className="px-4 pt-3 flex items-center gap-2 text-contrast-secondary">
           <ProfileChip user={user} />
           {createdDate && (
-            <Box className="grow flex justify-end shrink-0">
+            <Box className="grow flex flex-col items-end shrink-0">
               <Typography variant="caption">
                 <TimeFromNow date={createdDate} />
               </Typography>
+              {rootNote && (
+                <Typography
+                  className="cursor-pointer"
+                  variant="caption"
+                  color="secondary"
+                  onClick={handleClickRootNote}
+                >
+                  <ArrowRightAlt className="mr-1" fontSize="small" />
+                  from note
+                </Typography>
+              )}
             </Box>
           )}
           {action && (
@@ -59,16 +92,18 @@ const ShortTextNoteCard = ({
           )}
         </Box>
       )}
-      <Box className="flex">
-        <CardContent className="flex-1 !pt-3 !pb-0 overflow-hidden">
-          <TextNote event={event} relatedNoteVariant={relatedNoteVariant} />
-          {action && (
-            <Box className="mt-2">
-              <NoteActionBar event={event} />
-            </Box>
-          )}
-        </CardContent>
-      </Box>
+      {event.kind === NDKKind.Text && (
+        <Box className="flex">
+          <CardContent className="flex-1 !pt-3 !pb-0 overflow-hidden">
+            <TextNote event={event} relatedNoteVariant={relatedNoteVariant} />
+            {action && (
+              <Box className="mt-2">
+                <NoteActionBar event={event} />
+              </Box>
+            )}
+          </CardContent>
+        </Box>
+      )}
       <Divider className="!mt-3" />
     </Card>
   )

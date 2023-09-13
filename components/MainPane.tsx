@@ -220,10 +220,10 @@ const MainPane = () => {
     })
   }, [setEventAction])
 
-  const eventElemets = useMemo(
+  const eventElements = useMemo(
     () =>
       events
-        ? events.map((event, i) => (
+        ? events.map((event) => (
             <ShortTextNoteCard key={event.id} event={event} />
           ))
         : null,
@@ -251,7 +251,7 @@ const MainPane = () => {
         </Tooltip>
       </Box>
       <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
-      {showEvents && <Box className="overflow-y-auto">{eventElemets}</Box>}
+      {showEvents && <Box className="overflow-y-auto">{eventElements}</Box>}
       {eventAction && (
         <Box className="absolute left-0 top-0 w-[640px] h-full p-8 backdrop-blur">
           <EventActionModal />

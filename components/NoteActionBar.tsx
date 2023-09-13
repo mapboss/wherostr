@@ -1,5 +1,5 @@
 'use client'
-import { Box, IconButton, Tooltip, Typography } from '@mui/material'
+import { Box, IconButton, Link, Tooltip, Typography } from '@mui/material'
 import {
   Comment,
   ElectricBolt,
@@ -28,18 +28,19 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   })
   usePromise(async () => {
     if (ndk && event) {
-      let [reactedEvent, relatedEventSet] = await Promise.all([
+      let [reactedEvent, relatedEvents] = await Promise.all([
         ndk.fetchEvent({
           authors: [event.pubkey],
           kinds: [NDKKind.Reaction],
           '#e': [event.id],
         }),
-        ndk.fetchEvents({
-          kinds: [NDKKind.Reaction],
-          '#e': [event.id],
-        }),
+        Array.from(
+          await ndk.fetchEvents({
+            kinds: [NDKKind.Reaction],
+            '#e': [event.id],
+          }),
+        ),
       ])
-      const relatedEvents = Array.from(relatedEventSet)
       setReacted(
         reactedEvent?.content === '+'
           ? '+'
@@ -65,19 +66,31 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     },
   ] = usePromise(async () => {
     if (ndk && event) {
-      const relatedEvents = Array.from(
-        await ndk.fetchEvents({
-          kinds: [NDKKind.Text, NDKKind.Repost, NDKKind.Zap],
-          '#e': [event.id],
-        }),
-      )
+      const [repostEvents, quoteAndCommentEvents, zapEvents] =
+        await Promise.all([
+          Array.from(
+            await ndk.fetchEvents({
+              kinds: [NDKKind.Repost],
+              '#e': [event.id],
+            }),
+          ),
+          Array.from(
+            await ndk.fetchEvents({
+              kinds: [NDKKind.Text],
+              '#e': [event.id],
+            }),
+          ),
+          Array.from(
+            await ndk.fetchEvents({
+              kinds: [NDKKind.Zap],
+              '#e': [event.id],
+            }),
+          ),
+        ])
       const quotes: NDKEvent[] = []
       const comments: NDKEvent[] = []
-      relatedEvents.forEach((item) => {
-        const { kind, content, tags } = item
-        if (kind !== NDKKind.Text) {
-          return
-        }
+      quoteAndCommentEvents.forEach((item) => {
+        const { content, tags } = item
         if (
           transformText(content, tags).filter(
             ({ type, content }) =>
@@ -92,12 +105,12 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         }
       })
       return {
-        reposts: relatedEvents.filter(({ kind }) => kind === NDKKind.Repost),
+        reposts: repostEvents,
         quotes,
         comments,
-        zaps: relatedEvents
-          .filter(({ kind }) => kind === NDKKind.Zap)
-          .map((item) => zapInvoiceFromEvent(item) || { amount: 0 }),
+        zaps: zapEvents.map(
+          (item) => zapInvoiceFromEvent(item) || { amount: 0 },
+        ),
       }
     }
   }, [ndk, event])
@@ -130,10 +143,11 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     [event, ndk, liked, disliked],
   )
   const handleClickAction = useCallback(
-    (type: EventActionType) => () => {
+    (type: EventActionType, options?: any) => () => {
       setEventAction({
         type,
         event,
+        options,
       })
     },
     [event, setEventAction],
@@ -174,7 +188,14 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
             <Repeat />
           </IconButton>
         </Tooltip>
-        <Typography variant="caption">{repostAmount}</Typography>
+        <Link
+          className="!text-contrast-secondary cursor-pointer"
+          underline="hover"
+          component="span"
+          onClick={handleClickAction(EventActionType.View, { reposts: true })}
+        >
+          <Typography variant="caption">{repostAmount}</Typography>
+        </Link>
       </Box>
       <Box className="flex flex-row gap-2 items-center">
         <Tooltip title="Quote">
@@ -185,7 +206,14 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
             <FormatQuote />
           </IconButton>
         </Tooltip>
-        <Typography variant="caption">{quoteAmount}</Typography>
+        <Link
+          className="!text-contrast-secondary cursor-pointer"
+          underline="hover"
+          component="span"
+          onClick={handleClickAction(EventActionType.View, { quotes: true })}
+        >
+          <Typography variant="caption">{quoteAmount}</Typography>
+        </Link>
       </Box>
       <Box className="flex flex-row gap-2 items-center">
         <Tooltip title="Comment">
@@ -196,7 +224,14 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
             <Comment />
           </IconButton>
         </Tooltip>
-        <Typography variant="caption">{commentAmount}</Typography>
+        <Link
+          className="!text-contrast-secondary cursor-pointer"
+          underline="hover"
+          component="span"
+          onClick={handleClickAction(EventActionType.View, { comments: true })}
+        >
+          <Typography variant="caption">{commentAmount}</Typography>
+        </Link>
       </Box>
       <Box className="flex flex-row gap-2 items-center">
         <Tooltip title="Zap">
