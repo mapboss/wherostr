@@ -42,14 +42,16 @@ const ShortTextNoteCard = ({
     () => (event.created_at ? new Date(event.created_at * 1000) : undefined),
     [event],
   )
-  const rootNote = useMemo(
-    () => event && EventExt.extractThread(event as any)?.root,
-    [event],
-  )
+  const fromNote = useMemo(() => {
+    if (event) {
+      const thread = EventExt.extractThread(event as any)
+      return thread?.root || thread?.replyTo
+    }
+  }, [event])
   const { setEventAction } = useContext(EventContext)
   const handleClickRootNote = useCallback(async () => {
-    if (ndk && rootNote?.value) {
-      const rootEvent = await ndk.fetchEvent(rootNote.value)
+    if (ndk && fromNote?.value) {
+      const rootEvent = await ndk.fetchEvent(fromNote.value)
       if (rootEvent) {
         setEventAction({
           type: EventActionType.View,
@@ -61,7 +63,7 @@ const ShortTextNoteCard = ({
         })
       }
     }
-  }, [ndk, rootNote, setEventAction])
+  }, [ndk, fromNote, setEventAction])
   return (
     <Card className="!rounded-none">
       {user && (
@@ -72,7 +74,7 @@ const ShortTextNoteCard = ({
               <Typography variant="caption">
                 <TimeFromNow date={createdDate} />
               </Typography>
-              {rootNote && (
+              {fromNote && (
                 <Typography
                   className="cursor-pointer"
                   variant="caption"
