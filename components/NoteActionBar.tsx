@@ -15,11 +15,13 @@ import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
 import numeral from 'numeral'
 import { transformText, tryParseNostrLink } from '@snort/system'
+import { AccountContext } from '@/contexts/AccountContext'
 
 const amountFormat = '0,0.[0]a'
 
 const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   const { ndk } = useContext(NostrContext)
+  const { user } = useContext(AccountContext)
   const { setEventAction } = useContext(EventContext)
   const [reacted, setReacted] = useState<'+' | '-' | undefined>()
   const [{ liked, disliked }, setReaction] = useState({
@@ -27,10 +29,10 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     disliked: 0,
   })
   usePromise(async () => {
-    if (ndk && event) {
+    if (ndk && user && event) {
       let [reactedEvent, relatedEvents] = await Promise.all([
         ndk.fetchEvent({
-          authors: [event.pubkey],
+          authors: [user.hexpubkey],
           kinds: [NDKKind.Reaction],
           '#e': [event.id],
         }),
@@ -53,7 +55,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         disliked: relatedEvents.filter(({ content }) => content === '-').length,
       })
     }
-  }, [ndk, event])
+  }, [ndk, user, event])
   const reactionPercentage = useMemo(() => {
     return liked ? `${((liked / (liked + disliked)) * 100).toFixed(0)}%` : '-'
   }, [liked, disliked])
