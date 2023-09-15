@@ -6,7 +6,7 @@ import {
   Box,
   TextField,
 } from '@mui/material'
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useState } from 'react'
 import axios, { AxiosResponse } from 'axios'
 import { Search } from '@mui/icons-material'
 import usePromise from 'react-use-promise'
@@ -42,14 +42,19 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const keyword = searchParams.get('keyword')
+  const querySearch = searchParams.get('keyword') || ''
+  const [keyword, setKeyword] = useState<string>(querySearch)
+
+  useEffect(() => {
+    setKeyword(querySearch)
+  }, [querySearch])
 
   const [data, error, state] = usePromise<SearchPayload>(async () => {
-    if (!keyword) return {}
-    const result = await search(keyword)
+    if (!querySearch) return {}
+    const result = await search(querySearch)
     const place = result?.[0]
     if (!place?.boundingbox) {
-      return { keyword, places: [] }
+      return { keyword: querySearch, places: [] }
     }
     // const lat = Number(place.lat)
     // const lon = Number(place.lon)
@@ -61,11 +66,12 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
     const bounds = bbox(polygon)
     return {
       bbox: bounds as SearchPayload['bbox'],
-      keyword,
+      keyword: querySearch,
+      places: result,
       // geohash: g,
       // places: data,
     }
-  }, [keyword])
+  }, [querySearch])
 
   useEffect(() => {
     if (state !== 'resolved' || !data.keyword) return
@@ -84,7 +90,8 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
     >
       <TextField
         fullWidth
-        defaultValue={keyword}
+        value={keyword}
+        onChange={(evt) => setKeyword(evt.target.value)}
         name="search"
         size="small"
         margin="dense"
