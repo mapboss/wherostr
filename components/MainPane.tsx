@@ -12,6 +12,7 @@ import {
   NDKEvent,
   NDKKind,
   NDKSubscriptionCacheUsage,
+  NostrEvent,
 } from '@nostr-dev-kit/ndk'
 import usePromise from 'react-use-promise'
 import { Draw, LocationOn } from '@mui/icons-material'
@@ -91,7 +92,17 @@ const MainPane = () => {
     geoData.forEach((d) => {
       tagData.add(d)
     })
-    setEvents(Array.from(tagData).sort(handleSortDescending))
+    let ids = new Set<string>()
+    setEvents(
+      Array.from(tagData)
+        .filter((item) => {
+          if (!ids.has(item.id)) {
+            ids.add(item.id)
+            return true
+          }
+        })
+        .sort(handleSortDescending),
+    )
   }, [geoData, tagData, tagStat, geoStat, setEvents])
 
   const mouseEnterHandler = useCallback((ev: maplibregl.MapMouseEvent) => {
@@ -110,9 +121,20 @@ const MainPane = () => {
         features?: maplibregl.MapGeoJSONFeature[] | undefined
       } & Object,
     ) => {
-      console.log('ev.features', ev.features)
+      const feat = ev?.features?.[0]?.properties as NostrEvent
+      const event = events.find((ev) => ev.id === feat.id)
+      if (!event) return
+      setEventAction({
+        type: EventActionType.View,
+        event,
+        options: {
+          quotes: true,
+          comments: true,
+          reposts: true,
+        },
+      })
     },
-    [],
+    [events, setEventAction],
   )
 
   useEffect(() => {
@@ -172,20 +194,12 @@ const MainPane = () => {
         if (!geohashes[0]) return
         const { lat, lon } = Geohash.decode(geohashes[0][1])
         if (!lat || !lon) return
-        const userImage = event.author.profile?.image
+        const nostrEvent = event.rawEvent()
         const geojson = {
           type: 'Feature',
           geometry: { type: 'Point', coordinates: [lon, lat] },
           id: event.id,
-          properties: {
-            id: event.id,
-            content: event.content,
-            author: event.pubkey,
-            created_at: event.created_at,
-            kind: event.kind,
-            tags: event.tags,
-            userImage,
-          },
+          properties: nostrEvent,
         }
         zoomBounds.extend({ lon, lat })
         return geojson
@@ -193,12 +207,11 @@ const MainPane = () => {
       .filter((event) => !!event)
 
     if (features.length > 0) {
-      // map?.easeTo({ padding: { left: 656, right: 16 }, duration: 300 })
+      map?.easeTo({ padding: { left: 656, right: 16, top: 16 }, duration: 0 })
       if (!zoomBounds.isEmpty()) {
         map?.fitBounds(zoomBounds, {
           duration: 1000,
           maxZoom: 14,
-          padding: { left: 656, right: 16, top: 16, bottom: 16 },
         })
       }
     } else {
