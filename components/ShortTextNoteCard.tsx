@@ -82,7 +82,7 @@ const ShortTextNoteCard = ({
                   onClick={handleClickRootNote}
                 >
                   <ArrowRightAlt className="mr-1" fontSize="small" />
-                  from note
+                  from a note
                 </Typography>
               )}
             </Box>

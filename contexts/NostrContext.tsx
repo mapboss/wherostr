@@ -1,6 +1,7 @@
 'use client'
 import { FC, PropsWithChildren, createContext, useMemo } from 'react'
 import NDK from '@nostr-dev-kit/ndk'
+import NDKCacheAdapterDexie from '@nostr-dev-kit/ndk-cache-dexie'
 import usePromise from 'react-use-promise'
 
 interface Nostr {
@@ -9,6 +10,7 @@ interface Nostr {
 }
 
 const ndk = new NDK({
+  cacheAdapter: new NDKCacheAdapterDexie({ dbName: 'wherostr-ndk-db' }),
   explicitRelayUrls: (process.env.NEXT_PUBLIC_RELAY_URLS || '')
     .split(',')
     .filter((item) => !!item),
