@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useCallback, useContext, useMemo } from 'react'
-import { ArrowRightAlt, MoreVert } from '@mui/icons-material'
+import { ArrowRightAlt, MoreVert, Repeat } from '@mui/icons-material'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
@@ -81,7 +81,11 @@ const ShortTextNoteCard = ({
                   color="secondary"
                   onClick={handleClickRootNote}
                 >
-                  <ArrowRightAlt className="mr-1" fontSize="small" />
+                  {event.kind === 6 ? (
+                    <Repeat className="mr-1" fontSize="small" />
+                  ) : (
+                    <ArrowRightAlt className="mr-1" fontSize="small" />
+                  )}
                   from a note
                 </Typography>
               )}
