@@ -21,6 +21,8 @@ const youtubeRegExp =
 const youtubePlaylistRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:(?:playlist|embed)(?:\?|.+&)list=))([^#\&\?]*).*/
 
+type RelatedNoteVariant = 'full' | 'fraction' | 'link'
+
 const UserMentionLink = ({ id }: { id: string }) => {
   const { ndk } = useContext(NostrContext)
   const [user] = usePromise(async () => {
@@ -54,7 +56,7 @@ const QuotedEvent = ({
   relatedNoteVariant,
 }: {
   id: string
-  relatedNoteVariant: 'full' | 'fraction'
+  relatedNoteVariant: RelatedNoteVariant
 }) => {
   const { ndk } = useContext(NostrContext)
   const { setEventAction } = useContext(EventContext)
@@ -75,7 +77,17 @@ const QuotedEvent = ({
       })
     }
   }, [event, setEventAction])
-  return (
+  return relatedNoteVariant === 'link' ? (
+    <Typography
+      className="cursor-pointer"
+      variant="caption"
+      color="secondary"
+      onClick={handleClickNote}
+    >
+      <FormatQuote className="mr-1" fontSize="small" />
+      quoted note
+    </Typography>
+  ) : (
     <Box
       className={`relative my-2 border-2 border-secondary-dark rounded-2xl overflow-hidden cursor-pointer${
         relatedNoteVariant === 'fraction' ? ' max-h-80' : ''
@@ -101,7 +113,7 @@ const QuotedEvent = ({
 
 const renderChunk = (
   { type, content, mimeType }: ParsedFragment,
-  { relatedNoteVariant }: { relatedNoteVariant: 'full' | 'fraction' | 'link' },
+  { relatedNoteVariant }: { relatedNoteVariant: RelatedNoteVariant },
 ) => {
   switch (type) {
     case 'media':
@@ -152,14 +164,12 @@ const renderChunk = (
           case NostrPrefix.Profile:
             return <UserMentionLink id={nostrLink.id} />
           case NostrPrefix.Event:
-            if (relatedNoteVariant !== 'link') {
-              return (
-                <QuotedEvent
-                  id={nostrLink.id}
-                  relatedNoteVariant={relatedNoteVariant}
-                />
-              )
-            }
+            return (
+              <QuotedEvent
+                id={nostrLink.id}
+                relatedNoteVariant={relatedNoteVariant}
+              />
+            )
           case NostrPrefix.Note:
           case NostrPrefix.Address:
             return (
@@ -214,7 +224,7 @@ const TextNote = ({
   relatedNoteVariant = 'fraction',
 }: {
   event: NDKEvent
-  relatedNoteVariant?: 'full' | 'fraction' | 'link'
+  relatedNoteVariant?: RelatedNoteVariant
 }) => {
   const chunks = useMemo(() => {
     return transformText(event.content, event.tags)
