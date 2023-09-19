@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import EventActionModal from '@/components/EventActionModal'
+import EventList from '@/components/EventList'
 import Filter, { SearchPayload } from '@/components/Filter'
-import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import { EventActionType, EventContext } from '@/contexts/EventContext'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
@@ -232,16 +232,6 @@ const MainPane = () => {
       type: EventActionType.Create,
     })
   }, [setEventAction])
-
-  const eventElements = useMemo(
-    () =>
-      events
-        ? events.map((event) => (
-            <ShortTextNoteCard key={event.id} event={event} />
-          ))
-        : null,
-    [events],
-  )
   return (
     <Paper
       className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none overflow-hidden${
@@ -264,7 +254,7 @@ const MainPane = () => {
         </Tooltip>
       </Box>
       <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
-      {showEvents && <Box className="overflow-y-auto">{eventElements}</Box>}
+      {showEvents && <EventList events={events} />}
       {eventAction && (
         <Box className="absolute left-0 top-0 w-[640px] h-full p-8 backdrop-blur">
           <EventActionModal />
