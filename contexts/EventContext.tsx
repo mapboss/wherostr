@@ -5,10 +5,14 @@ import {
   PropsWithChildren,
   SetStateAction,
   createContext,
+  useCallback,
+  useContext,
   useMemo,
   useState,
 } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
+import { NostrContext } from '@/contexts/NostrContext'
+import { ErrorCode } from '@/constants/app'
 
 export enum EventActionType {
   Create = 0,
@@ -26,12 +30,17 @@ export interface EventAction {
   event?: NDKEvent
   options?: any
 }
+export interface EventActionOptions {
+  type: EventActionType
+  event?: NDKEvent | string
+  options?: any
+}
 
 export interface EventContextProps {
   events: NDKEvent[]
   setEvents: Dispatch<SetStateAction<NDKEvent[]>>
   eventAction?: EventAction
-  setEventAction: Dispatch<SetStateAction<EventAction | undefined>>
+  setEventAction: (eventAction?: EventActionOptions) => void
 }
 
 export const EventContext = createContext<EventContextProps>({
@@ -41,8 +50,34 @@ export const EventContext = createContext<EventContextProps>({
 })
 
 export const EventContextProvider: FC<PropsWithChildren> = ({ children }) => {
+  const { getEvent } = useContext(NostrContext)
   const [events, setEvents] = useState<NDKEvent[]>([])
-  const [eventAction, setEventAction] = useState<EventAction>()
+  const [eventAction, _setEventAction] = useState<EventAction>()
+  const setEventAction = useCallback(
+    async (eventAction?: EventActionOptions) => {
+      if (!eventAction) {
+        _setEventAction(undefined)
+        return
+      }
+      try {
+        let event = eventAction.event
+        if (typeof event === 'string') {
+          const _event = await getEvent(event)
+          if (!_event) {
+            throw new Error(ErrorCode.EventNotFound)
+          }
+          event = _event
+        }
+        _setEventAction({
+          ...eventAction,
+          event,
+        })
+      } catch (error) {
+        console.log('error', error)
+      }
+    },
+    [getEvent],
+  )
   const value = useMemo((): EventContextProps => {
     return {
       events,
@@ -50,7 +85,7 @@ export const EventContextProvider: FC<PropsWithChildren> = ({ children }) => {
       eventAction,
       setEventAction,
     }
-  }, [eventAction, events])
+  }, [eventAction, events, setEventAction])
 
   return <EventContext.Provider value={value}>{children}</EventContext.Provider>
 }

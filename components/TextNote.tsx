@@ -9,12 +9,11 @@ import {
 import { Box, Link, Typography } from '@mui/material'
 import { Fragment } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
-import { NostrContext } from '@/contexts/NostrContext'
-import usePromise from 'react-use-promise'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import { FormatQuote } from '@mui/icons-material'
 import NextLink from 'next/link'
 import { EventActionType, EventContext } from '@/contexts/EventContext'
+import { useEventCache, useUserCache } from '@/hooks/useCache'
 
 const youtubeRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
@@ -24,16 +23,7 @@ const youtubePlaylistRegExp =
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
 const UserMentionLink = ({ id }: { id: string }) => {
-  const { ndk } = useContext(NostrContext)
-  const [user] = usePromise(async () => {
-    if (ndk && id) {
-      const user = ndk.getUser({
-        hexpubkey: id,
-      })
-      await user.fetchProfile()
-      return user
-    }
-  }, [ndk, id])
+  const [user] = useUserCache(id)
   const displayName = useMemo(
     () => user?.profile?.displayName || user?.profile?.name || user?.npub,
     [user],
@@ -58,13 +48,8 @@ const QuotedEvent = ({
   id: string
   relatedNoteVariant: RelatedNoteVariant
 }) => {
-  const { ndk } = useContext(NostrContext)
   const { setEventAction } = useContext(EventContext)
-  const [event] = usePromise(async () => {
-    if (ndk && id) {
-      return await ndk.fetchEvent(id)
-    }
-  }, [ndk, id])
+  const [event] = useEventCache(id)
   const handleClickNote = useCallback(() => {
     if (event) {
       setEventAction({

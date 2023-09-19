@@ -25,7 +25,7 @@ export const AccountContext = createContext<Account>({
 })
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { ndk } = useContext(NostrContext)
+  const { ndk, getUser } = useContext(NostrContext)
   const [user, setUser] = useState<NDKUser>()
   useEffect(() => {
     if (ndk) {
@@ -36,15 +36,14 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     if (ndk) {
       const signerUser = await ndk.signer?.user()
       if (signerUser) {
-        const _user = ndk.getUser({
-          npub: signerUser.npub,
-        })
-        await _user.fetchProfile()
-        localStorage.setItem('npub', _user.npub)
-        setUser(_user)
+        const _user = await getUser(signerUser.hexpubkey)
+        if (_user) {
+          localStorage.setItem('npub', _user.npub)
+          setUser(_user)
+        }
       }
     }
-  }, [ndk])
+  }, [ndk, getUser])
   const signOut = useCallback(async () => {
     if (ndk) {
       ndk.signer = new NDKNip07Signer()

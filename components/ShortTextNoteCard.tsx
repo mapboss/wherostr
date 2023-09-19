@@ -15,9 +15,9 @@ import { useCallback, useContext, useMemo } from 'react'
 import { ArrowRightAlt, MoreVert, Repeat } from '@mui/icons-material'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
-import usePromise from 'react-use-promise'
 import { EventExt } from '@snort/system'
 import { EventActionType, EventContext } from '@/contexts/EventContext'
+import { useUserCache } from '@/hooks/useCache'
 
 const ShortTextNoteCard = ({
   event,
@@ -28,16 +28,8 @@ const ShortTextNoteCard = ({
   action?: boolean
   relatedNoteVariant?: 'full' | 'fraction' | 'link'
 }) => {
-  const { ndk } = useContext(NostrContext)
-  const [user] = usePromise(async () => {
-    if (ndk && event) {
-      const user = ndk.getUser({
-        hexpubkey: event.pubkey,
-      })
-      await user.fetchProfile()
-      return user
-    }
-  }, [ndk, event])
+  const { ndk, getEvent } = useContext(NostrContext)
+  const [user] = useUserCache(event.pubkey)
   const createdDate = useMemo(
     () => (event.created_at ? new Date(event.created_at * 1000) : undefined),
     [event],
@@ -51,7 +43,7 @@ const ShortTextNoteCard = ({
   const { setEventAction } = useContext(EventContext)
   const handleClickRootNote = useCallback(async () => {
     if (ndk && fromNote?.value) {
-      const rootEvent = await ndk.fetchEvent(fromNote.value)
+      const rootEvent = await getEvent(fromNote.value)
       if (rootEvent) {
         setEventAction({
           type: EventActionType.View,
@@ -63,7 +55,7 @@ const ShortTextNoteCard = ({
         })
       }
     }
-  }, [ndk, fromNote, setEventAction])
+  }, [ndk, fromNote, getEvent, setEventAction])
   return (
     <Card className="!rounded-none">
       {user && (
