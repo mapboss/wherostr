@@ -24,11 +24,13 @@ export interface MapProviderProps<T = MapType>
 
 export const MapContext = createContext<MapContextProps>(defaultValue)
 
-export function MapContextProvider({ children, map: defaultMap }: MapProviderProps) {
+export function MapContextProvider({
+  children,
+  map: defaultMap,
+}: MapProviderProps) {
   const [map, setMap] = useState<MapType | undefined>(defaultMap)
   const contextValue = useMemo<MapContextProps>(() => {
     return {
-      ...defaultValue,
       map,
       setMap,
     }

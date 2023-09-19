@@ -8,23 +8,16 @@ import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import { Box, IconButton, Paper, Tooltip } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
-import { NostrContext } from '@/contexts/NostrContext'
-import {
-  NDKEvent,
-  NDKKind,
-  NDKSubscriptionCacheUsage,
-  NostrEvent,
-} from '@nostr-dev-kit/ndk'
-import usePromise from 'react-use-promise'
+import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import { Draw, LocationOn } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
+import { useSubscribe } from '@/hooks/useSubscribe'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
 
 const MainPane = () => {
   const { map } = useContext(MapContext)
-  const { ndk } = useContext(NostrContext)
   const { profileAction, events, eventAction, setEvents, setEventAction } =
     useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -48,7 +41,7 @@ const MainPane = () => {
     return {
       kinds: [NDKKind.Text],
       '#g': Array.from(geohashFilter),
-      limit: 50,
+      // limit: 50,
     }
   }, [payload.bbox])
 
@@ -60,42 +53,27 @@ const MainPane = () => {
     return { kinds: [NDKKind.Text], '#t': Array.from(tags), limit: 50 }
   }, [payload.keyword])
 
-  const [geoData, geoError, geoStat] = usePromise(async () => {
-    if (!ndk || !geohashFilter || bounds.isEmpty()) return new Set<NDKEvent>()
-    const result = await ndk.fetchEvents(geohashFilter, {
-      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-      closeOnEose: true,
-    })
-    const data = new Set<NDKEvent>()
-    result.forEach((d) => {
-      const geohashes = d.getMatchingTags('g')
-      if (!geohashes.length) return
-      geohashes.sort((a, b) => b[1].length - a[1].length)
-      if (!geohashes[0]) return
-      const { lat, lon } = Geohash.decode(geohashes[0][1])
-      if (!bounds.contains({ lat, lon })) return
-      data.add(d)
-    })
-    return data
-  }, [bounds, geohashFilter])
-
-  const [tagData, tagError, tagStat] = usePromise(async () => {
-    if (!ndk || !tagsFilter) return new Set<NDKEvent>()
-    return ndk.fetchEvents(tagsFilter, {
-      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-      closeOnEose: true,
-    })
-  }, [tagsFilter])
+  const [subGeoFilter] = useSubscribe(geohashFilter)
+  const [subTagFilter, fetchMore] = useSubscribe(tagsFilter)
 
   useEffect(() => {
-    if (tagStat === 'pending' || geoStat === 'pending') return
-    if (!tagData || !geoData) return
-    geoData.forEach((d) => {
-      tagData.add(d)
-    })
+    if (!subTagFilter || !subGeoFilter) return
+    const data = new Set<NDKEvent>(subTagFilter)
+    if (!bounds.isEmpty()) {
+      subGeoFilter.forEach((d) => {
+        if (data.has(d)) return
+        const geohashes = d.getMatchingTags('g')
+        if (!geohashes.length) return
+        geohashes.sort((a, b) => b[1].length - a[1].length)
+        if (!geohashes[0]) return
+        const { lat, lon } = Geohash.decode(geohashes[0][1])
+        if (!bounds.contains({ lat, lon })) return
+        data.add(d)
+      })
+    }
     let ids = new Set<string>()
     setEvents(
-      Array.from(tagData)
+      Array.from(data)
         .filter((item) => {
           if (!ids.has(item.id)) {
             ids.add(item.id)
@@ -104,7 +82,7 @@ const MainPane = () => {
         })
         .sort(handleSortDescending),
     )
-  }, [geoData, tagData, tagStat, geoStat, setEvents])
+  }, [bounds, subGeoFilter, subTagFilter, setEvents])
 
   const mouseEnterHandler = useCallback((ev: maplibregl.MapMouseEvent) => {
     const style = ev.target.getCanvas().style
@@ -255,7 +233,7 @@ const MainPane = () => {
         </Tooltip>
       </Box>
       <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
-      {showEvents && <EventList events={events} />}
+      {showEvents && <EventList events={events} onNeedFetch={fetchMore} />}
       {eventAction && (
         <Box className="absolute left-0 top-0 w-[640px] h-full p-8 backdrop-blur">
           <EventActionModal />
@@ -271,11 +249,3 @@ const MainPane = () => {
 }
 
 export default MainPane
-
-export function getTagValues(tags: string[][], tag: string): Array<string> {
-  return tags
-    .filter((t) => t.at(0) === tag)
-    .map((t) => t.at(1))
-    .filter((t) => t)
-    .map((t) => t as string)
-}

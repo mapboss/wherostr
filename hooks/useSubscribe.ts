@@ -5,11 +5,16 @@ import {
   NDKKind,
   NDKSubscription,
 } from '@nostr-dev-kit/ndk'
-import { useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import usePromise from 'react-use-promise'
 
+export type SubscribeResult = [
+  NDKEvent[],
+  () => Promise<NDKEvent[] | undefined>,
+]
+
 export const useSubscribe = (
-  filter: NDKFilter<NDKKind> = {},
+  filter?: NDKFilter<NDKKind>,
   options?: {
     disabled?: boolean
     onStart?: (events: NDKEvent[]) => void
@@ -17,13 +22,12 @@ export const useSubscribe = (
     onStop?: () => void
   },
 ) => {
-  const { disabled, onStart, onEvent, onStop } = options || {}
   const { ndk } = useContext(NostrContext)
   const [sub, setSub] = useState<NDKSubscription>()
   const [items, setItems] = useState<NDKEvent[]>([])
 
-  const [events, eventError, eventState] = usePromise(async () => {
-    if (disabled) return []
+  const [events] = usePromise(async () => {
+    if (!filter) return
     const items = await ndk.fetchEvents(filter)
     return Array.from(items).sort((a, b) => {
       if (b.kind !== 30311) {
@@ -33,10 +37,10 @@ export const useSubscribe = (
       const startsB = Number(b.tagValue('starts') || b.created_at)
       return startsB - startsA
     })
-  }, [disabled, filter])
+  }, [filter])
 
   useEffect(() => {
-    if (!filter || eventState !== 'resolved') {
+    if (!filter || !events) {
       setItems([])
       return setSub((prev) => {
         prev?.stop()
@@ -55,23 +59,23 @@ export const useSubscribe = (
       prev?.stop()
       return subscribe
     })
-  }, [ndk, eventState, events, filter])
+  }, [ndk, events, filter])
+
+  // useEffect(() => {
+  //   if (sub && disabled) {
+  //     sub.stop()
+  //     onStop?.()
+  //   }
+  // }, [disabled, sub, onStop])
 
   useEffect(() => {
-    if (sub && disabled) {
-      sub.stop()
-      onStop?.()
-    }
-  }, [disabled, sub, onStop])
-
-  useEffect(() => {
-    if (disabled || !sub || eventState !== 'resolved') return
+    if (!sub || !events) return
     const items = new Set<NDKEvent>(events)
-    onStart?.(events)
+    // onStart?.(events)
     sub.on('event', (item: NDKEvent) => {
       if (items.has(item)) return
       items.add(item)
-      onEvent?.(item)
+      // onEvent?.(item)
       setItems((prev) => {
         if (item.kind !== 30311) {
           return [item, ...prev].slice(0, 10000)
@@ -98,9 +102,39 @@ export const useSubscribe = (
     sub.start()
     return () => {
       sub.stop()
-      onStop?.()
+      // onStop?.()
     }
-  }, [sub, eventState, events, disabled, onStart, onEvent, onStop])
+  }, [sub, events])
 
-  return items
+  const oldestEvent = useMemo(() => items[items.length - 1], [items])
+  const fetchMore = useCallback(async () => {
+    if (!filter || !oldestEvent) return
+    const { until, since, ...filterOriginal } = filter
+    const oldestDate = Number(
+      oldestEvent.tagValue('starts') || oldestEvent.created_at,
+    )
+    const events = await ndk.fetchEvents({
+      ...filterOriginal,
+      until: oldestDate,
+    })
+    const items = Array.from(events).sort((a, b) => {
+      if (b.kind !== 30311) {
+        return (b.created_at || 0) - (a.created_at || 0)
+      }
+      const startsA = Number(a.tagValue('starts') || a.created_at)
+      const startsB = Number(b.tagValue('starts') || b.created_at)
+      return startsB - startsA
+    })
+
+    let nonDupItems: NDKEvent[] = []
+    setItems((prev) => {
+      nonDupItems = items.filter((item) => !prev.find((d) => d.id === item.id))
+      return [...prev, ...nonDupItems]
+    })
+    return nonDupItems
+  }, [filter, ndk, oldestEvent])
+
+  return useMemo<SubscribeResult>(() => {
+    return [items, fetchMore]
+  }, [items, fetchMore])
 }
