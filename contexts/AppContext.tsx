@@ -36,20 +36,20 @@ export interface EventActionOptions {
   options?: any
 }
 
-export interface EventContextProps {
+export interface AppContextProps {
   events: NDKEvent[]
   setEvents: Dispatch<SetStateAction<NDKEvent[]>>
   eventAction?: EventAction
   setEventAction: (eventAction?: EventActionOptions) => void
 }
 
-export const EventContext = createContext<EventContextProps>({
+export const AppContext = createContext<AppContextProps>({
   events: [],
   setEvents: () => {},
   setEventAction: () => {},
 })
 
-export const EventContextProvider: FC<PropsWithChildren> = ({ children }) => {
+export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const { getEvent } = useContext(NostrContext)
   const [events, setEvents] = useState<NDKEvent[]>([])
   const [eventAction, _setEventAction] = useState<EventAction>()
@@ -78,7 +78,7 @@ export const EventContextProvider: FC<PropsWithChildren> = ({ children }) => {
     },
     [getEvent],
   )
-  const value = useMemo((): EventContextProps => {
+  const value = useMemo((): AppContextProps => {
     return {
       events,
       setEvents,
@@ -87,5 +87,5 @@ export const EventContextProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   }, [eventAction, events, setEventAction])
 
-  return <EventContext.Provider value={value}>{children}</EventContext.Provider>
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }

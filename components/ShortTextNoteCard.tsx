@@ -16,7 +16,7 @@ import { ArrowRightAlt, MoreVert, Repeat } from '@mui/icons-material'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import { EventExt } from '@snort/system'
-import { EventActionType, EventContext } from '@/contexts/EventContext'
+import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { useUserCache } from '@/hooks/useCache'
 
 const ShortTextNoteCard = ({
@@ -40,7 +40,7 @@ const ShortTextNoteCard = ({
       return thread?.root || thread?.replyTo
     }
   }, [event])
-  const { setEventAction } = useContext(EventContext)
+  const { setEventAction } = useContext(AppContext)
   const handleClickRootNote = useCallback(async () => {
     if (ndk && fromNote?.value) {
       const rootEvent = await getEvent(fromNote.value)

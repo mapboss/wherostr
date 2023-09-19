@@ -21,7 +21,7 @@ import {
 } from '@mui/icons-material'
 import { NostrContext } from '@/contexts/NostrContext'
 import { AccountContext } from '@/contexts/AccountContext'
-import { EventActionType, EventContext } from '@/contexts/EventContext'
+import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { useForm } from 'react-hook-form'
 import { MapContext } from '@/contexts/MapContext'
@@ -47,7 +47,7 @@ const CreateEventForm = ({
 }) => {
   const { ndk } = useContext(NostrContext)
   const { map } = useContext(MapContext)
-  const { setEventAction } = useContext(EventContext)
+  const { setEventAction } = useContext(AppContext)
   const { register, handleSubmit, setValue, watch } = useForm()
   const geohashValue = watch('geohash')
   useEffect(() => {
@@ -201,7 +201,7 @@ const CreateEventForm = ({
 }
 
 const ZapEventForm = ({ event }: { event: NDKEvent }) => {
-  const { setEventAction } = useContext(EventContext)
+  const { setEventAction } = useContext(AppContext)
   const { register, handleSubmit, setValue, watch } = useForm()
   const _amountValue = watch('amount')
   const _handleSubmit = useCallback(
@@ -371,7 +371,7 @@ const ShortTextNotePane = ({
 
 const EventActionModal = () => {
   const { user } = useContext(AccountContext)
-  const { eventAction, setEventAction } = useContext(EventContext)
+  const { eventAction, setEventAction } = useContext(AppContext)
   const handleClickCloseModal = useCallback(() => {
     setEventAction(undefined)
   }, [setEventAction])

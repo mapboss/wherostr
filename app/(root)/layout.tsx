@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import UserBar from '@/components/UserBar'
-import { EventContextProvider } from '@/contexts/EventContext'
+import { AppContextProvider } from '@/contexts/AppContext'
 import { AccountContextProvider } from '@/contexts/AccountContext'
 
 export const metadata: Metadata = {
@@ -15,12 +15,12 @@ export default function RootLayout({
 }) {
   return (
     <AccountContextProvider>
-      <EventContextProvider>
+      <AppContextProvider>
         <header className="absolute top-0 right-0 z-10">
           <UserBar />
         </header>
         <main className="min-h-screen flex flex-col">{children}</main>
-      </EventContextProvider>
+      </AppContextProvider>
     </AccountContextProvider>
   )
 }

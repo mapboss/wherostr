@@ -12,7 +12,7 @@ import { NDKEvent } from '@nostr-dev-kit/ndk'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import { FormatQuote } from '@mui/icons-material'
 import NextLink from 'next/link'
-import { EventActionType, EventContext } from '@/contexts/EventContext'
+import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { useEventCache, useUserCache } from '@/hooks/useCache'
 
 const youtubeRegExp =
@@ -48,7 +48,7 @@ const QuotedEvent = ({
   id: string
   relatedNoteVariant: RelatedNoteVariant
 }) => {
-  const { setEventAction } = useContext(EventContext)
+  const { setEventAction } = useContext(AppContext)
   const [event] = useEventCache(id)
   const handleClickNote = useCallback(() => {
     if (event) {

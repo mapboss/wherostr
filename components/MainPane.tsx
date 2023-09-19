@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import EventActionModal from '@/components/EventActionModal'
 import EventList from '@/components/EventList'
 import Filter, { SearchPayload } from '@/components/Filter'
-import { EventActionType, EventContext } from '@/contexts/EventContext'
+import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import { Box, IconButton, Paper, Tooltip } from '@mui/material'
@@ -25,7 +25,7 @@ const MainPane = () => {
   const { map } = useContext(MapContext)
   const { ndk } = useContext(NostrContext)
   const { events, eventAction, setEvents, setEventAction } =
-    useContext(EventContext)
+    useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [payload, setPayload] = useState<SearchPayload>({})
 

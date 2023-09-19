@@ -9,7 +9,7 @@ import {
   ThumbUp,
 } from '@mui/icons-material'
 import { useCallback, useContext, useMemo, useState } from 'react'
-import { EventActionType, EventContext } from '@/contexts/EventContext'
+import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { NDKEvent, NDKKind, zapInvoiceFromEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
@@ -22,7 +22,7 @@ const amountFormat = '0,0.[0]a'
 const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   const { ndk } = useContext(NostrContext)
   const { user } = useContext(AccountContext)
-  const { setEventAction } = useContext(EventContext)
+  const { setEventAction } = useContext(AppContext)
   const [reacted, setReacted] = useState<'+' | '-' | undefined>()
   const [{ liked, disliked }, setReaction] = useState({
     liked: 0,
