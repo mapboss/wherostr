@@ -63,10 +63,12 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
           user = ndk.getUser({ hexpubkey })
           await user.fetchProfile()
           if (user) {
-            userCache.set(hexpubkey, user)
+            if (user.profile?.name) {
+              userCache.set(hexpubkey, user)
+            }
             return user
           } else {
-            throw new Error(ErrorCode.EventNotFound)
+            throw new Error(ErrorCode.ProfileNotFound)
           }
         } else if (user) {
           return user

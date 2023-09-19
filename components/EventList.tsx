@@ -5,7 +5,7 @@ import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import { Box } from '@mui/material'
 import { ViewportList } from 'react-viewport-list'
 
-const EventList = ({ events = [] }: { events: NDKEvent[] }) => {
+const EventList = ({ events = [] }: { events?: NDKEvent[] }) => {
   const ref = useRef(null)
   return (
     <Box ref={ref} className="overflow-y-auto">

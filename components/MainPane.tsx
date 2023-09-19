@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import EventActionModal from '@/components/EventActionModal'
+import ProfileActionModal from '@/components/ProfileActionModal'
 import EventList from '@/components/EventList'
 import Filter, { SearchPayload } from '@/components/Filter'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
@@ -24,7 +25,7 @@ const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
 const MainPane = () => {
   const { map } = useContext(MapContext)
   const { ndk } = useContext(NostrContext)
-  const { events, eventAction, setEvents, setEventAction } =
+  const { profileAction, events, eventAction, setEvents, setEventAction } =
     useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [payload, setPayload] = useState<SearchPayload>({})
@@ -235,7 +236,7 @@ const MainPane = () => {
   return (
     <Paper
       className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none overflow-hidden${
-        eventAction || showEvents ? ' h-full' : ''
+        profileAction || eventAction || showEvents ? ' h-full' : ''
       }`}
     >
       <Box className="px-4 py-2 flex gap-4 items-center">
@@ -258,6 +259,11 @@ const MainPane = () => {
       {eventAction && (
         <Box className="absolute left-0 top-0 w-[640px] h-full p-8 backdrop-blur">
           <EventActionModal />
+        </Box>
+      )}
+      {profileAction && (
+        <Box className="absolute left-0 top-0 w-[640px] h-full p-8 backdrop-blur">
+          <ProfileActionModal />
         </Box>
       )}
     </Paper>

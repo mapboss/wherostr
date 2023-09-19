@@ -14,6 +14,7 @@ import { FormatQuote } from '@mui/icons-material'
 import NextLink from 'next/link'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { useEventCache, useUserCache } from '@/hooks/useCache'
+import { Variant } from '@mui/material/styles/createTypography'
 
 const youtubeRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
@@ -207,17 +208,19 @@ const renderChunk = (
 const TextNote = ({
   event,
   relatedNoteVariant = 'fraction',
+  textVariant = 'body1',
 }: {
-  event: NDKEvent
+  event: Partial<NDKEvent>
   relatedNoteVariant?: RelatedNoteVariant
+  textVariant?: Variant
 }) => {
   const chunks = useMemo(() => {
-    return transformText(event.content, event.tags)
+    return transformText(event.content || '', event.tags || [])
   }, [event])
   return (
     <Typography
       className="whitespace-break-spaces break-words"
-      variant="body1"
+      variant={textVariant}
       component="div"
     >
       {chunks.map((chunk, index) => (

@@ -10,10 +10,13 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { NDKEvent } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import { ErrorCode } from '@/constants/app'
 
+export enum ProfileActionType {
+  View = 0,
+}
 export enum EventActionType {
   Create = 0,
   Delete = 1,
@@ -25,6 +28,16 @@ export enum EventActionType {
   View = 7,
 }
 
+export interface ProfileAction {
+  type: ProfileActionType
+  user: NDKUser
+  options?: any
+}
+export interface ProfileActionOptions {
+  type: ProfileActionType
+  hexpubkey: string
+  options?: any
+}
 export interface EventAction {
   type: EventActionType
   event?: NDKEvent
@@ -37,6 +50,8 @@ export interface EventActionOptions {
 }
 
 export interface AppContextProps {
+  profileAction?: ProfileAction
+  setProfileAction: (profileAction?: ProfileActionOptions) => void
   events: NDKEvent[]
   setEvents: Dispatch<SetStateAction<NDKEvent[]>>
   eventAction?: EventAction
@@ -44,15 +59,39 @@ export interface AppContextProps {
 }
 
 export const AppContext = createContext<AppContextProps>({
+  setProfileAction: () => {},
   events: [],
   setEvents: () => {},
   setEventAction: () => {},
 })
 
 export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { getEvent } = useContext(NostrContext)
+  const { getUser, getEvent } = useContext(NostrContext)
+  const [profileAction, _setProfileAction] = useState<ProfileAction>()
   const [events, setEvents] = useState<NDKEvent[]>([])
   const [eventAction, _setEventAction] = useState<EventAction>()
+  const setProfileAction = useCallback(
+    async (profileAction?: ProfileActionOptions) => {
+      if (!profileAction) {
+        _setProfileAction(undefined)
+        return
+      }
+      try {
+        const user = await getUser(profileAction.hexpubkey)
+        if (!user) {
+          throw new Error(ErrorCode.ProfileNotFound)
+        }
+        _setProfileAction({
+          ...profileAction,
+          user,
+        })
+        _setEventAction(undefined)
+      } catch (error) {
+        console.log('error', error)
+      }
+    },
+    [getUser],
+  )
   const setEventAction = useCallback(
     async (eventAction?: EventActionOptions) => {
       if (!eventAction) {
@@ -72,6 +111,7 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
           ...eventAction,
           event,
         })
+        _setProfileAction(undefined)
       } catch (error) {
         console.log('error', error)
       }
@@ -80,12 +120,14 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   )
   const value = useMemo((): AppContextProps => {
     return {
+      profileAction,
+      setProfileAction,
       events,
       setEvents,
       eventAction,
       setEventAction,
     }
-  }, [eventAction, events, setEventAction])
+  }, [profileAction, setProfileAction, events, eventAction, setEventAction])
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }
