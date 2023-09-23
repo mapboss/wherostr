@@ -213,7 +213,7 @@ const MainPane = () => {
   }, [setEventAction])
   return (
     <Paper
-      className={`absolute left-0 top-0 w-[640px] flex flex-col !rounded-none overflow-hidden${
+      className={`absolute left-0 top-0 w-full md:w-[440px] xl:w-[640px] flex flex-col !rounded-none overflow-hidden${
         profileAction || eventAction || showEvents ? ' h-full' : ''
       }`}
     >
@@ -235,12 +235,12 @@ const MainPane = () => {
       <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
       {showEvents && <EventList events={events} onNeedFetch={fetchMore} />}
       {eventAction && (
-        <Box className="absolute left-0 top-0 w-[640px] h-full p-8 backdrop-blur">
+        <Box className="absolute left-0 top-0 w-full md:w-[440px] xl:w-[640px] h-full p-8 backdrop-blur">
           <EventActionModal />
         </Box>
       )}
       {profileAction && (
-        <Box className="absolute left-0 top-0 w-[640px] h-full p-8 backdrop-blur">
+        <Box className="absolute left-0 top-0 w-full md:w-[440px] lg:w-[640px] h-full p-8 backdrop-blur">
           <ProfileActionModal />
         </Box>
       )}

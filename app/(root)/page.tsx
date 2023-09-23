@@ -8,7 +8,7 @@ export default function Page() {
   return (
     <MapContextProvider>
       <Box className="flex-1 flex flex-col">
-        <Map />
+        <Map className="invisible md:visible" />
         <MainPane />
       </Box>
     </MapContextProvider>

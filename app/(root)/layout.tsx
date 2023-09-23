@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <AccountContextProvider>
       <AppContextProvider>
-        <header className="absolute top-0 right-0 z-10">
+        <header className="bottom-0 left-0 absolute lg:bottom-auto lg:left-auto lg:top-0 lg:right-0 z-10">
           <UserBar />
         </header>
         <main className="min-h-screen flex flex-col">{children}</main>
