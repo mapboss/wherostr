@@ -7,6 +7,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { NDKNip07Signer, NDKUser } from '@nostr-dev-kit/ndk'
@@ -27,13 +28,16 @@ export const AccountContext = createContext<Account>({
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const { ndk, getUser } = useContext(NostrContext)
   const [user, setUser] = useState<NDKUser>()
+  const nostrRef = useRef<typeof window.nostr>()
+  nostrRef.current = typeof window !== 'undefined' ? window.nostr : undefined
+
   useEffect(() => {
-    if (ndk) {
+    if (ndk && nostrRef.current) {
       ndk.signer = new NDKNip07Signer()
     }
   }, [ndk])
   const signIn = useCallback(async () => {
-    if (ndk) {
+    if (ndk && nostrRef.current) {
       const signerUser = await ndk.signer?.user()
       if (signerUser) {
         const _user = await getUser(signerUser.hexpubkey)
@@ -45,7 +49,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   }, [ndk, getUser])
   const signOut = useCallback(async () => {
-    if (ndk) {
+    if (ndk && nostrRef.current) {
       ndk.signer = new NDKNip07Signer()
       localStorage.removeItem('npub')
       setUser(undefined)
@@ -59,12 +63,10 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   }, [user, signIn, signOut])
   useEffect(() => {
-    if (ndk) {
-      if (localStorage.getItem('npub')) {
-        signIn()
-      }
+    if (localStorage.getItem('npub')) {
+      signIn()
     }
-  }, [ndk, signIn])
+  }, [signIn])
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
   )
