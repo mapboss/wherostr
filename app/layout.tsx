@@ -9,6 +9,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <meta name="lightning" content="lnurlp:nickydev@getalby.com" />
+        <meta property="og:image" content="https://www.your.blog/YOUR_IMAGE" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body>
         <DefaultTheme>
           <NostrContextProvider>{children}</NostrContextProvider>

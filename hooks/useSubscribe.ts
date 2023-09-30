@@ -22,12 +22,12 @@ export const useSubscribe = (
     onStop?: () => void
   },
 ) => {
-  const { ndk } = useContext(NostrContext)
+  const { ndk, connected } = useContext(NostrContext)
   const [sub, setSub] = useState<NDKSubscription>()
   const [items, setItems] = useState<NDKEvent[]>([])
 
   const [events] = usePromise(async () => {
-    if (!filter) return
+    if (!connected || !filter) return
     const items = await ndk.fetchEvents(filter)
     return Array.from(items).sort((a, b) => {
       if (b.kind !== 30311) {
@@ -37,10 +37,10 @@ export const useSubscribe = (
       const startsB = Number(b.tagValue('starts') || b.created_at)
       return startsB - startsA
     })
-  }, [filter])
+  }, [connected, filter])
 
   useEffect(() => {
-    if (!filter || !events) {
+    if (!connected || !filter || !events) {
       setItems([])
       return setSub((prev) => {
         prev?.stop()
@@ -59,7 +59,7 @@ export const useSubscribe = (
       prev?.stop()
       return subscribe
     })
-  }, [ndk, events, filter])
+  }, [connected, ndk, events, filter])
 
   // useEffect(() => {
   //   if (sub && disabled) {
@@ -69,7 +69,7 @@ export const useSubscribe = (
   // }, [disabled, sub, onStop])
 
   useEffect(() => {
-    if (!sub || !events) return
+    if (!connected || !sub || !events) return
     const items = new Set<NDKEvent>(events)
     // onStart?.(events)
     sub.on('event', (item: NDKEvent) => {
@@ -104,11 +104,11 @@ export const useSubscribe = (
       sub.stop()
       // onStop?.()
     }
-  }, [sub, events])
+  }, [connected, sub, events])
 
   const oldestEvent = useMemo(() => items[items.length - 1], [items])
   const fetchMore = useCallback(async () => {
-    if (!filter || !oldestEvent) return
+    if (!connected || !filter || !oldestEvent) return
     const { until, since, ...filterOriginal } = filter
     const oldestDate = Number(
       oldestEvent.tagValue('starts') || oldestEvent.created_at,
@@ -132,7 +132,7 @@ export const useSubscribe = (
       return [...prev, ...nonDupItems]
     })
     return nonDupItems
-  }, [filter, ndk, oldestEvent])
+  }, [connected, filter, ndk, oldestEvent])
 
   return useMemo<SubscribeResult>(() => {
     return [items, fetchMore]

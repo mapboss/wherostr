@@ -18,7 +18,7 @@ const UserBar = () => {
   }, [signOut])
   return (
     <Box
-      className={`grid items-center py-2 px-3 rounded-tr-2xl lg:rounded-tr-none lg:rounded-bl-2xl${
+      className={`grid items-center py-2 px-3 rounded-bl-2xl${
         signedIn ? ' background-gradient' : ''
       }`}
     >

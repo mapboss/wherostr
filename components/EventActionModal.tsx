@@ -22,7 +22,11 @@ import {
 import { NostrContext } from '@/contexts/NostrContext'
 import { AccountContext } from '@/contexts/AccountContext'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
+import {
+  NDKEvent,
+  NDKKind,
+  NDKSubscriptionCacheUsage,
+} from '@nostr-dev-kit/ndk'
 import { useForm } from 'react-hook-form'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
@@ -311,24 +315,30 @@ const ShortTextNotePane = ({
   quotes: boolean
   comments: boolean
 }) => {
-  const { ndk } = useContext(NostrContext)
+  const { ndk, connected } = useContext(NostrContext)
   const [relatedEvents] = usePromise(async () => {
-    if (ndk && event) {
+    if (connected && ndk && event) {
       const [repostEvents, quoteAndCommentEvents] = await Promise.all([
         reposts
           ? Array.from(
-              await ndk.fetchEvents({
-                kinds: [NDKKind.Repost],
-                '#e': [event.id],
-              }),
+              await ndk.fetchEvents(
+                {
+                  kinds: [NDKKind.Repost],
+                  '#e': [event.id],
+                },
+                { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+              ),
             )
           : [],
         quotes || comments
           ? Array.from(
-              await ndk.fetchEvents({
-                kinds: [NDKKind.Text],
-                '#e': [event.id],
-              }),
+              await ndk.fetchEvents(
+                {
+                  kinds: [NDKKind.Text],
+                  '#e': [event.id],
+                },
+                { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+              ),
             )
           : [],
       ])
@@ -351,7 +361,7 @@ const ShortTextNotePane = ({
       })
       return [...repostEvents, ..._quotes, ..._comments]
     }
-  }, [ndk, event, reposts, quotes, comments])
+  }, [connected, ndk, event, reposts, quotes, comments])
   const relatedEventElements = useMemo(
     () =>
       relatedEvents?.map((item) => (

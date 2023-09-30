@@ -95,7 +95,7 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
         name="search"
         size="small"
         margin="dense"
-        placeholder="Search"
+        placeholder="Search hashtag or places"
         sx={{ my: 1 }}
         autoComplete="off"
         InputProps={{

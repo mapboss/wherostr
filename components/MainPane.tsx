@@ -6,26 +6,58 @@ import Filter, { SearchPayload } from '@/components/Filter'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
-import { Box, IconButton, Paper, Tooltip } from '@mui/material'
+import {
+  Avatar,
+  Box,
+  IconButton,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemSecondaryAction,
+  ListItemText,
+  Paper,
+  Tab,
+  Tabs,
+  Tooltip,
+} from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
-import { Draw, LocationOn } from '@mui/icons-material'
+import {
+  DescriptionOutlined,
+  Draw,
+  LocationOn,
+  NotesOutlined,
+  Place,
+  TravelExplore,
+} from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
+import { useUserStore } from '@/hooks/useUserStore'
+import { AccountContext } from '@/contexts/AccountContext'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
 
 const MainPane = () => {
   const { map } = useContext(MapContext)
+  const { user } = useContext(AccountContext)
   const { profileAction, events, eventAction, setEvents, setEventAction } =
     useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [payload, setPayload] = useState<SearchPayload>({})
+  const [tabIndex, setTabIndex] = useState(0)
 
   useEffect(() => {
     setEvents([])
   }, [payload, setEvents])
+
+  useEffect(() => {
+    if (!events.length && !!payload.places?.length) {
+      setTabIndex(1)
+    } else {
+      setTabIndex(0)
+    }
+  }, [events.length, payload.places?.length])
 
   const bounds = useMemo(() => new LngLatBounds(payload.bbox), [payload.bbox])
 
@@ -41,7 +73,7 @@ const MainPane = () => {
     return {
       kinds: [NDKKind.Text],
       '#g': Array.from(geohashFilter),
-      // limit: 50,
+      limit: 50,
     }
   }, [payload.bbox])
 
@@ -185,16 +217,14 @@ const MainPane = () => {
       })
       .filter((event) => !!event)
 
-    if (features.length > 0) {
-      map?.easeTo({ padding: { left: 656, right: 16, top: 16 }, duration: 0 })
-      if (!zoomBounds.isEmpty()) {
-        map?.fitBounds(zoomBounds, {
-          duration: 1000,
-          maxZoom: 14,
-        })
-      }
-    } else {
-      map?.easeTo({ padding: { left: 0, right: 0 } })
+    if (events.length > 0) {
+      map?.easeTo({ padding: { left: 512, right: 32, top: 32 }, duration: 0 })
+    }
+    if (!zoomBounds.isEmpty()) {
+      map?.fitBounds(zoomBounds, {
+        duration: 1000,
+        maxZoom: 14,
+      })
     }
 
     try {
@@ -205,15 +235,19 @@ const MainPane = () => {
     } catch (err) {}
   }, [events, map])
 
-  const showEvents = useMemo(() => !!events?.length, [events])
+  const showEvents = useMemo(
+    () => !!events?.length || !!payload.places?.length,
+    [events, payload.places],
+  )
   const handleClickPost = useCallback(() => {
     setEventAction({
       type: EventActionType.Create,
     })
   }, [setEventAction])
+
   return (
     <Paper
-      className={`absolute left-0 top-0 w-full md:w-[440px] xl:w-[640px] flex flex-col !rounded-none overflow-hidden${
+      className={`absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] flex flex-col !rounded-none overflow-hidden${
         profileAction || eventAction || showEvents ? ' h-full' : ''
       }`}
     >
@@ -222,25 +256,98 @@ const MainPane = () => {
           className="grow"
           onSearch={(payload) => setPayload(payload || {})}
         />
-        <Tooltip title="Post">
-          <IconButton
-            className="background-gradient"
-            size="large"
-            onClick={handleClickPost}
-          >
-            <Draw />
-          </IconButton>
-        </Tooltip>
+        {user?.npub && (
+          <Tooltip title="Post">
+            <IconButton
+              className="background-gradient"
+              size="large"
+              onClick={handleClickPost}
+            >
+              <Draw />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
-      <Box className="w-full h-0.5 shrink-0 background-gradient"></Box>
-      {showEvents && <EventList events={events} onNeedFetch={fetchMore} />}
+      <Box className="w-full h-0.5 shrink-0 background-gradient" />
+      {showEvents && (
+        <>
+          <Box>
+            <Tabs value={tabIndex} onChange={(_, value) => setTabIndex(value)}>
+              {!!events.length ? (
+                <Tab
+                  value={0}
+                  label="Notes"
+                  icon={<DescriptionOutlined />}
+                  iconPosition="start"
+                  sx={{ minHeight: 48 }}
+                />
+              ) : null}
+              {!!payload?.places?.length ? (
+                <Tab
+                  value={1}
+                  label="Places"
+                  icon={<Place />}
+                  iconPosition="start"
+                  sx={{ minHeight: 48 }}
+                />
+              ) : null}
+            </Tabs>
+          </Box>
+          {tabIndex === 0 && (
+            <EventList events={events} onNeedFetch={fetchMore} />
+          )}
+          {tabIndex === 1 && (
+            <Box className="overflow-y-auto">
+              <List disablePadding>
+                {payload.places?.map((item) => {
+                  return (
+                    <ListItem key={item.place_id}>
+                      <ListItemAvatar>
+                        <Avatar>
+                          <Place />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={item.name}
+                        secondary={item.display_name}
+                      />
+                      <ListItemSecondaryAction>
+                        <IconButton
+                          onClick={() => {
+                            const [y1, y2, x1, x2] = item.boundingbox.map(
+                              (b: string) => Number(b),
+                            )
+                            const bounds: [number, number, number, number] = [
+                              x1,
+                              y1,
+                              x2,
+                              y2,
+                            ]
+                            map?.fitBounds(bounds, {
+                              maxZoom: 14,
+                              duration: 300,
+                            })
+                          }}
+                        >
+                          <TravelExplore />
+                        </IconButton>
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  )
+                })}
+              </List>
+            </Box>
+          )}
+        </>
+      )}
+
       {eventAction && (
-        <Box className="absolute left-0 top-0 w-full md:w-[440px] xl:w-[640px] h-full p-8 backdrop-blur">
+        <Box className="absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur">
           <EventActionModal />
         </Box>
       )}
       {profileAction && (
-        <Box className="absolute left-0 top-0 w-full md:w-[440px] lg:w-[640px] h-full p-8 backdrop-blur">
+        <Box className="absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur">
           <ProfileActionModal />
         </Box>
       )}

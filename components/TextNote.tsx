@@ -1,20 +1,26 @@
 'use client'
-import { useCallback, useContext, useMemo } from 'react'
+import 'react-photo-view/dist/react-photo-view.css'
+import { useCallback, useContext, useMemo, useState } from 'react'
 import {
   NostrPrefix,
   ParsedFragment,
   transformText,
   tryParseNostrLink,
 } from '@snort/system'
-import { Box, Link, Typography } from '@mui/material'
+import { Box, Icon, Link, Paper, Typography } from '@mui/material'
 import { Fragment } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
-import { FormatQuote } from '@mui/icons-material'
+import { FormatQuote, InfoOutlined } from '@mui/icons-material'
 import NextLink from 'next/link'
-import { EventActionType, AppContext } from '@/contexts/AppContext'
+import {
+  EventActionType,
+  AppContext,
+  ProfileActionType,
+} from '@/contexts/AppContext'
 import { useEventCache, useUserCache } from '@/hooks/useCache'
 import { Variant } from '@mui/material/styles/createTypography'
+import { PhotoProvider, PhotoView } from 'react-photo-view'
 
 const youtubeRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
@@ -24,18 +30,26 @@ const youtubePlaylistRegExp =
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
 const UserMentionLink = ({ id }: { id: string }) => {
+  const { setProfileAction } = useContext(AppContext)
   const [user] = useUserCache(id)
   const displayName = useMemo(
     () => user?.profile?.displayName || user?.profile?.name || user?.npub,
     [user],
   )
+  const handleClickProfile = useCallback(() => {
+    if (!user?.hexpubkey) return
+    setProfileAction({
+      type: ProfileActionType.View,
+      hexpubkey: user?.hexpubkey,
+    })
+  }, [setProfileAction, user?.hexpubkey])
+
   return (
     <Link
-      href={id}
-      target="_blank"
       component="a"
       underline="hover"
       color="primary"
+      onClick={handleClickProfile}
     >
       @{displayName}
     </Link>
@@ -105,9 +119,12 @@ const renderChunk = (
     case 'media':
       if (mimeType?.startsWith('image/')) {
         return (
-          <Box className="rounded-2xl overflow-hidden">
-            <img className="object-contain w-full" src={content} />
-          </Box>
+          <PhotoView src={content}>
+            <img
+              className="rounded-2xl overflow-hidden max-h-[344px]"
+              src={content}
+            />
+          </PhotoView>
         )
       } else if (mimeType?.startsWith('audio/')) {
         return (
@@ -118,7 +135,7 @@ const renderChunk = (
       } else if (mimeType?.startsWith('video/')) {
         return (
           <Box className="rounded-2xl overflow-hidden">
-            <video className="w-full" src={content} controls />
+            <video className="w-full max-h-[344px]" src={content} controls />
           </Box>
         )
       }
@@ -161,7 +178,7 @@ const renderChunk = (
             return (
               <Link
                 className="block text-ellipsis whitespace-nowrap overflow-hidden"
-                href={npub}
+                href={`https://snort.social/${npub}`}
                 target="_blank"
                 component="a"
                 underline="hover"
@@ -214,22 +231,58 @@ const TextNote = ({
   relatedNoteVariant?: RelatedNoteVariant
   textVariant?: Variant
 }) => {
+  const [show, setShow] = useState(false)
   const chunks = useMemo(() => {
     return transformText(event.content || '', event.tags || [])
   }, [event])
+
+  const nsfw = useMemo(() => event.tagValue?.('content-warning'), [event])
+
   return (
     <Typography
       className="whitespace-break-spaces break-words"
       variant={textVariant}
       component="div"
     >
-      {chunks.map((chunk, index) => (
-        <Fragment key={index}>
-          {renderChunk(chunk, {
-            relatedNoteVariant,
-          })}
-        </Fragment>
-      ))}
+      {!nsfw || show ? (
+        <PhotoProvider>
+          {chunks.map((chunk, index) => (
+            <Fragment key={index}>
+              {renderChunk(chunk, {
+                relatedNoteVariant,
+              })}
+            </Fragment>
+          ))}
+        </PhotoProvider>
+      ) : (
+        <Paper
+          elevation={4}
+          className="w-full flex items-center justify-center px-2 py-4"
+          onClick={() => setShow(true)}
+        >
+          <Box mr={1} mt={1} display="flex" alignSelf="flex-start">
+            <InfoOutlined className="text-primary" />
+          </Box>
+          <Box>
+            <Typography display="inline" color="text.secondary">
+              The author has marked this note as a
+            </Typography>{' '}
+            <Typography display="inline" color="primary.main">
+              sensitive topic
+            </Typography>
+            <br />
+            <Typography display="inline" color="text.secondary">
+              Reason:
+            </Typography>{' '}
+            <Typography display="inline" color="primary.main">
+              {nsfw}
+            </Typography>
+            <Typography color="secondary.dark">
+              Click here to load anyway
+            </Typography>
+          </Box>
+        </Paper>
+      )}
     </Typography>
   )
 }

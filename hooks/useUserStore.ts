@@ -4,7 +4,6 @@ import {
   NDKKind,
   NDKSubscriptionCacheUsage,
   NDKUser,
-  NDKUserProfile,
   zapInvoiceFromEvent,
 } from '@nostr-dev-kit/ndk'
 import { useCallback, useContext, useEffect, useState } from 'react'
@@ -13,7 +12,7 @@ import usePromise from 'react-use-promise'
 export const useUserStore = (events?: NDKEvent[]) => {
   const { ndk } = useContext(NostrContext)
   const [userIndexes, setUserIndexes] = useState<Record<string, NDKUser>>({})
-  const [userStore, setUserStore] = useState<Record<string, NDKUserProfile>>({})
+  const [userStore, setUserStore] = useState<Record<string, NDKUser>>({})
 
   const initUserStore = useCallback(() => {
     if (!events) return
@@ -23,17 +22,14 @@ export const useUserStore = (events?: NDKEvent[]) => {
         if (b.kind === NDKKind.Zap) {
           const zapInvoice = zapInvoiceFromEvent(b)
           pubkey = zapInvoice!.zappee
-        } else if (b.kind === 30311) {
-          pubkey = b.tagValue('p') || b.pubkey
         }
-        if (prev[pubkey]) {
-          return { ...a, [pubkey]: prev[pubkey] }
+        return {
+          ...a,
+          [pubkey]: prev[pubkey] || ndk.getUser({ hexpubkey: pubkey }),
         }
-        const user = ndk.getUser({ hexpubkey: pubkey })
-        return { ...a, [pubkey]: user }
       }, {})
     })
-  }, [events, ndk])
+  }, [ndk, events])
 
   useEffect(() => {
     initUserStore()
@@ -44,29 +40,16 @@ export const useUserStore = (events?: NDKEvent[]) => {
     const values = Object.values(userIndexes)
     if (keys.length === 0) return {}
     const result = await Promise.all(
-      keys
-        .map(async (key, i) => {
-          // console.log(key, values[i])
-          // if (values[i]) {
-          //   return { [key]: values[i] }
-          // }
-          if (!values[i]) return
-          const user = values[i]
-          if (!user.profile) {
-            await user.fetchProfile({
-              closeOnEose: true,
-              cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-            })
-          }
-
-          const displayName =
-            user.profile?.displayName ||
-            user.profile?.name ||
-            user?.npub.substring(0, 12)
-
-          return { [key]: { ...user.profile, displayName } as NDKUserProfile }
-        })
-        .filter((d) => !!d),
+      keys.map(async (key, i) => {
+        const user = values[i] || ndk.getUser({ hexpubkey: key })
+        if (!user.profile) {
+          await user.fetchProfile({
+            closeOnEose: true,
+            cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+          })
+        }
+        return { [key]: user }
+      }),
     )
     return result.reduce((a, b) => ({ ...a, ...b }), {})
   }, [ndk, userIndexes])

@@ -4,22 +4,27 @@ import { Avatar, Box, Typography } from '@mui/material'
 import { NDKUser } from '@nostr-dev-kit/ndk'
 import { useCallback, useContext, useMemo } from 'react'
 
-const ProfileChip = ({ user }: { user: NDKUser }) => {
+const ProfileChip = ({ user }: { user?: NDKUser | null }) => {
   const { setProfileAction } = useContext(AppContext)
   const displayName = useMemo(
-    () => user?.profile?.displayName || user?.profile?.name || user?.npub,
+    () =>
+      user?.profile?.displayName ||
+      user?.profile?.name ||
+      user?.npub.substring(0, 12),
     [user],
   )
   const handleClickProfile = useCallback(() => {
+    if (!user?.hexpubkey) return
     setProfileAction({
       type: ProfileActionType.View,
-      hexpubkey: user.hexpubkey,
+      hexpubkey: user?.hexpubkey,
     })
-  }, [setProfileAction, user.hexpubkey])
+  }, [setProfileAction, user?.hexpubkey])
+
   return (
     <Box
       className="flex overflow-hidden cursor-pointer hover:underline"
-      onClick={handleClickProfile}
+      onClick={user ? handleClickProfile : undefined}
     >
       <Avatar className="border-2" src={user?.profile?.image} />
       <Box className="flex flex-col pl-2 max-w-xs overflow-hidden">

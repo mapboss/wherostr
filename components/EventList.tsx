@@ -2,27 +2,54 @@
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
-import { Box, LinearProgress, Slide, Typography } from '@mui/material'
+import {
+  Box,
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemText,
+  Slide,
+  Tab,
+  Tabs,
+  Toolbar,
+  Typography,
+} from '@mui/material'
 import { ViewportList } from 'react-viewport-list'
+import { Note, Place } from '@mui/icons-material'
 
 const EventList = ({
+  enableTab = false,
   events = [],
+  places = [],
   onNeedFetch,
 }: {
+  enableTab?: boolean
   events?: NDKEvent[]
+  places?: any[]
   onNeedFetch?: () => Promise<NDKEvent[] | undefined>
 }) => {
-  const ref = useRef(null)
+  const noteRef = useRef(null)
+  const placeRef = useRef(null)
   const totalEvent = useMemo(() => events.length || 0, [events.length])
+  const totalPlace = useMemo(() => places.length || 0, [places.length])
   const [scrollEnd, setScrollEnd] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [hasNext, setHasNext] = useState(true)
+  const [tabIndex, setTabIndex] = useState(0)
 
   useEffect(() => {
     if (totalEvent > 0) {
       setHasNext(true)
     }
   }, [totalEvent])
+
+  useEffect(() => {
+    if (totalEvent > 0) {
+      setTabIndex(0)
+    } else if (totalPlace > 0) {
+      setTabIndex(1)
+    }
+  }, [totalPlace, totalEvent])
 
   const onViewportIndexesChange = useCallback(
     async ([current, next]: [number, number]) => {
@@ -37,12 +64,12 @@ const EventList = ({
     },
     [hasNext, fetching, totalEvent, onNeedFetch],
   )
-  console.log(hasNext, scrollEnd)
+
   return (
     <>
-      <Box ref={ref} className="overflow-y-auto">
+      <Box ref={noteRef} className="overflow-y-auto">
         <ViewportList
-          viewportRef={ref}
+          viewportRef={noteRef}
           items={events}
           onViewportIndexesChange={onViewportIndexesChange}
           withCache

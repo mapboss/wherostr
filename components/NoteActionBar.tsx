@@ -10,7 +10,12 @@ import {
 } from '@mui/icons-material'
 import { useCallback, useContext, useMemo, useState } from 'react'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
-import { NDKEvent, NDKKind, zapInvoiceFromEvent } from '@nostr-dev-kit/ndk'
+import {
+  NDKEvent,
+  NDKKind,
+  NDKSubscriptionCacheUsage,
+  zapInvoiceFromEvent,
+} from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
 import numeral from 'numeral'
@@ -20,7 +25,7 @@ import { AccountContext } from '@/contexts/AccountContext'
 const amountFormat = '0,0.[0]a'
 
 const NoteActionBar = ({ event }: { event: NDKEvent }) => {
-  const { ndk } = useContext(NostrContext)
+  const { ndk, connected } = useContext(NostrContext)
   const { user } = useContext(AccountContext)
   const { setEventAction } = useContext(AppContext)
   const [reacted, setReacted] = useState<'+' | '-' | undefined>()
@@ -29,18 +34,24 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     disliked: 0,
   })
   usePromise(async () => {
-    if (ndk && user && event) {
+    if (ndk && connected && user && event) {
       let [reactedEvent, relatedEvents] = await Promise.all([
-        ndk.fetchEvent({
-          authors: [user.hexpubkey],
-          kinds: [NDKKind.Reaction],
-          '#e': [event.id],
-        }),
-        Array.from(
-          await ndk.fetchEvents({
+        ndk.fetchEvent(
+          {
+            authors: [user.hexpubkey],
             kinds: [NDKKind.Reaction],
             '#e': [event.id],
-          }),
+          },
+          { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+        ),
+        Array.from(
+          await ndk.fetchEvents(
+            {
+              kinds: [NDKKind.Reaction],
+              '#e': [event.id],
+            },
+            { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+          ),
         ),
       ])
       setReacted(
@@ -55,7 +66,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         disliked: relatedEvents.filter(({ content }) => content === '-').length,
       })
     }
-  }, [ndk, user, event])
+  }, [ndk, connected, user, event])
   const reactionPercentage = useMemo(() => {
     return liked ? `${((liked / (liked + disliked)) * 100).toFixed(0)}%` : '-'
   }, [liked, disliked])
@@ -67,26 +78,35 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
       zaps: [],
     },
   ] = usePromise(async () => {
-    if (ndk && event) {
+    if (connected && ndk && event) {
       const [repostEvents, quoteAndCommentEvents, zapEvents] =
         await Promise.all([
           Array.from(
-            await ndk.fetchEvents({
-              kinds: [NDKKind.Repost],
-              '#e': [event.id],
-            }),
+            await ndk.fetchEvents(
+              {
+                kinds: [NDKKind.Repost],
+                '#e': [event.id],
+              },
+              { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+            ),
           ),
           Array.from(
-            await ndk.fetchEvents({
-              kinds: [NDKKind.Text],
-              '#e': [event.id],
-            }),
+            await ndk.fetchEvents(
+              {
+                kinds: [NDKKind.Text],
+                '#e': [event.id],
+              },
+              { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+            ),
           ),
           Array.from(
-            await ndk.fetchEvents({
-              kinds: [NDKKind.Zap],
-              '#e': [event.id],
-            }),
+            await ndk.fetchEvents(
+              {
+                kinds: [NDKKind.Zap],
+                '#e': [event.id],
+              },
+              { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+            ),
           ),
         ])
       const quotes: NDKEvent[] = []
@@ -115,7 +135,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         ),
       }
     }
-  }, [ndk, event])
+  }, [connected, ndk, event])
   const { repostAmount, quoteAmount, commentAmount, zapAmount } = useMemo(
     () => ({
       repostAmount: numeral(reposts.length).format(amountFormat),
