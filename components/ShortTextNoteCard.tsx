@@ -102,7 +102,7 @@ const ShortTextNoteCard = ({
             onClick={() => {
               map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
                 maxZoom: 15,
-                duration: 300,
+                duration: 1000,
               })
             }}
           >

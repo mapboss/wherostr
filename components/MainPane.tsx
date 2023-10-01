@@ -9,6 +9,7 @@ import Geohash from 'latlon-geohash'
 import {
   Avatar,
   Box,
+  Hidden,
   IconButton,
   List,
   ListItem,
@@ -19,6 +20,8 @@ import {
   Tab,
   Tabs,
   Tooltip,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
@@ -34,6 +37,7 @@ import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { useUserStore } from '@/hooks/useUserStore'
 import { AccountContext } from '@/contexts/AccountContext'
+import UserBar from './UserBar'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -46,6 +50,9 @@ const MainPane = () => {
   const [mapLoaded, setMapLoaded] = useState(false)
   const [payload, setPayload] = useState<SearchPayload>({})
   const [tabIndex, setTabIndex] = useState(0)
+  const theme = useTheme()
+  const xlUp = useMediaQuery(theme.breakpoints.up('lg'))
+  const mdUp = useMediaQuery(theme.breakpoints.up('md'))
 
   useEffect(() => {
     setEvents([])
@@ -217,9 +224,6 @@ const MainPane = () => {
       })
       .filter((event) => !!event)
 
-    if (events.length > 0) {
-      map?.easeTo({ padding: { left: 512, right: 32, top: 32 }, duration: 0 })
-    }
     if (!zoomBounds.isEmpty()) {
       map?.fitBounds(zoomBounds, {
         duration: 1000,
@@ -244,6 +248,35 @@ const MainPane = () => {
       type: EventActionType.Create,
     })
   }, [setEventAction])
+
+  useEffect(() => {
+    if (!map) return
+    const basePadding = 32
+    const left = xlUp ? 640 : mdUp ? 496 : 0
+    if (showEvents) {
+      map.easeTo({
+        padding: {
+          left: left + basePadding,
+          right: basePadding,
+          top: basePadding,
+          bottom: basePadding,
+        },
+        duration: 1000,
+        easeId: 'mainpane',
+      })
+    } else {
+      map.easeTo({
+        padding: {
+          left: basePadding,
+          right: basePadding,
+          top: basePadding,
+          bottom: basePadding,
+        },
+        duration: 1000,
+        easeId: 'mainpane',
+      })
+    }
+  }, [map, showEvents, mdUp, xlUp])
 
   return (
     <Paper
@@ -325,7 +358,7 @@ const MainPane = () => {
                             ]
                             map?.fitBounds(bounds, {
                               maxZoom: 14,
-                              duration: 300,
+                              duration: 1000,
                             })
                           }}
                         >
@@ -340,7 +373,6 @@ const MainPane = () => {
           )}
         </>
       )}
-
       {eventAction && (
         <Box className="absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur">
           <EventActionModal />

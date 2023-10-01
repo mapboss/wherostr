@@ -456,7 +456,6 @@ const EventActionModal = () => {
     }
   }, [eventAction])
   return (
-    user &&
     eventAction && (
       <Box className="max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
         <Paper className="w-full overflow-y-auto pt-3 !rounded-2xl">

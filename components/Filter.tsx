@@ -95,7 +95,7 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
         name="search"
         size="small"
         margin="dense"
-        placeholder="Search hashtag or places"
+        placeholder="Search notes and places"
         sx={{ my: 1 }}
         autoComplete="off"
         InputProps={{
@@ -104,7 +104,7 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
               {state === 'pending' ? (
                 <CircularProgress color="inherit" size={20} />
               ) : null}
-              <IconButton>
+              <IconButton type="submit">
                 <Search />
               </IconButton>
             </InputAdornment>

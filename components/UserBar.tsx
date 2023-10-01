@@ -4,8 +4,9 @@ import { Login, Logout } from '@mui/icons-material'
 import { Box, Button, IconButton } from '@mui/material'
 import { useCallback, useContext, useMemo } from 'react'
 import ProfileChip from '@/components/ProfileChip'
+import classNames from 'classnames'
 
-const UserBar = () => {
+const UserBar = ({ className }: { className?: string }) => {
   const { user, signIn, signOut } = useContext(AccountContext)
   const signedIn = useMemo(() => {
     return !!user
@@ -18,9 +19,12 @@ const UserBar = () => {
   }, [signOut])
   return (
     <Box
-      className={`grid items-center py-2 px-3 rounded-bl-2xl${
-        signedIn ? ' background-gradient' : ''
-      }`}
+      className={classNames(
+        `grid items-center py-2 px-3 rounded-bl-2xl${
+          signedIn ? ' background-gradient' : ''
+        }`,
+        className,
+      )}
     >
       {user ? (
         <Box className="flex items-center gap-2">
