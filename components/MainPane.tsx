@@ -9,7 +9,6 @@ import Geohash from 'latlon-geohash'
 import {
   Avatar,
   Box,
-  Hidden,
   IconButton,
   List,
   ListItem,
@@ -28,16 +27,12 @@ import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import {
   DescriptionOutlined,
   Draw,
-  LocationOn,
-  NotesOutlined,
   Place,
   TravelExplore,
 } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { useUserStore } from '@/hooks/useUserStore'
 import { AccountContext } from '@/contexts/AccountContext'
-import UserBar from './UserBar'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -80,7 +75,6 @@ const MainPane = () => {
     return {
       kinds: [NDKKind.Text],
       '#g': Array.from(geohashFilter),
-      limit: 50,
     }
   }, [payload.bbox])
 
@@ -89,8 +83,10 @@ const MainPane = () => {
     const tags = new Set(
       payload.keyword.split(/\s|,/).map((d) => d.trim().toLowerCase()),
     )
-    return { kinds: [NDKKind.Text], '#t': Array.from(tags), limit: 50 }
+    return { kinds: [NDKKind.Text], '#t': Array.from(tags) }
   }, [payload.keyword])
+
+  console.log('geohashFilter', { geohashFilter, tagsFilter })
 
   const [subGeoFilter] = useSubscribe(geohashFilter)
   const [subTagFilter, fetchMore] = useSubscribe(tagsFilter)

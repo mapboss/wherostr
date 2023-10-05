@@ -22,7 +22,7 @@ interface Nostr {
   connected: boolean
   connectRelays: (relays?: string[]) => void
   getUser: (hexpubkey: string) => Promise<NDKUser | undefined>
-  getEvent: (id: string) => Promise<NDKEvent | undefined>
+  getEvent: (id: string) => Promise<NDKEvent | null>
 }
 
 const defaultRelays = (process.env.NEXT_PUBLIC_RELAY_URLS || '')
@@ -30,9 +30,7 @@ const defaultRelays = (process.env.NEXT_PUBLIC_RELAY_URLS || '')
   .filter((item) => !!item)
 
 const ndk = new NDK({
-  cacheAdapter: new NDKCacheAdapterDexie({
-    dbName: 'wherostr-ndk-db',
-  }),
+  cacheAdapter: new NDKCacheAdapterDexie({ dbName: 'wherostr-ndk-db' }),
   explicitRelayUrls: defaultRelays,
 })
 
@@ -41,18 +39,7 @@ export const NostrContext = createContext<Nostr>({
   connected: false,
   connectRelays: (relays?: string[]) => {},
   getUser: () => new Promise((resolve) => resolve(undefined)),
-  getEvent: () => new Promise((resolve) => resolve(undefined)),
-})
-const userCache = new NodeCache({
-  stdTTL: 600,
-  checkperiod: 600,
-  useClones: true,
-})
-
-const eventCache = new NodeCache({
-  stdTTL: 300,
-  checkperiod: 300,
-  useClones: true,
+  getEvent: () => new Promise((resolve) => resolve(null)),
 })
 
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -66,6 +53,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const connectRelays = useCallback(
     async (relays: string[] = defaultRelays) => {
       ndk.explicitRelayUrls = relays
+      setConnected(false)
       await ndk.connect()
       setConnected(true)
     },
@@ -73,44 +61,22 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
   )
 
   const getUser = useCallback(async (hexpubkey: string) => {
-    if (ndk) {
-      const user = ndk.getUser({ hexpubkey })
-      let profile: NDKUserProfile | undefined | false = userCache.get(hexpubkey)
-      if (!profile) {
-        const results = await user.fetchProfile()
-        const values = results?.values()
-        const result = values?.next()
-        const profile = JSON.parse(result?.value?.content || '{}')
-        user.profile = profile
-        if (user.profile) {
-          user.profile.displayName = profile.display_name
-          user.profile.image = profile.picture
-          userCache.set(hexpubkey, user.profile)
-        }
-        return user
-      } else {
-        user.profile = profile
-        return user
-      }
+    const user = ndk.getUser({ hexpubkey })
+    const profile = await user.fetchProfile({
+      closeOnEose: true,
+      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+    })
+    if (profile) {
+      user.profile = profile
     }
+    return user
   }, [])
 
   const getEvent = useCallback(async (id: string) => {
-    if (ndk) {
-      let event: NDKEvent | undefined | null | false = eventCache.get(id)
-      if (!event && event !== false) {
-        eventCache.set(id, false)
-        event = await ndk.fetchEvent(id)
-        if (event) {
-          eventCache.set(id, event)
-          return event
-        } else {
-          throw new Error(ErrorCode.EventNotFound)
-        }
-      } else if (event) {
-        return event
-      }
-    }
+    return ndk.fetchEvent(id, {
+      closeOnEose: true,
+      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+    })
   }, [])
 
   const value = useMemo((): Nostr => {

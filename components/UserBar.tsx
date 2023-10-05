@@ -40,7 +40,7 @@ const UserBar = ({ className }: { className?: string }) => {
           onClick={handleClickSignIn}
           endIcon={<Login />}
         >
-          Sign In
+          Log In
         </Button>
       )}
     </Box>

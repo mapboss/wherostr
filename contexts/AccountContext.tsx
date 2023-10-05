@@ -40,7 +40,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
         connectRelays(relayList.readRelayUrls)
       }
     })
-  }, [user, connectRelays])
+  }, [user])
   useEffect(() => {
     if (ndk && nostrRef.current) {
       ndk.signer = new NDKNip07Signer()
