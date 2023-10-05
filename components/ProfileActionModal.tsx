@@ -11,10 +11,9 @@ import {
 import { useCallback, useContext, useMemo } from 'react'
 import { Close } from '@mui/icons-material'
 import { AppContext } from '@/contexts/AppContext'
-import { NostrContext } from '@/contexts/NostrContext'
-import usePromise from 'react-use-promise'
 import { NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
 import TextNote from './TextNote'
+import { useSubscribe } from '@/hooks/useSubscribe'
 
 const ProfileCard = ({ user }: { user: NDKUser }) => {
   const displayName = useMemo(
@@ -71,36 +70,35 @@ const ProfileCard = ({ user }: { user: NDKUser }) => {
 
 const ProfileActionModal = () => {
   const { profileAction, setProfileAction } = useContext(AppContext)
-  const { ndk } = useContext(NostrContext)
-  const [events] = usePromise(async () => {
-    if (ndk && profileAction?.user) {
-      const events = Array.from(
-        await ndk.fetchEvents({
-          kinds: [NDKKind.Text, NDKKind.Repost],
-          authors: [profileAction.user.hexpubkey],
-          limit: 50,
-        }),
-      )
-      return events
-    }
-  }, [ndk])
   const handleClickCloseModal = useCallback(() => {
     setProfileAction(undefined)
   }, [setProfileAction])
+
+  const filter = useMemo(() => {
+    if (!profileAction?.user.hexpubkey) return
+    return {
+      kinds: [NDKKind.Text],
+      authors: [profileAction.user.hexpubkey],
+      limit: 10,
+    }
+  }, [profileAction?.user.hexpubkey])
+
+  const [events, fetchMore] = useSubscribe(filter)
+
   return (
     profileAction && (
       <Box className="max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
+        <IconButton
+          className="!absolute top-12 right-12 z-10 !bg-[#0000001f]"
+          size="small"
+          onClick={handleClickCloseModal}
+        >
+          <Close />
+        </IconButton>
         <Paper className="relative w-full overflow-y-auto !rounded-2xl">
           <ProfileCard user={profileAction.user} />
-          <IconButton
-            className="!absolute top-3 right-4 !bg-[#0000001f]"
-            size="small"
-            onClick={handleClickCloseModal}
-          >
-            <Close />
-          </IconButton>
           <Divider />
-          <EventList events={events} />
+          <EventList events={events} onNeedFetch={fetchMore} />
         </Paper>
       </Box>
     )

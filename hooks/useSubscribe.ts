@@ -20,9 +20,13 @@ import usePromise from 'react-use-promise'
 export type SubscribeResult = [
   NDKEvent[],
   () => Promise<NDKEvent[] | undefined>,
+  NDKEvent[],
+  () => void,
 ]
 
-const sortItems = (items: Set<NDKEvent> | IterableIterator<NDKEvent>) => {
+const sortItems = (
+  items: NDKEvent[] | Set<NDKEvent> | IterableIterator<NDKEvent>,
+) => {
   return Array.from(items).sort((a, b) => b.created_at! - a.created_at!)
 }
 
@@ -38,6 +42,7 @@ export const useSubscribe = (
   const { ndk, connected } = useContext(NostrContext)
   const [sub, setSub] = useState<NDKSubscription>()
   const [items, setItems] = useState<NDKEvent[]>([])
+  const [newItems, setNewItems] = useState<NDKEvent[]>([])
   const eos = useRef(false)
 
   useEffect(() => {
@@ -53,7 +58,7 @@ export const useSubscribe = (
     setItems([])
     eos.current = false
     const subscribe = ndk.subscribe(
-      { since: timestamp - DAY_IN_SECONDS, ...filter },
+      filter,
       { closeOnEose: false, cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
       undefined,
       false,
@@ -77,7 +82,7 @@ export const useSubscribe = (
     eos.current = false
     const items = new Map<string, NDKEvent>()
 
-    const onEvent = (item: NDKEvent) => {
+    const collectEvent = (item: NDKEvent) => {
       const dedupKey = item.deduplicationKey()
       const existingEvent = items.get(dedupKey)
       if (existingEvent) {
@@ -85,11 +90,22 @@ export const useSubscribe = (
       }
       item.ndk = ndk
       items.set(dedupKey, item)
+    }
+
+    const onEventDup = (item: NDKEvent) => {
+      collectEvent(item)
       if (eos.current) {
         setItems(sortItems(items.values()))
       }
     }
+    const onEvent = (item: NDKEvent) => {
+      collectEvent(item)
+      if (eos.current) {
+        setNewItems(sortItems(items.values()))
+      }
+    }
     sub.on('event', onEvent)
+    sub.on('event:dup', onEventDup)
     sub.once('eose', () => {
       eos.current = true
       setItems(sortItems(items.values()))
@@ -104,8 +120,9 @@ export const useSubscribe = (
   const oldestEvent = useMemo(() => items[items.length - 1], [items])
   const fetchMore = useCallback(async () => {
     if (!connected || !filter || !oldestEvent) return
+    const { since, ...original } = filter
     const events = await ndk.fetchEvents(
-      { ...filter, until: oldestEvent.created_at, limit: 50 },
+      { ...original, until: oldestEvent.created_at, limit: 20 },
       { closeOnEose: true, cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
     )
     const items = sortItems(events)
@@ -120,9 +137,13 @@ export const useSubscribe = (
     return nonDupItems
   }, [connected, ndk, filter, oldestEvent])
 
+  const showNewItems = useCallback(() => {
+    setItems((prev) => sortItems([...newItems, ...prev]))
+  }, [newItems])
+
   return useMemo<SubscribeResult>(() => {
-    return [items, fetchMore]
-  }, [items, fetchMore])
+    return [items, fetchMore, newItems, showNewItems]
+  }, [items, fetchMore, newItems, showNewItems])
 }
 
 export function dedupEvent(event1: NDKEvent, event2: NDKEvent) {

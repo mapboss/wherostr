@@ -39,6 +39,7 @@
     "react-dom": "18.2.0",
     "react-hook-form": "^7.45.4",
     "react-photo-view": "^1.2.3",
+    "react-player": "^2.13.0",
     "react-timeago": "^7.2.0",
     "react-use-promise": "^0.5.0",
     "react-viewport-list": "^7.1.1",

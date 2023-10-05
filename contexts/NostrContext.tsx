@@ -11,11 +11,8 @@ import NDK, {
   NDKEvent,
   NDKSubscriptionCacheUsage,
   NDKUser,
-  NDKUserProfile,
 } from '@nostr-dev-kit/ndk'
 import NDKCacheAdapterDexie from '@nostr-dev-kit/ndk-cache-dexie'
-import NodeCache from 'node-cache'
-import { ErrorCode } from '@/constants/app'
 
 interface Nostr {
   ndk: NDK
@@ -29,8 +26,9 @@ const defaultRelays = (process.env.NEXT_PUBLIC_RELAY_URLS || '')
   .split(',')
   .filter((item) => !!item)
 
+const dexieAdapter = new NDKCacheAdapterDexie({ dbName: 'wherostr-cache' })
 const ndk = new NDK({
-  cacheAdapter: new NDKCacheAdapterDexie({ dbName: 'wherostr-ndk-db' }),
+  cacheAdapter: dexieAdapter as any,
   explicitRelayUrls: defaultRelays,
 })
 

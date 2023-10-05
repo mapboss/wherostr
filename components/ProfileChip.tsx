@@ -4,7 +4,13 @@ import { Avatar, Box, Typography } from '@mui/material'
 import { NDKUser } from '@nostr-dev-kit/ndk'
 import { useCallback, useContext, useMemo } from 'react'
 
-const ProfileChip = ({ user }: { user?: NDKUser | null }) => {
+const ProfileChip = ({
+  user,
+  showName = true,
+}: {
+  user?: NDKUser | null
+  showName?: boolean
+}) => {
   const { setProfileAction } = useContext(AppContext)
   const displayName = useMemo(
     () =>
@@ -27,20 +33,22 @@ const ProfileChip = ({ user }: { user?: NDKUser | null }) => {
       onClick={user ? handleClickProfile : undefined}
     >
       <Avatar className="border-2" src={user?.profile?.image} />
-      <Box className="flex flex-col pl-2 max-w-xs overflow-hidden">
-        <Typography
-          className="overflow-hidden whitespace-nowrap text-ellipsis"
-          variant="subtitle2"
-        >
-          {displayName}
-        </Typography>
-        <Typography
-          className="overflow-hidden whitespace-nowrap text-ellipsis"
-          variant="caption"
-        >
-          {user?.profile?.nip05}
-        </Typography>
-      </Box>
+      {showName && (
+        <Box className="flex flex-col pl-2 max-w-xs overflow-hidden">
+          <Typography
+            className="overflow-hidden whitespace-nowrap text-ellipsis"
+            variant="subtitle2"
+          >
+            {displayName}
+          </Typography>
+          <Typography
+            className="overflow-hidden whitespace-nowrap text-ellipsis"
+            variant="caption"
+          >
+            {user?.profile?.nip05}
+          </Typography>
+        </Box>
+      )}
     </Box>
   )
 }

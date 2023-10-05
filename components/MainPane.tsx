@@ -33,11 +33,14 @@ import {
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { AccountContext } from '@/contexts/AccountContext'
+import { DAY_IN_SECONDS, timestamp } from '@/utils/timestamp'
+import { useSearchParams } from 'next/navigation'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
 
 const MainPane = () => {
+  const searchParams = useSearchParams()
   const { map } = useContext(MapContext)
   const { user } = useContext(AccountContext)
   const { profileAction, events, eventAction, setEvents, setEventAction } =
@@ -48,6 +51,8 @@ const MainPane = () => {
   const theme = useTheme()
   const xlUp = useMediaQuery(theme.breakpoints.up('lg'))
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
+  const mdDown = useMediaQuery(theme.breakpoints.down('md'))
+  const hasMap = searchParams.get('map') === '1'
 
   useEffect(() => {
     setEvents([])
@@ -83,7 +88,12 @@ const MainPane = () => {
     const tags = new Set(
       payload.keyword.split(/\s|,/).map((d) => d.trim().toLowerCase()),
     )
-    return { kinds: [NDKKind.Text], '#t': Array.from(tags) }
+    return {
+      kinds: [NDKKind.Text],
+      '#t': Array.from(tags),
+      since: timestamp - DAY_IN_SECONDS,
+      limit: 20,
+    }
   }, [payload.keyword])
 
   console.log('geohashFilter', { geohashFilter, tagsFilter })
@@ -236,8 +246,9 @@ const MainPane = () => {
   }, [events, map])
 
   const showEvents = useMemo(
-    () => !!events?.length || !!payload.places?.length,
-    [events, payload.places],
+    () =>
+      (!!events?.length || !!payload.places?.length) && (!mdDown || !hasMap),
+    [events, payload.places, mdDown, hasMap],
   )
   const handleClickPost = useCallback(() => {
     setEventAction({

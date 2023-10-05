@@ -15,6 +15,9 @@ import { NDKEvent, NDKFilter, NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
 import { FC, useMemo, useRef } from 'react'
 import ReactTimeago from 'react-timeago'
 import { nip19 } from 'nostr-tools'
+import Link from 'next/link'
+import { useUserCache } from '@/hooks/useCache'
+import LiveBadge from '@/components/LiveBadge'
 
 const MILLISECONDS = 1000
 const DAY_IN_MILLISECONDS = MILLISECONDS * 60 * 60 * 24
@@ -23,14 +26,15 @@ export default function Page() {
   const liveFilter = useMemo(() => {
     return {
       kinds: [30311 as NDKKind],
-      since: Math.floor(Date.now() / MILLISECONDS - 10 * DAY_IN_SECONDS),
+      since: Math.floor(Date.now() / MILLISECONDS - 15 * DAY_IN_SECONDS),
+      limit: 100,
     } as NDKFilter
   }, [])
   const endedFilter = useMemo(() => {
     return {
       kinds: [30311 as NDKKind],
       until: Math.floor(Date.now() / MILLISECONDS),
-      limit: 1000,
+      limit: 100,
     } as NDKFilter
   }, [])
   const [liveEvent] = useSubscribe(liveFilter)
@@ -68,8 +72,6 @@ export default function Page() {
     return liveItems.concat(endedItems)
   }, [liveItems, endedItems])
 
-  const users = useUserStore(events)
-
   const ref = useRef<HTMLDivElement | null>(null)
 
   return (
@@ -84,7 +86,7 @@ export default function Page() {
 
       <Box className="grid grid-cols-4 gap-8 m-8">
         {liveItems.map((item) => (
-          <CardEvent key={item.deduplicationKey()} ev={item} users={users} />
+          <CardEvent key={item.deduplicationKey()} ev={item} />
         ))}
       </Box>
       <Box my={8} />
@@ -96,7 +98,7 @@ export default function Page() {
 
       <Box className="grid grid-cols-4 gap-8 m-8">
         {endedItems.map((item) => (
-          <CardEvent key={item.deduplicationKey()} ev={item} users={users} />
+          <CardEvent key={item.deduplicationKey()} ev={item} />
         ))}
       </Box>
     </Box>
@@ -124,11 +126,11 @@ const CardEvent: FC<{
       }),
     [ev.kind, ev.pubkey, id],
   )
-  const profile = users?.[pubkey]?.profile
+  const [user] = useUserCache(pubkey)
   return (
     <Card key={id}>
       <CardMedia
-        component="a"
+        component={Link}
         href={`/${nostrLink}`}
         sx={{
           backgroundImage: `url(${image})`,
@@ -145,11 +147,7 @@ const CardEvent: FC<{
             flexDirection="column"
             alignItems="flex-end"
           >
-            <Paper sx={{ bgcolor: 'primary.main', px: 1, py: 0.5 }}>
-              <Typography variant="body2" fontWeight="bold">
-                Live
-              </Typography>
-            </Paper>
+            <LiveBadge />
             {typeof viewers !== 'undefined' ? (
               <>
                 <Box my={0.5} />
@@ -165,14 +163,16 @@ const CardEvent: FC<{
       </CardMedia>
       <CardHeader
         avatar={
-          <Avatar src={profile?.image}>
-            {profile?.displayName?.substring(0, 1)}
+          <Avatar src={user?.profile?.image}>
+            {user?.profile?.displayName?.substring(0, 1)}
           </Avatar>
         }
         title={title}
         subheader={
           <Box component="span" display="flex" flexDirection="column">
-            <Typography variant="caption">{profile?.displayName}</Typography>
+            <Typography variant="caption">
+              {user?.profile?.displayName}
+            </Typography>
             <ReactTimeago date={new Date(starts * 1000)} />
           </Box>
         }
