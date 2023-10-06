@@ -1,17 +1,17 @@
 'use client'
 import LiveActivity from '@/components/LiveActivity'
-import { NostrContext } from '@/contexts/NostrContext'
+import { useSubscribe } from '@/hooks/useSubscribe'
 import { Box, LinearProgress, Typography } from '@mui/material'
-import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { NDKFilter } from '@nostr-dev-kit/ndk'
 import { RedirectType } from 'next/dist/client/components/redirect'
-import { redirect, useParams } from 'next/navigation'
+import { redirect, useParams, useSearchParams } from 'next/navigation'
 import { nip19 } from 'nostr-tools'
-import { useContext, useMemo } from 'react'
-import usePromise from 'react-use-promise'
+import { useMemo } from 'react'
 
 export default function Page() {
-  const { ndk } = useContext(NostrContext)
-  const { naddr } = useParams()
+  const searchParams = useSearchParams()
+  const params = useParams()
+  const naddr = searchParams.get('naddr') || params['naddr']
 
   const naddrDesc = useMemo(() => {
     try {
@@ -19,20 +19,25 @@ export default function Page() {
     } catch (err) {}
   }, [naddr])
 
-  const [event, error, state] = usePromise(async () => {
-    if (!naddr || !naddrDesc || !ndk) return
-    if (naddrDesc.type !== 'naddr') return
-    return ndk.fetchEvent(naddr.toString(), {
-      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-      closeOnEose: false,
-    })
-  }, [ndk, naddrDesc, naddr])
-
   if (naddrDesc?.type !== 'naddr') {
     redirect(`/${naddr}`, RedirectType.replace)
   }
 
-  if (state === 'pending') {
+  const filter = useMemo<NDKFilter | undefined>(() => {
+    if (!naddrDesc) return
+    naddrDesc.data.identifier
+    return {
+      kinds: [naddrDesc.data.kind],
+      authors: [naddrDesc.data.pubkey],
+      '#d': [naddrDesc.data.identifier],
+    }
+  }, [naddrDesc])
+
+  const [events] = useSubscribe(filter)
+
+  const event = useMemo(() => events?.[0], [events])
+
+  if (!event) {
     return <LinearProgress />
   }
 

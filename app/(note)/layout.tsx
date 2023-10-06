@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import UserBar from '@/components/UserBar'
 import { AppContextProvider } from '@/contexts/AppContext'
 import { AccountContextProvider } from '@/contexts/AccountContext'
-import { Hidden } from '@mui/material'
+import { Hidden, NoSsr } from '@mui/material'
+import BottomActions from '@/components/BottomActions'
 
 export const metadata: Metadata = {
   title: 'Wherostr',
@@ -22,12 +23,12 @@ export default function RootLayout({
             <UserBar />
           </header>
         </Hidden>
-        <main className="min-h-screen h-screen flex flex-col flex-1 overflow-y-auto">
-          {children}
+        <main className="relative min-h-[calc(100%_-_56px)] h-[calc(100%-_56px)] md:min-h-full md:h-full flex flex-col flex-1 overflow-y-auto">
+          <NoSsr>{children}</NoSsr>
         </main>
         <Hidden mdUp>
-          <footer>
-            <UserBar />
+          <footer className="relative">
+            <BottomActions />
           </footer>
         </Hidden>
       </AppContextProvider>

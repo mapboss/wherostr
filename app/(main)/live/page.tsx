@@ -6,8 +6,8 @@ import {
   Card,
   CardHeader,
   CardMedia,
+  Chip,
   Divider,
-  Paper,
   Typography,
 } from '@mui/material'
 import { NDKEvent, NDKFilter, NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
@@ -16,7 +16,6 @@ import ReactTimeago from 'react-timeago'
 import { nip19 } from 'nostr-tools'
 import Link from 'next/link'
 import { useUserCache } from '@/hooks/useCache'
-import LiveBadge from '@/components/LiveBadge'
 
 const MILLISECONDS = 1000
 const DAY_IN_MILLISECONDS = MILLISECONDS * 60 * 60 * 24
@@ -104,8 +103,7 @@ export default function Page() {
 
 const CardEvent: FC<{
   ev: NDKEvent
-  users?: Record<string, NDKUser>
-}> = ({ ev, users }) => {
+}> = ({ ev }) => {
   const id = ev.tagValue('d') || ''
   const pubkey = ev.tagValue('p') || ev.pubkey
   const title = ev.tagValue('title')
@@ -128,35 +126,43 @@ const CardEvent: FC<{
     <Card key={id}>
       <CardMedia
         component={Link}
-        href={`/${nostrLink}`}
+        href={`/a?naddr=${nostrLink}`}
+        prefetch={false}
         sx={{
           backgroundImage: `url(${image})`,
-          aspectRatio: '16/10',
+          aspectRatio: '16/9',
           position: 'relative',
         }}
       >
-        {isLive ? (
-          <Box
-            position="absolute"
-            right={8}
-            top={8}
-            display="flex"
-            flexDirection="column"
-            alignItems="flex-end"
-          >
-            <LiveBadge />
-            {typeof viewers !== 'undefined' ? (
-              <>
-                <Box my={0.5} />
-                <Paper sx={{ bgcolor: 'rgba(0,0,0,0.8)', px: 1, py: 0.5 }}>
-                  <Typography variant="body2" fontWeight="bold">
-                    {viewers} viewers
-                  </Typography>
-                </Paper>
-              </>
-            ) : null}
-          </Box>
-        ) : null}
+        <Box
+          position="absolute"
+          right={8}
+          top={8}
+          display="flex"
+          flexDirection="column"
+          alignItems="flex-end"
+        >
+          <Chip
+            size="small"
+            color={isLive ? 'primary' : 'default'}
+            label={isLive ? 'LIVE' : 'ENDED'}
+            sx={{
+              fontWeight: 'bold',
+              bgcolor: !isLive ? 'background.paper' : undefined,
+            }}
+          />
+          {isLive && typeof viewers !== 'undefined' ? (
+            <>
+              <Box my={0.5} />
+              <Chip
+                size="small"
+                color="default"
+                label={viewers + ' viewers'}
+                sx={{ fontWeight: 'bold', bgcolor: 'background.paper' }}
+              />
+            </>
+          ) : null}
+        </Box>
       </CardMedia>
       <CardHeader
         avatar={

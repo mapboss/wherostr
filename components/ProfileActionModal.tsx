@@ -8,7 +8,7 @@ import {
   Paper,
   Typography,
 } from '@mui/material'
-import { useCallback, useContext, useMemo } from 'react'
+import { useCallback, useContext, useMemo, useRef } from 'react'
 import { Close } from '@mui/icons-material'
 import { AppContext } from '@/contexts/AppContext'
 import { NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
@@ -84,6 +84,7 @@ const ProfileActionModal = () => {
   }, [profileAction?.user.hexpubkey])
 
   const [events, fetchMore] = useSubscribe(filter)
+  const ref = useRef<HTMLDivElement>(null)
 
   return (
     profileAction && (
@@ -95,10 +96,13 @@ const ProfileActionModal = () => {
         >
           <Close />
         </IconButton>
-        <Paper className="relative w-full overflow-y-auto !rounded-2xl">
+        <Paper
+          className="relative w-full overflow-y-auto !rounded-2xl"
+          ref={ref}
+        >
           <ProfileCard user={profileAction.user} />
           <Divider />
-          <EventList events={events} onNeedFetch={fetchMore} />
+          <EventList events={events} onNeedFetch={fetchMore} parentRef={ref} />
         </Paper>
       </Box>
     )

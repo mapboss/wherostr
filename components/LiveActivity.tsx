@@ -7,8 +7,6 @@ import { useMemo } from 'react'
 import { useUserCache } from '@/hooks/useCache'
 import ProfileChip from './ProfileChip'
 import { Bolt, Share, SubscriptionsSharp } from '@mui/icons-material'
-import LiveBadge from './LiveBadge'
-import ReactTimeago from 'react-timeago'
 import { LiveStreamTime } from './LiveStreamTime'
 
 export interface LiveActivityItem {
@@ -87,11 +85,20 @@ const LiveActivity = ({
                 color={liveItem.status === 'live' ? 'primary' : 'secondary'}
               />
               {liveItem.status === 'live' && (
-                <Chip
-                  sx={{ fontWeight: 'bold' }}
-                  variant="outlined"
-                  label={<LiveStreamTime starts={liveItem.starts} />}
-                />
+                <>
+                  {typeof liveItem.viewers !== 'undefined' && (
+                    <Chip
+                      sx={{ fontWeight: 'bold' }}
+                      variant="outlined"
+                      label={`${liveItem.viewers} viewers`}
+                    />
+                  )}
+                  <Chip
+                    sx={{ fontWeight: 'bold' }}
+                    variant="outlined"
+                    label={<LiveStreamTime starts={liveItem.starts} />}
+                  />
+                </>
               )}
               {liveItem.tags.map(([_, tag], i) => {
                 return <Chip key={i} label={tag} />

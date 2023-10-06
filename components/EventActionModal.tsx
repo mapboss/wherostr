@@ -359,7 +359,9 @@ const ShortTextNotePane = ({
           _comments.push(item)
         }
       })
-      return [...repostEvents, ..._quotes, ..._comments]
+      return [...repostEvents, ..._quotes, ..._comments].sort(
+        (a, b) => b.created_at! - a.created_at!,
+      )
     }
   }, [connected, ndk, event, reposts, quotes, comments])
   const relatedEventElements = useMemo(

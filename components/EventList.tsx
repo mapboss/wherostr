@@ -1,20 +1,33 @@
 'use client'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  FC,
+  ForwardRefRenderFunction,
+  ForwardedRef,
+  RefObject,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import { Box, LinearProgress, Slide, Typography } from '@mui/material'
 import { ViewportList } from 'react-viewport-list'
 
-const EventList = ({
-  enableTab = false,
-  events = [],
-  onNeedFetch,
-}: {
-  enableTab?: boolean
+export interface EventListProps {
   events?: NDKEvent[]
   onNeedFetch?: () => Promise<NDKEvent[] | undefined>
+  parentRef?: RefObject<HTMLElement> | null
+}
+
+const EventList: FC<EventListProps> = ({
+  events = [],
+  parentRef = null,
+  onNeedFetch,
 }) => {
-  const noteRef = useRef(null)
+  const noteRef = useRef<HTMLElement>(null)
   const totalEvent = useMemo(() => events.length || 0, [events.length])
   const [scrollEnd, setScrollEnd] = useState(false)
   const [fetching, setFetching] = useState(false)
@@ -42,14 +55,16 @@ const EventList = ({
 
   return (
     <>
-      <Box ref={noteRef} className="overflow-y-auto">
+      <Box ref={!parentRef ? noteRef : undefined} className="overflow-y-auto">
         <ViewportList
-          viewportRef={noteRef}
+          viewportRef={parentRef || noteRef}
           items={events}
           onViewportIndexesChange={onViewportIndexesChange}
           withCache
         >
-          {(item) => <ShortTextNoteCard key={item.id} event={item} />}
+          {(item) => (
+            <ShortTextNoteCard key={item.deduplicationKey()} event={item} />
+          )}
         </ViewportList>
       </Box>
       {fetching && <LinearProgress sx={{ minHeight: 4 }} />}

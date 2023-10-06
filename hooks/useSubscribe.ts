@@ -14,7 +14,6 @@ import {
   useRef,
   useState,
 } from 'react'
-import usePromise from 'react-use-promise'
 
 export type SubscribeResult = [
   NDKEvent[],
@@ -69,13 +68,6 @@ export const useSubscribe = (
     })
   }, [ndk, connected, filter])
 
-  // useEffect(() => {
-  //   if (sub && disabled) {
-  //     sub.stop()
-  //     onStop?.()
-  //   }
-  // }, [disabled, sub, onStop])
-
   useEffect(() => {
     if (!connected || !sub) return
     eos.current = false
@@ -122,7 +114,7 @@ export const useSubscribe = (
     const { since, ...original } = filter
     const events = await ndk.fetchEvents(
       { ...original, until: oldestEvent.created_at, limit: 20 },
-      { closeOnEose: true, cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+      { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
     )
     const items = sortItems(events)
     let nonDupItems: NDKEvent[] = []

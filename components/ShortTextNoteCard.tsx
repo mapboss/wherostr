@@ -14,11 +14,9 @@ import {
 import { useCallback, useContext, useMemo } from 'react'
 import {
   ArrowRightAlt,
-  MapOutlined,
   MoreVert,
   Repeat,
   TravelExploreOutlined,
-  ZoomInMap,
 } from '@mui/icons-material'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'

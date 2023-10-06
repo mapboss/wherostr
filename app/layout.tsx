@@ -14,7 +14,7 @@ export default function RootLayout({
         <meta property="og:image" content="https://www.your.blog/YOUR_IMAGE" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body>
+      <body className="h-[100dvh] overflow-y-auto">
         <DefaultTheme>
           <NostrContextProvider>{children}</NostrContextProvider>
         </DefaultTheme>

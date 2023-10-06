@@ -3,14 +3,16 @@ import { NostrContext } from '@/contexts/NostrContext'
 import { Box, Typography } from '@mui/material'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { RedirectType } from 'next/dist/client/components/redirect'
-import { redirect, useParams } from 'next/navigation'
+import { redirect, useParams, useSearchParams } from 'next/navigation'
 import { nip19 } from 'nostr-tools'
 import { useContext, useMemo } from 'react'
 import usePromise from 'react-use-promise'
 
 export default function Page() {
   const { ndk } = useContext(NostrContext)
-  const { naddr } = useParams()
+  const searchParams = useSearchParams()
+  const params = useParams()
+  const naddr = searchParams.get('naddr') || params['naddr']
 
   const naddrDesc = useMemo(() => {
     try {
@@ -40,7 +42,7 @@ export default function Page() {
   return (
     <Box m={4}>
       <Typography component="pre" variant="caption">
-        {JSON.stringify(event || {}, null, 4)}
+        {JSON.stringify(user || {}, null, 4)}
       </Typography>
     </Box>
   )
