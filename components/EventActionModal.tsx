@@ -225,7 +225,9 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
     [_amountValue],
   )
   const amountOptions = useMemo(
-    () => [50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
+    () => [
+      50, 100, 500, 1_000, 5_000, 10_000, 50_000, 100_000, 500_000, 1_000_000,
+    ],
     [],
   )
   const handleClickAmount = useCallback(

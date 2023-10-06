@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { NDKNip07Signer, NDKUser } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
+import { Dialog, DialogContent, DialogTitle, Modal } from '@mui/material'
 
 interface Account {
   user?: NDKUser

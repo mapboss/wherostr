@@ -63,8 +63,8 @@ const LiveActivity = ({
   const autoplay = useMemo(() => liveItem.status === 'live', [liveItem.status])
   const [user] = useUserCache(liveItem.pubkey)
   return (
-    <Box className="grid grid-cols-[auto_440px] gap-6 flex-1 flex-row-reverse overflow-hidden mt-16">
-      <Box className="overflow-y-auto flex-1 [&::-webkit-scrollbar]:w-0 gap-4">
+    <Box className="grid gap-6 flex-1 overflow-hidden md:mt-16 grid-cols-1 md:grid-cols-[auto_400px]">
+      <Box className="flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 gap-4">
         <Paper className="overflow-hidden">
           <LiveVideoPlayer
             stream={liveItem.recording || liveItem.streaming}
@@ -72,61 +72,63 @@ const LiveActivity = ({
             poster={liveItem.image}
           />
         </Paper>
-        <Box className="flex my-4">
-          <Box flex={1}>
-            <Typography variant="h4" fontWeight="bold">
-              {liveItem.title}
-            </Typography>
-            <Typography>{liveItem.summary}</Typography>
-            <Box className="flex [&>div]:mx-1 mt-2">
-              <Chip
-                sx={{ fontWeight: 'bold' }}
-                label={liveItem.status?.toUpperCase()}
-                color={liveItem.status === 'live' ? 'primary' : 'secondary'}
-              />
-              {liveItem.status === 'live' && (
-                <>
-                  {typeof liveItem.viewers !== 'undefined' && (
-                    <Chip
-                      sx={{ fontWeight: 'bold' }}
-                      variant="outlined"
-                      label={`${liveItem.viewers} viewers`}
-                    />
-                  )}
+        <Box mx={2}>
+          <Box className="flex flex-wrap space-4">
+            <Box flex={1}>
+              <Typography variant="h4" fontWeight="bold">
+                {liveItem.title}
+              </Typography>
+              <Typography>{liveItem.summary}</Typography>
+            </Box>
+            <Box className="flex items-start">
+              <ProfileChip user={user} showName={false} />
+              <Box component="span" mx={1} />
+              <Button variant="outlined" color="inherit" startIcon={<Share />}>
+                Share
+              </Button>
+              <Box component="span" mx={0.5} />
+              <Button
+                variant="outlined"
+                color="inherit"
+                startIcon={<SubscriptionsSharp />}
+              >
+                Follow
+              </Button>
+              <Box component="span" mx={0.5} />
+              <Button variant="contained" color="primary" startIcon={<Bolt />}>
+                Zap
+              </Button>
+            </Box>
+          </Box>
+          <Box className="flex flex-wrap gap-2">
+            <Chip
+              sx={{ fontWeight: 'bold' }}
+              label={liveItem.status?.toUpperCase()}
+              color={liveItem.status === 'live' ? 'primary' : 'secondary'}
+            />
+            {liveItem.status === 'live' && (
+              <>
+                {typeof liveItem.viewers !== 'undefined' && (
                   <Chip
                     sx={{ fontWeight: 'bold' }}
                     variant="outlined"
-                    label={<LiveStreamTime starts={liveItem.starts} />}
+                    label={`${liveItem.viewers} viewers`}
                   />
-                </>
-              )}
-              {liveItem.tags.map(([_, tag], i) => {
-                return <Chip key={i} label={tag} />
-              })}
-            </Box>
-          </Box>
-          <Box className="flex items-start">
-            <ProfileChip user={user} showName={false} />
-            <Box component="span" mx={1} />
-            <Button variant="outlined" color="inherit" startIcon={<Share />}>
-              Share
-            </Button>
-            <Box component="span" mx={0.5} />
-            <Button
-              variant="outlined"
-              color="inherit"
-              startIcon={<SubscriptionsSharp />}
-            >
-              Follow
-            </Button>
-            <Box component="span" mx={0.5} />
-            <Button variant="contained" color="primary" startIcon={<Bolt />}>
-              Zap
-            </Button>
+                )}
+                <Chip
+                  sx={{ fontWeight: 'bold' }}
+                  variant="outlined"
+                  label={<LiveStreamTime starts={liveItem.starts} />}
+                />
+              </>
+            )}
+            {liveItem.tags.map(([_, tag], i) => {
+              return <Chip key={i} label={tag} />
+            })}
           </Box>
         </Box>
       </Box>
-      <Paper className="overflow-hidden relative flex flex-col mb-4">
+      <Paper className="overflow-hidden relative flex flex-col md:mb-4">
         <Toolbar>
           <Typography variant="h6" fontWeight="bold">
             Stream Chat

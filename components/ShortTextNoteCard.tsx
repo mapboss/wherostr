@@ -26,6 +26,7 @@ import { useUserCache } from '@/hooks/useCache'
 import { extractLngLat } from '@/utils/extractLngLat'
 import { MapContext } from '@/contexts/MapContext'
 import { LngLatBounds } from 'maplibre-gl'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 const ShortTextNoteCard = ({
   event,
@@ -36,6 +37,9 @@ const ShortTextNoteCard = ({
   action?: boolean
   relatedNoteVariant?: 'full' | 'fraction' | 'link'
 }) => {
+  const pathname = usePathname()
+  const query = useSearchParams()
+  const router = useRouter()
   const { ndk, getEvent } = useContext(NostrContext)
   const { map } = useContext(MapContext)
   const [user, error, state] = useUserCache(event.pubkey)
@@ -98,10 +102,14 @@ const ShortTextNoteCard = ({
           <IconButton
             size="small"
             onClick={() => {
-              map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
-                maxZoom: 15,
-                duration: 1000,
-              })
+              const keyword = query.get('keyword') || ''
+              router.replace(`${pathname}?keyword=${keyword}&map=1`)
+              setTimeout(() => {
+                map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
+                  maxZoom: 15,
+                  duration: 1000,
+                })
+              }, 100)
             }}
           >
             {/* <MoreVert /> */}

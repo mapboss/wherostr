@@ -22,6 +22,9 @@ import { useSubscribe } from '@/hooks/useSubscribe'
 import { AccountContext } from '@/contexts/AccountContext'
 import { DAY_IN_SECONDS, timestamp } from '@/utils/timestamp'
 import { useSearchParams } from 'next/navigation'
+import ProfileChip from './ProfileChip'
+import UserBar from './UserBar'
+import classNames from 'classnames'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -66,6 +69,7 @@ const MainPane = () => {
     geohashFilter = new Set([bboxhash1, bboxhash2, bboxhash3, bboxhash4])
     return {
       kinds: [NDKKind.Text],
+      until: timestamp,
       '#g': Array.from(geohashFilter),
     }
   }, [payload.bbox])
@@ -80,6 +84,7 @@ const MainPane = () => {
       ...(tags ? { '#t': Array.from(tags) } : undefined),
       kinds: [NDKKind.Text],
       since: timestamp - 30 * DAY_IN_SECONDS,
+      until: timestamp,
       limit: 20,
     }
   }, [payload.keyword])
@@ -216,13 +221,6 @@ const MainPane = () => {
       })
       .filter((event) => !!event)
 
-    if (!zoomBounds.isEmpty()) {
-      map?.fitBounds(zoomBounds, {
-        duration: 1000,
-        maxZoom: 14,
-      })
-    }
-
     try {
       ;(map.getSource('nostr-event') as any)?.setData({
         type: 'FeatureCollection',
@@ -235,6 +233,12 @@ const MainPane = () => {
     () => !!events?.length && (!mdDown || !hasMap),
     [events, mdDown, hasMap],
   )
+  const showOnlyMap = useMemo(() => mdDown && hasMap, [mdDown, hasMap])
+
+  const showPanel = useMemo(
+    () => profileAction || eventAction || showEvents || !showOnlyMap,
+    [profileAction, eventAction, showEvents, showOnlyMap],
+  )
   const handleClickPost = useCallback(() => {
     setEventAction({
       type: EventActionType.Create,
@@ -245,7 +249,7 @@ const MainPane = () => {
     if (!map) return
     const basePadding = 32
     const left = xlUp ? 640 : mdUp ? 496 : 0
-    if (showEvents) {
+    if (showPanel) {
       map.easeTo({
         padding: {
           left: left + basePadding,
@@ -253,7 +257,7 @@ const MainPane = () => {
           top: basePadding,
           bottom: basePadding,
         },
-        duration: 1000,
+        duration: 0,
         easeId: 'mainpane',
       })
     } else {
@@ -264,19 +268,28 @@ const MainPane = () => {
           top: basePadding,
           bottom: basePadding,
         },
-        duration: 1000,
+        duration: 0,
         easeId: 'mainpane',
       })
     }
-  }, [map, showEvents, mdUp, xlUp])
+  }, [map, showPanel, mdUp, xlUp])
 
   return (
     <Paper
-      className={`absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] flex flex-col !rounded-none overflow-hidden${
-        profileAction || eventAction || showEvents ? ' h-full' : ''
-      }`}
+      className={classNames(
+        `absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] flex flex-col !rounded-none overflow-hidden`,
+        {
+          'h-full': showPanel,
+          'h-[74px]': !showPanel,
+        },
+      )}
     >
-      <Box className="px-4 py-2 flex gap-4 items-center">
+      <Box className="px-4 py-2 flex gap-2 items-center">
+        {user?.npub ? (
+          <ProfileChip user={user} showName={false} />
+        ) : (
+          <UserBar />
+        )}
         <Filter
           className="grow"
           onSearch={(payload) => setPayload(payload || {})}
@@ -294,7 +307,7 @@ const MainPane = () => {
         )}
       </Box>
       <Box className="w-full h-0.5 shrink-0 background-gradient" />
-      {showEvents && <EventList events={events} onNeedFetch={fetchMore} />}
+      <EventList events={events} onNeedFetch={fetchMore} />
       {/* {showEvents && (
         <>
           <Box>

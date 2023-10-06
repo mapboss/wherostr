@@ -14,8 +14,9 @@ import { AppContext } from '@/contexts/AppContext'
 import { NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
 import TextNote from './TextNote'
 import { useSubscribe } from '@/hooks/useSubscribe'
+import { MILLISECONDS, timestamp } from '@/utils/timestamp'
 
-const ProfileCard = ({ user }: { user: NDKUser }) => {
+const ProfileCard = ({ user }: { user?: NDKUser }) => {
   const displayName = useMemo(
     () => user?.profile?.displayName || user?.profile?.name || user?.npub,
     [user],
@@ -58,7 +59,7 @@ const ProfileCard = ({ user }: { user: NDKUser }) => {
         <Box className="py-3 text-contrast-secondary">
           <TextNote
             event={{
-              content: user.profile?.about,
+              content: user?.profile?.about,
             }}
             textVariant="subtitle2"
           />
@@ -78,7 +79,8 @@ const ProfileActionModal = () => {
     if (!profileAction?.user.hexpubkey) return
     return {
       kinds: [NDKKind.Text],
-      authors: [profileAction.user.hexpubkey],
+      authors: [profileAction?.user.hexpubkey],
+      until: timestamp,
       limit: 10,
     }
   }, [profileAction?.user.hexpubkey])
@@ -87,25 +89,20 @@ const ProfileActionModal = () => {
   const ref = useRef<HTMLDivElement>(null)
 
   return (
-    profileAction && (
-      <Box className="max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
-        <IconButton
-          className="!absolute top-12 right-12 z-10 !bg-[#0000001f]"
-          size="small"
-          onClick={handleClickCloseModal}
-        >
-          <Close />
-        </IconButton>
-        <Paper
-          className="relative w-full overflow-y-auto !rounded-2xl"
-          ref={ref}
-        >
-          <ProfileCard user={profileAction.user} />
-          <Divider />
-          <EventList events={events} onNeedFetch={fetchMore} parentRef={ref} />
-        </Paper>
-      </Box>
-    )
+    <Box className="max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
+      <IconButton
+        className="!absolute top-12 right-12 z-10 !bg-[#0000001f]"
+        size="small"
+        onClick={handleClickCloseModal}
+      >
+        <Close />
+      </IconButton>
+      <Paper className="relative w-full overflow-y-auto !rounded-2xl" ref={ref}>
+        <ProfileCard user={profileAction?.user} />
+        <Divider />
+        <EventList events={events} onNeedFetch={fetchMore} parentRef={ref} />
+      </Paper>
+    </Box>
   )
 }
 

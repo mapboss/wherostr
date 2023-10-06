@@ -1,6 +1,12 @@
 import './globals.css'
 import { DefaultTheme } from '@/themes'
 import { NostrContextProvider } from '@/contexts/NostrContext'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Wherostr',
+  description: 'Wherostr',
+}
 
 export default function RootLayout({
   children,

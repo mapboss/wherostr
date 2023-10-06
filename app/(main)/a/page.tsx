@@ -43,7 +43,7 @@ export default function Page() {
 
   if (event?.kind === 30311) {
     return (
-      <Box px={3} flex={1} display="flex" overflow="hidden">
+      <Box className="px-0 md:px-4" flex={1} display="flex" overflow="hidden">
         <LiveActivity naddr={naddr.toString()} event={event} />
       </Box>
     )
