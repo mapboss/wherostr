@@ -7,29 +7,16 @@ import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import {
-  Avatar,
   Box,
   IconButton,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemSecondaryAction,
-  ListItemText,
   Paper,
-  Tab,
-  Tabs,
   Tooltip,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
-import {
-  DescriptionOutlined,
-  Draw,
-  Place,
-  TravelExplore,
-} from '@mui/icons-material'
+import { Draw } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { AccountContext } from '@/contexts/AccountContext'
@@ -84,19 +71,18 @@ const MainPane = () => {
   }, [payload.bbox])
 
   const tagsFilter = useMemo(() => {
-    if (!payload.keyword) return
-    const tags = new Set(
-      payload.keyword.split(/\s|,/).map((d) => d.trim().toLowerCase()),
-    )
+    const tags = payload.keyword
+      ? new Set(
+          payload.keyword.split(/\s|,/).map((d) => d.trim().toLowerCase()),
+        )
+      : undefined
     return {
+      ...(tags ? { '#t': Array.from(tags) } : undefined),
       kinds: [NDKKind.Text],
-      '#t': Array.from(tags),
-      since: timestamp - DAY_IN_SECONDS,
+      since: timestamp - 30 * DAY_IN_SECONDS,
       limit: 20,
     }
   }, [payload.keyword])
-
-  console.log('geohashFilter', { geohashFilter, tagsFilter })
 
   const [subGeoFilter] = useSubscribe(geohashFilter)
   const [subTagFilter, fetchMore] = useSubscribe(tagsFilter)
@@ -246,9 +232,8 @@ const MainPane = () => {
   }, [events, map])
 
   const showEvents = useMemo(
-    () =>
-      (!!events?.length || !!payload.places?.length) && (!mdDown || !hasMap),
-    [events, payload.places, mdDown, hasMap],
+    () => !!events?.length && (!mdDown || !hasMap),
+    [events, mdDown, hasMap],
   )
   const handleClickPost = useCallback(() => {
     setEventAction({
@@ -309,7 +294,8 @@ const MainPane = () => {
         )}
       </Box>
       <Box className="w-full h-0.5 shrink-0 background-gradient" />
-      {showEvents && (
+      {showEvents && <EventList events={events} onNeedFetch={fetchMore} />}
+      {/* {showEvents && (
         <>
           <Box>
             <Tabs value={tabIndex} onChange={(_, value) => setTabIndex(value)}>
@@ -379,7 +365,7 @@ const MainPane = () => {
             </Box>
           )}
         </>
-      )}
+      )} */}
       {eventAction && (
         <Box className="absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur">
           <EventActionModal />

@@ -15,7 +15,7 @@ import { NostrContext } from '@/contexts/NostrContext'
 
 interface Account {
   user?: NDKUser
-  signIn: () => Promise<void>
+  signIn: () => Promise<NDKUser | void>
   signOut: () => Promise<void>
 }
 
@@ -26,46 +26,58 @@ export const AccountContext = createContext<Account>({
 })
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { ndk, connected, getUser, connectRelays } = useContext(NostrContext)
+  const { ndk, getUser, connectRelays } = useContext(NostrContext)
   const [user, setUser] = useState<NDKUser>()
   const nostrRef = useRef<typeof window.nostr>()
   nostrRef.current = typeof window !== 'undefined' ? window.nostr : undefined
-  useEffect(() => {
-    if (!user) {
-      connectRelays()
-      return
-    }
-    user.relayList().then((relayList) => {
-      if (relayList && relayList.readRelayUrls.length) {
-        connectRelays(relayList.readRelayUrls)
-      }
-    })
-  }, [user])
+
   useEffect(() => {
     if (ndk && nostrRef.current) {
       ndk.signer = new NDKNip07Signer()
     }
   }, [ndk])
+
+  const connect = useCallback(
+    async (user?: NDKUser) => {
+      if (!user) {
+        return connectRelays()
+      }
+      return user.relayList().then((relayList) => {
+        if (relayList?.readRelayUrls.length) {
+          return connectRelays(relayList.readRelayUrls)
+        }
+      })
+    },
+    [connectRelays],
+  )
+
   const signIn = useCallback(async () => {
     if (ndk && nostrRef.current) {
       const signerUser = await ndk.signer?.user()
-      if (signerUser && connected) {
+      if (signerUser) {
         const user = ndk.getUser({ hexpubkey: signerUser.hexpubkey })
-        await user.fetchProfile()
+        const profile = await user.fetchProfile()
+        if (profile) {
+          user.profile = profile
+        }
         if (user) {
           localStorage.setItem('npub', user.npub)
-          setUser(user)
         }
+        setUser(user)
+        await connect(user)
+        return user
       }
     }
-  }, [ndk, connected])
+  }, [ndk, connect])
+
   const signOut = useCallback(async () => {
     if (ndk && nostrRef.current) {
       ndk.signer = new NDKNip07Signer()
       localStorage.removeItem('npub')
       setUser(undefined)
+      await connectRelays()
     }
-  }, [ndk])
+  }, [ndk, connectRelays])
   const value = useMemo((): Account => {
     return {
       user,
@@ -73,11 +85,24 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       signOut,
     }
   }, [user, signIn, signOut])
+
   useEffect(() => {
-    if (localStorage.getItem('npub')) {
-      signIn()
+    const func = async () => {
+      let user: NDKUser | undefined
+      if (localStorage.getItem('npub')) {
+        const signerUser = await ndk.signer?.user()
+        if (signerUser?.hexpubkey) {
+          user = await getUser(signerUser.hexpubkey)
+        }
+      }
+      await connect(user)
+      if (user) {
+        setUser(user)
+      }
     }
-  }, [signIn])
+    func()
+  }, [getUser, connect, ndk.signer])
+
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
   )

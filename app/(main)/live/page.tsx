@@ -1,6 +1,5 @@
 'use client'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { useUserStore } from '@/hooks/useUserStore'
 import {
   Avatar,
   Box,
@@ -27,14 +26,14 @@ export default function Page() {
     return {
       kinds: [30311 as NDKKind],
       since: Math.floor(Date.now() / MILLISECONDS - 15 * DAY_IN_SECONDS),
-      limit: 100,
+      limit: 200,
     } as NDKFilter
   }, [])
   const endedFilter = useMemo(() => {
     return {
       kinds: [30311 as NDKKind],
       until: Math.floor(Date.now() / MILLISECONDS),
-      limit: 100,
+      limit: 200,
     } as NDKFilter
   }, [])
   const [liveEvent] = useSubscribe(liveFilter)
@@ -46,13 +45,11 @@ export default function Page() {
       .sort(
         (a, b) => Number(b.tagValue('starts')) - Number(a.tagValue('starts')),
       )
-
     const filtered = sorted.filter(
       (item, index) =>
         item.tagValue('status') === 'live' &&
         sorted.findIndex((e) => e.pubkey === item.pubkey) === index,
     )
-    console.log('filtered', filtered)
     return filtered
   }, [liveEvent])
 

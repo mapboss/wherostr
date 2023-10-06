@@ -9,6 +9,7 @@ import {
 } from 'react'
 import NDK, {
   NDKEvent,
+  NDKRelay,
   NDKSubscriptionCacheUsage,
   NDKUser,
 } from '@nostr-dev-kit/ndk'
@@ -17,7 +18,7 @@ import NDKCacheAdapterDexie from '@nostr-dev-kit/ndk-cache-dexie'
 interface Nostr {
   ndk: NDK
   connected: boolean
-  connectRelays: (relays?: string[]) => void
+  connectRelays: (relays?: string[]) => Promise<void>
   getUser: (hexpubkey: string) => Promise<NDKUser | undefined>
   getEvent: (id: string) => Promise<NDKEvent | null>
 }
@@ -35,7 +36,7 @@ const ndk = new NDK({
 export const NostrContext = createContext<Nostr>({
   ndk,
   connected: false,
-  connectRelays: (relays?: string[]) => {},
+  connectRelays: async (relays?: string[]) => {},
   getUser: () => new Promise((resolve) => resolve(undefined)),
   getEvent: () => new Promise((resolve) => resolve(null)),
 })
@@ -50,8 +51,12 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const connectRelays = useCallback(
     async (relays: string[] = defaultRelays) => {
-      ndk.explicitRelayUrls = relays
       setConnected(false)
+      ndk.explicitRelayUrls?.forEach((e) => {
+        if (relays.includes(e)) return
+        new NDKRelay(e).disconnect()
+      })
+      ndk.explicitRelayUrls = relays
       await ndk.connect()
       setConnected(true)
     },

@@ -22,7 +22,14 @@ export default function RootLayout({
             <UserBar />
           </header>
         </Hidden>
-        <main className="min-h-screen h-screen flex flex-col">{children}</main>
+        <main className="min-h-screen h-screen flex flex-col flex-1 overflow-y-auto">
+          {children}
+        </main>
+        <Hidden mdUp>
+          <footer>
+            <UserBar />
+          </footer>
+        </Hidden>
       </AppContextProvider>
     </AccountContextProvider>
   )

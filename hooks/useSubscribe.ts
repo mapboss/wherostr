@@ -1,5 +1,4 @@
 import { NostrContext } from '@/contexts/NostrContext'
-import { DAY_IN_SECONDS, timestamp } from '@/utils/timestamp'
 import {
   NDKEvent,
   NDKFilter,

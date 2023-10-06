@@ -119,7 +119,7 @@ const CreateEventForm = ({
       )
       if (geohash) {
         const length = geohash.length
-        for (let i = 1; i <= length; i++) {
+        for (let i = length - 1; i >= 0; i--) {
           newEvent.tags.push(['g', geohash.substring(0, i)])
         }
       }

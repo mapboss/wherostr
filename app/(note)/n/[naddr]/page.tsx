@@ -1,7 +1,6 @@
 'use client'
-import LiveActivity from '@/components/LiveActivity'
 import { NostrContext } from '@/contexts/NostrContext'
-import { Box, LinearProgress, Typography } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { RedirectType } from 'next/dist/client/components/redirect'
 import { redirect, useParams } from 'next/navigation'
@@ -21,31 +20,20 @@ export default function Page() {
 
   const [event, error, state] = usePromise(async () => {
     if (!naddr || !naddrDesc || !ndk) return
-    if (naddrDesc.type !== 'naddr') return
-    return ndk.fetchEvent(naddr.toString(), {
+    if (naddrDesc.type !== 'note') return
+    const ev = await ndk.fetchEvent(naddr.toString(), {
       cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-      closeOnEose: false,
+      closeOnEose: true,
     })
+    return ev?.toNostrEvent()
   }, [ndk, naddrDesc, naddr])
 
-  if (naddrDesc?.type !== 'naddr') {
+  if (naddrDesc?.type !== 'note') {
     redirect(`/${naddr}`, RedirectType.replace)
   }
 
-  if (state === 'pending') {
-    return <LinearProgress />
-  }
-
-  if (event?.kind === 30311) {
-    return (
-      <Box px={3} flex={1} display="flex" overflow="hidden">
-        <LiveActivity naddr={naddr.toString()} event={event} />
-      </Box>
-    )
-  }
-
   return (
-    <Box m={2} overflow="hidden">
+    <Box m={4}>
       <Typography component="pre" variant="caption">
         {JSON.stringify(event || {}, null, 4)}
       </Typography>
