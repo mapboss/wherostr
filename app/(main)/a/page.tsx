@@ -25,7 +25,6 @@ export default function Page() {
 
   const filter = useMemo<NDKFilter | undefined>(() => {
     if (!naddrDesc) return
-    naddrDesc.data.identifier
     return {
       kinds: [naddrDesc.data.kind],
       authors: [naddrDesc.data.pubkey],
@@ -33,7 +32,7 @@ export default function Page() {
     }
   }, [naddrDesc])
 
-  const [events] = useSubscribe(filter)
+  const [events] = useSubscribe(filter, true)
 
   const event = useMemo(() => events?.[0], [events])
 

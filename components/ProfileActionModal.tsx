@@ -14,7 +14,7 @@ import { AppContext } from '@/contexts/AppContext'
 import { NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
 import TextNote from './TextNote'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { MILLISECONDS, timestamp } from '@/utils/timestamp'
+import { MILLISECONDS, unixNow } from '@/utils/time'
 
 const ProfileCard = ({ user }: { user?: NDKUser }) => {
   const displayName = useMemo(
@@ -80,7 +80,7 @@ const ProfileActionModal = () => {
     return {
       kinds: [NDKKind.Text],
       authors: [profileAction?.user.hexpubkey],
-      until: timestamp,
+      until: unixNow(),
       limit: 10,
     }
   }, [profileAction?.user.hexpubkey])

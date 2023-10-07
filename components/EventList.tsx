@@ -2,10 +2,7 @@
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import {
   FC,
-  ForwardRefRenderFunction,
-  ForwardedRef,
   RefObject,
-  forwardRef,
   useCallback,
   useEffect,
   useMemo,
@@ -13,21 +10,28 @@ import {
   useState,
 } from 'react'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
-import { Box, LinearProgress, Slide, Typography } from '@mui/material'
-import { ViewportList } from 'react-viewport-list'
+import { Box, Chip, LinearProgress, Slide, Typography } from '@mui/material'
+import { ViewportList, ViewportListRef } from 'react-viewport-list'
+import { SubscribeResult } from '@/hooks/useSubscribe'
+import { ArrowUpward } from '@mui/icons-material'
 
 export interface EventListProps {
   events?: NDKEvent[]
-  onNeedFetch?: () => Promise<NDKEvent[] | undefined>
   parentRef?: RefObject<HTMLElement> | null
+  onFetchMore?: SubscribeResult[1]
+  newItems?: SubscribeResult[2]
+  onShowNewItems?: SubscribeResult[3]
 }
 
 const EventList: FC<EventListProps> = ({
   events = [],
   parentRef = null,
-  onNeedFetch,
+  newItems = [],
+  onFetchMore,
+  onShowNewItems,
 }) => {
   const noteRef = useRef<HTMLElement>(null)
+  const scrollRef = useRef<ViewportListRef>(null)
   const totalEvent = useMemo(() => events.length || 0, [events.length])
   const [scrollEnd, setScrollEnd] = useState(false)
   const [fetching, setFetching] = useState(false)
@@ -46,17 +50,38 @@ const EventList: FC<EventListProps> = ({
       if (fetching || !hasNext) return
       if (percent < 90) return
       setFetching(true)
-      const items = await onNeedFetch?.()
+      const items = await onFetchMore?.()
       setFetching(false)
       setHasNext(!!items?.length)
     },
-    [hasNext, fetching, totalEvent, onNeedFetch],
+    [hasNext, fetching, totalEvent, onFetchMore],
   )
 
   return (
     <>
-      <Box ref={!parentRef ? noteRef : undefined} className="overflow-y-auto">
+      <Box
+        ref={!parentRef ? noteRef : undefined}
+        className="overflow-y-auto relative"
+      >
+        <Slide in={!!newItems.length} unmountOnExit>
+          <Box className="sticky z-10 top-2 left-0 right-0 text-center opacity-80">
+            <Chip
+              color="secondary"
+              label={`${newItems.length} new note${
+                newItems.length > 1 ? 's' : ''
+              }`}
+              onClick={() => {
+                onShowNewItems?.()
+                setTimeout(() => {
+                  scrollRef.current?.scrollToIndex({ index: 0 })
+                }, 100)
+              }}
+              icon={<ArrowUpward />}
+            />
+          </Box>
+        </Slide>
         <ViewportList
+          ref={scrollRef}
           viewportRef={parentRef || noteRef}
           items={events}
           onViewportIndexesChange={onViewportIndexesChange}

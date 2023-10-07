@@ -10,63 +10,54 @@ import {
   Divider,
   Typography,
 } from '@mui/material'
-import { NDKEvent, NDKFilter, NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 import { FC, useMemo, useRef } from 'react'
 import ReactTimeago from 'react-timeago'
 import { nip19 } from 'nostr-tools'
 import Link from 'next/link'
 import { useUserCache } from '@/hooks/useCache'
+import { WEEK, unixNow } from '@/utils/time'
 
-const MILLISECONDS = 1000
-const DAY_IN_MILLISECONDS = MILLISECONDS * 60 * 60 * 24
-const DAY_IN_SECONDS = 60 * 60 * 24
 export default function Page() {
+  const since = useMemo(() => unixNow() - WEEK, [])
   const liveFilter = useMemo(() => {
     return {
       kinds: [30311 as NDKKind],
-      since: Math.floor(Date.now() / MILLISECONDS - 15 * DAY_IN_SECONDS),
-      limit: 200,
+      since,
     } as NDKFilter
-  }, [])
-  const endedFilter = useMemo(() => {
-    return {
-      kinds: [30311 as NDKKind],
-      until: Math.floor(Date.now() / MILLISECONDS),
-      limit: 200,
-    } as NDKFilter
-  }, [])
-  const [liveEvent] = useSubscribe(liveFilter)
-  const [endedEvent] = useSubscribe(endedFilter)
+  }, [since])
+
+  const [liveEvent] = useSubscribe(liveFilter, true)
 
   const liveItems = useMemo(() => {
-    const sorted = liveEvent
-      .slice(0)
+    const items = liveEvent
+      .filter(
+        (item) =>
+          item.tagValue('status') === 'live' &&
+          item.tagValue('starts') &&
+          item.tagValue('streaming'),
+      )
+      .slice()
       .sort(
         (a, b) => Number(b.tagValue('starts')) - Number(a.tagValue('starts')),
       )
-    const filtered = sorted.filter(
-      (item, index) =>
-        item.tagValue('status') === 'live' &&
-        sorted.findIndex((e) => e.pubkey === item.pubkey) === index,
-    )
-    return filtered
+    return items
   }, [liveEvent])
 
   const endedItems = useMemo(() => {
-    return endedEvent
-      .slice(0)
-      .sort((a, b) => Number(b.tagValue('ends')) - Number(a.tagValue('ends')))
+    const items = liveEvent
       .filter(
         (item) =>
-          item.tagValue('status') === 'ended' && !!item.tagValue('recording'),
+          item.tagValue('status') === 'ended' && item.tagValue('recording'),
       )
-      .slice(0, 500)
-  }, [endedEvent])
-
-  const events = useMemo(() => {
-    if (liveItems.length === 0 || endedItems.length === 0) return
-    return liveItems.concat(endedItems)
-  }, [liveItems, endedItems])
+      .slice()
+      .sort(
+        (a, b) =>
+          Number(b.tagValue('ends') || b.created_at) -
+          Number(a.tagValue('ends') || a.created_at),
+      )
+    return items.slice(0, 100)
+  }, [liveEvent])
 
   const ref = useRef<HTMLDivElement | null>(null)
 
@@ -74,12 +65,6 @@ export default function Page() {
     <Box p={2} ref={ref} overflow={'auto'} flex={1}>
       <Typography variant="h4">Live</Typography>
       <Divider />
-      {/* <Box className="grid grid-cols-4 gap-8 m-8">
-        <ViewportList<NDKEvent> viewportRef={ref} items={liveItems}>
-          {(item) => <CardEvent key={item.id} ev={item} users={users} />}
-        </ViewportList>
-      </Box> */}
-
       <Box className="grid grid-cols-4 gap-8 m-8">
         {liveItems.map((item) => (
           <CardEvent key={item.deduplicationKey()} ev={item} />
@@ -88,10 +73,6 @@ export default function Page() {
       <Box my={8} />
       <Typography variant="h4">Ended</Typography>
       <Divider />
-      {/* <ViewportList<NDKEvent> viewportRef={ref} items={endedItems}>
-        {(item) => renderItem(item)}
-      </ViewportList> */}
-
       <Box className="grid grid-cols-4 gap-8 m-8">
         {endedItems.map((item) => (
           <CardEvent key={item.deduplicationKey()} ev={item} />
@@ -110,6 +91,7 @@ const CardEvent: FC<{
   const summary = ev.tagValue('summary')
   const image = ev.tagValue('image')
   const starts = Number(ev.tagValue('starts') || ev.created_at)
+  const ends = Number(ev.tagValue('ends') || ev.created_at)
   const isLive = ev.tagValue('status') === 'live'
   const viewers = ev.tagValue('current_participants')
   const nostrLink = useMemo(
@@ -127,7 +109,6 @@ const CardEvent: FC<{
       <CardMedia
         component={Link}
         href={`/a?naddr=${nostrLink}`}
-        prefetch={false}
         sx={{
           backgroundImage: `url(${image})`,
           aspectRatio: '16/9',
@@ -176,7 +157,7 @@ const CardEvent: FC<{
             <Typography variant="caption">
               {user?.profile?.displayName}
             </Typography>
-            <ReactTimeago date={new Date(starts * 1000)} />
+            <ReactTimeago date={new Date((isLive ? starts : ends) * 1000)} />
           </Box>
         }
         titleTypographyProps={{

@@ -20,11 +20,11 @@ import { Draw } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { AccountContext } from '@/contexts/AccountContext'
-import { DAY_IN_SECONDS, timestamp } from '@/utils/timestamp'
 import { useSearchParams } from 'next/navigation'
 import ProfileChip from './ProfileChip'
 import UserBar from './UserBar'
 import classNames from 'classnames'
+import { MONTH, unixNow } from '@/utils/time'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -69,7 +69,6 @@ const MainPane = () => {
     geohashFilter = new Set([bboxhash1, bboxhash2, bboxhash3, bboxhash4])
     return {
       kinds: [NDKKind.Text],
-      until: timestamp,
       '#g': Array.from(geohashFilter),
     }
   }, [payload.bbox])
@@ -83,14 +82,14 @@ const MainPane = () => {
     return {
       ...(tags ? { '#t': Array.from(tags) } : undefined),
       kinds: [NDKKind.Text],
-      since: timestamp - 30 * DAY_IN_SECONDS,
-      until: timestamp,
+      since: unixNow() - MONTH,
       limit: 20,
     }
   }, [payload.keyword])
 
   const [subGeoFilter] = useSubscribe(geohashFilter)
-  const [subTagFilter, fetchMore] = useSubscribe(tagsFilter)
+  const [subTagFilter, fetchMore, newItems, showNewItems] =
+    useSubscribe(tagsFilter)
 
   useEffect(() => {
     if (!subTagFilter || !subGeoFilter) return
@@ -307,7 +306,12 @@ const MainPane = () => {
         )}
       </Box>
       <Box className="w-full h-0.5 shrink-0 background-gradient" />
-      <EventList events={events} onNeedFetch={fetchMore} />
+      <EventList
+        events={events}
+        onFetchMore={fetchMore}
+        newItems={newItems}
+        onShowNewItems={showNewItems}
+      />
       {/* {showEvents && (
         <>
           <Box>
@@ -380,12 +384,12 @@ const MainPane = () => {
         </>
       )} */}
       {eventAction && (
-        <Box className="absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur">
+        <Box className="absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur z-10">
           <EventActionModal />
         </Box>
       )}
       {profileAction && (
-        <Box className="absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur">
+        <Box className="absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur z-10">
           <ProfileActionModal />
         </Box>
       )}
