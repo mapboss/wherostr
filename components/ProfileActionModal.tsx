@@ -100,7 +100,7 @@ const ProfileActionModal = () => {
       <Paper className="relative w-full overflow-y-auto !rounded-2xl" ref={ref}>
         <ProfileCard user={profileAction?.user} />
         <Divider />
-        <EventList events={events} onNeedFetch={fetchMore} parentRef={ref} />
+        <EventList events={events} onFetchMore={fetchMore} parentRef={ref} />
       </Paper>
     </Box>
   )
