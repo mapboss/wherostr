@@ -42,7 +42,7 @@ export function LiveVideoPlayer({
         muted={muted}
         width="100%"
         height="100%"
-        style={{ aspectRatio: '16/9' }}
+        style={{ aspectRatio: '16/9', flex: 1, maxHeight: '100%' }}
         onStart={() => {
           setStatus(VideoStatus.Online)
           load(stream)

@@ -1,32 +1,18 @@
 'use client'
 import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk'
-import {
-  Box,
-  Button,
-  ButtonProps,
-  Chip,
-  Hidden,
-  Paper,
-  Toolbar,
-  Tooltip,
-  Typography,
-} from '@mui/material'
+import { Box, Chip, Hidden, Paper, Toolbar, Typography } from '@mui/material'
 import { LiveVideoPlayer } from './LiveVideoPlayer'
 import { LiveChat } from './LiveChat'
-import { FC, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useUserCache } from '@/hooks/useCache'
 import ProfileChip from './ProfileChip'
-import {
-  Bolt,
-  ChevronLeft,
-  Share,
-  SubscriptionsSharp,
-} from '@mui/icons-material'
+import { Bolt, Share, SubscriptionsSharp } from '@mui/icons-material'
 import { LiveStreamTime } from './LiveStreamTime'
 import ResponsiveButton from './ResponsiveButton'
 
 export interface LiveActivityItem {
   id: string
+  author: string
   pubkey: string
   title: string
   summary?: string
@@ -62,6 +48,7 @@ const LiveActivity = ({
     const tags = event?.getMatchingTags('t') || []
     return {
       id,
+      author: event?.pubkey || '',
       pubkey,
       title,
       summary,
@@ -79,16 +66,17 @@ const LiveActivity = ({
   const autoplay = useMemo(() => liveItem.status === 'live', [liveItem.status])
   const [user] = useUserCache(liveItem.pubkey)
   return (
-    <Box className="grid gap-2 lg:gap-6 flex-1 overflow-hidden lg:mt-16 grid-cols-1 lg:grid-cols-[auto_400px]">
+    <Box className="grid gap-2 lg:gap-6 flex-1 overflow-hidden lg:mt-16 grid-cols-1 lg:grid-cols-[auto_440px]">
       <Box className="flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 gap-2">
         <Paper
           component={LiveVideoPlayer}
-          className="overflow-hidden flex-auto"
+          className="relative overflow-hidden flex-auto lg:flex-none flex items-center justify-center"
+          sx={{ aspectRatio: '16/9' }}
           stream={liveItem.recording || liveItem.streaming}
           autoPlay={autoplay}
           poster={liveItem.image}
         />
-        <Box className="mx-2 flex flex-auto flex-col overflow-visible items-stretch">
+        <Box className="mx-2 flex flex-auto lg:flex-none flex-col overflow-visible items-stretch">
           <Box className="flex flex-1 items-stretch sm:items-start overflow-hidden flex-col-reverse sm:flex-row lg:flex-initial">
             <Box className="flex-1 overflow-hidden mr-2">
               <Typography
@@ -169,7 +157,16 @@ const LiveActivity = ({
             Live Chat
           </Typography>
           <Box flex={1} />
-          <Typography variant="caption">noStrudel.ninja</Typography>
+          <Typography
+            component="a"
+            color="primary"
+            sx={{ textDecoration: 'underline' }}
+            href={`https://zap.stream/chat/${naddr}`}
+            target="_blank"
+            variant="caption"
+          >
+            zap.stream
+          </Typography>
         </Toolbar>
         <LiveChat naddr={naddr} flex={1} event={liveItem} />
       </Paper>

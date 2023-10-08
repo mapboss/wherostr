@@ -55,7 +55,7 @@ export default function Page() {
           color="inherit"
           size="large"
           startIcon={<ChevronLeft />}
-          className="!absolute top-0 left-0"
+          className="!absolute top-0 left-0 z-10"
           onClick={() => router.push('/live')}
         >
           Back
