@@ -12,7 +12,6 @@ import {
 } from 'react'
 import { NDKNip07Signer, NDKUser } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
-import { Dialog, DialogContent, DialogTitle, Modal } from '@mui/material'
 
 interface Account {
   user?: NDKUser
@@ -79,20 +78,16 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       await connectRelays()
     }
   }, [ndk, connectRelays])
-  const value = useMemo((): Account => {
-    return {
-      user,
-      signIn,
-      signOut,
-    }
-  }, [user, signIn, signOut])
 
   useEffect(() => {
+    if (!ndk.signer) return
     const func = async () => {
+      if (!ndk.signer) return
       let user: NDKUser | undefined
       if (localStorage.getItem('npub')) {
-        const signerUser = await ndk.signer?.user()
+        const signerUser = await ndk.signer.user()
         if (signerUser?.hexpubkey) {
+          await connect()
           user = await getUser(signerUser.hexpubkey)
         }
       }
@@ -102,7 +97,15 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       }
     }
     func()
-  }, [getUser, connect, ndk.signer])
+  }, [ndk, connect, getUser])
+
+  const value = useMemo((): Account => {
+    return {
+      user,
+      signIn,
+      signOut,
+    }
+  }, [user, signIn, signOut])
 
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
