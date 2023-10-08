@@ -65,7 +65,7 @@ export default function Page() {
     <Box p={2} ref={ref} overflow={'auto'} flex={1}>
       <Typography variant="h4">Live</Typography>
       <Divider />
-      <Box className="grid grid-cols-4 gap-8 m-8">
+      <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8 m-8">
         {liveItems.map((item) => (
           <CardEvent key={item.deduplicationKey()} ev={item} />
         ))}
@@ -73,7 +73,7 @@ export default function Page() {
       <Box my={8} />
       <Typography variant="h4">Ended</Typography>
       <Divider />
-      <Box className="grid grid-cols-4 gap-8 m-8">
+      <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8 m-8">
         {endedItems.map((item) => (
           <CardEvent key={item.deduplicationKey()} ev={item} />
         ))}

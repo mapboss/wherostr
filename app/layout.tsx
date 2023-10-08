@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="overflow-hidden">
+    <html lang="en">
       <head>
         <meta name="lightning" content="lnurlp:nickydev@getalby.com" />
         <meta property="og:image" content="https://www.your.blog/YOUR_IMAGE" />

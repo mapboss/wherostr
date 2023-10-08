@@ -1,7 +1,15 @@
 import { Send } from '@mui/icons-material'
-import { Box, BoxProps, Button, Divider, TextField } from '@mui/material'
-import { useEffect, useRef } from 'react'
+import {
+  Box,
+  BoxProps,
+  Button,
+  Divider,
+  TextField,
+  Typography,
+} from '@mui/material'
+import { useContext, useEffect, useRef } from 'react'
 import { LiveActivityItem } from './LiveActivity'
+import { AccountContext } from '@/contexts/AccountContext'
 
 export function LiveChat({
   naddr,
@@ -11,6 +19,7 @@ export function LiveChat({
   naddr?: string
   event?: LiveActivityItem
 }) {
+  const { user } = useContext(AccountContext)
   const ref = useRef<Window>(
     typeof window !== 'undefined' ? window.frames : null,
   )
@@ -39,26 +48,37 @@ export function LiveChat({
           evt.preventDefault()
         }}
       >
-        <TextField
-          color="secondary"
-          name="message"
-          type="text"
-          autoComplete="off"
-          placeholder="Message"
-          fullWidth
-          size="small"
-          multiline
-          maxRows={3}
-        />
-        <Box mx={0.5} />
-        <Button
-          variant="outlined"
-          color="secondary"
-          size="large"
-          startIcon={<Send />}
-        >
-          Send
-        </Button>
+        {user ? (
+          <>
+            <TextField
+              color="secondary"
+              name="message"
+              type="text"
+              autoComplete="off"
+              placeholder="Message"
+              fullWidth
+              size="small"
+              multiline
+              maxRows={3}
+            />
+            <Box mx={0.5} />
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="large"
+              startIcon={<Send />}
+            >
+              Send
+            </Button>
+          </>
+        ) : (
+          <TextField
+            placeholder="Please login to write messages!"
+            fullWidth
+            disabled
+            size="small"
+          />
+        )}
       </Box>
     </Box>
   )

@@ -1,19 +1,18 @@
-import type { Metadata } from 'next'
+'use client'
 import UserBar from '@/components/UserBar'
 import { AppContextProvider } from '@/contexts/AppContext'
 import { AccountContextProvider } from '@/contexts/AccountContext'
 import { Hidden } from '@mui/material'
-
-export const metadata: Metadata = {
-  title: 'Wherostr',
-  description: 'Wherostr',
-}
+import { useContext } from 'react'
+import { NostrContext } from '@/contexts/NostrContext'
+import SplashScreen from '@/components/SplashScreen'
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const { connected } = useContext(NostrContext)
   return (
     <AccountContextProvider>
       <AppContextProvider>
@@ -22,7 +21,10 @@ export default function RootLayout({
             <UserBar />
           </header>
         </Hidden>
-        <main className="min-h-screen h-screen flex flex-col">{children}</main>
+        <main className="relative min-h-full h-full flex flex-col flex-1">
+          {children}
+        </main>
+        <SplashScreen in={!connected} />
       </AppContextProvider>
     </AccountContextProvider>
   )

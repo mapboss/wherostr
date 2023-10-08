@@ -1,13 +1,29 @@
 'use client'
 import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk'
-import { Box, Button, Chip, Paper, Toolbar, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  ButtonProps,
+  Chip,
+  Hidden,
+  Paper,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from '@mui/material'
 import { LiveVideoPlayer } from './LiveVideoPlayer'
 import { LiveChat } from './LiveChat'
-import { useMemo } from 'react'
+import { FC, useMemo } from 'react'
 import { useUserCache } from '@/hooks/useCache'
 import ProfileChip from './ProfileChip'
-import { Bolt, Share, SubscriptionsSharp } from '@mui/icons-material'
+import {
+  Bolt,
+  ChevronLeft,
+  Share,
+  SubscriptionsSharp,
+} from '@mui/icons-material'
 import { LiveStreamTime } from './LiveStreamTime'
+import ResponsiveButton from './ResponsiveButton'
 
 export interface LiveActivityItem {
   id: string
@@ -63,44 +79,61 @@ const LiveActivity = ({
   const autoplay = useMemo(() => liveItem.status === 'live', [liveItem.status])
   const [user] = useUserCache(liveItem.pubkey)
   return (
-    <Box className="grid gap-6 flex-1 overflow-hidden md:mt-16 grid-cols-1 md:grid-cols-[auto_400px]">
-      <Box className="flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 gap-4">
-        <Paper className="overflow-hidden">
-          <LiveVideoPlayer
-            stream={liveItem.recording || liveItem.streaming}
-            autoPlay={autoplay}
-            poster={liveItem.image}
-          />
-        </Paper>
-        <Box mx={2}>
-          <Box className="flex flex-wrap space-4">
-            <Box flex={1}>
-              <Typography variant="h4" fontWeight="bold">
+    <Box className="grid gap-2 lg:gap-6 flex-1 overflow-hidden lg:mt-16 grid-cols-1 lg:grid-cols-[auto_400px]">
+      <Box className="flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 gap-2">
+        <Paper
+          component={LiveVideoPlayer}
+          className="overflow-hidden flex-auto"
+          stream={liveItem.recording || liveItem.streaming}
+          autoPlay={autoplay}
+          poster={liveItem.image}
+        />
+        <Box className="mx-2 flex flex-auto flex-col overflow-visible items-stretch">
+          <Box className="flex flex-1 items-stretch sm:items-start overflow-hidden flex-col-reverse sm:flex-row lg:flex-initial">
+            <Box className="flex-1 overflow-hidden mr-2">
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                noWrap
+                overflow="hidden"
+                textOverflow="ellipsis"
+              >
                 {liveItem.title}
               </Typography>
-              <Typography>{liveItem.summary}</Typography>
+              <Typography color="text.secondary">{liveItem.summary}</Typography>
             </Box>
-            <Box className="flex items-start">
+            <Box className="flex items-center">
               <ProfileChip user={user} showName={false} />
-              <Box component="span" mx={1} />
-              <Button variant="outlined" color="inherit" startIcon={<Share />}>
-                Share
-              </Button>
-              <Box component="span" mx={0.5} />
-              <Button
-                variant="outlined"
+              <Box className="flex-1 sm:flex-auto" component="span" mx={1} />
+              <ResponsiveButton
                 color="inherit"
+                variant="outlined"
+                size="small"
+                startIcon={<Share />}
+              >
+                Share
+              </ResponsiveButton>
+              <Box component="span" mx={0.5} />
+              <ResponsiveButton
+                color="inherit"
+                variant="outlined"
+                size="small"
                 startIcon={<SubscriptionsSharp />}
               >
                 Follow
-              </Button>
+              </ResponsiveButton>
               <Box component="span" mx={0.5} />
-              <Button variant="contained" color="primary" startIcon={<Bolt />}>
+              <ResponsiveButton
+                color="primary"
+                variant="contained"
+                size="small"
+                startIcon={<Bolt />}
+              >
                 Zap
-              </Button>
+              </ResponsiveButton>
             </Box>
           </Box>
-          <Box className="flex flex-wrap gap-2">
+          <Box className="flex flex-wrap gap-1 mt-2">
             <Chip
               sx={{ fontWeight: 'bold' }}
               label={liveItem.status?.toUpperCase()}
@@ -122,16 +155,18 @@ const LiveActivity = ({
                 />
               </>
             )}
-            {liveItem.tags.map(([_, tag], i) => {
-              return <Chip key={i} label={tag} />
-            })}
+            <Hidden mdDown>
+              {liveItem.tags.map(([_, tag], i) => {
+                return <Chip key={i} label={tag} />
+              })}
+            </Hidden>
           </Box>
         </Box>
       </Box>
-      <Paper className="overflow-hidden relative flex flex-col md:mb-4">
-        <Toolbar>
+      <Paper className="overflow-hidden relative flex flex-col lg:mb-4">
+        <Toolbar className="!min-h-[48px]">
           <Typography variant="h6" fontWeight="bold">
-            Stream Chat
+            Live Chat
           </Typography>
           <Box flex={1} />
           <Typography variant="caption">noStrudel.ninja</Typography>
