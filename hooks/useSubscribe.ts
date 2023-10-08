@@ -90,7 +90,9 @@ export const useSubscribe = (
       const { existingEvent, dedupKey, event } = collectEvent(item)
       evetns.set(dedupKey, event)
       if (eos.current) {
-        setNewItems((prev) => [event, ...prev])
+        if (!existingEvent) {
+          setNewItems((prev) => [event, ...prev])
+        }
       } else {
         setItems(sortItems(evetns.values()))
       }
@@ -99,7 +101,9 @@ export const useSubscribe = (
       const { existingEvent, dedupKey, event } = collectEvent(item)
       evetns.set(dedupKey, event)
       if (eos.current) {
-        setNewItems((prev) => [event, ...prev])
+        if (!existingEvent) {
+          setNewItems((prev) => [event, ...prev])
+        }
       } else {
         setItems(sortItems(evetns.values()))
       }

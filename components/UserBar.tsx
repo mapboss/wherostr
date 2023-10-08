@@ -20,9 +20,8 @@ const UserBar = ({ className }: { className?: string }) => {
   return (
     <Box
       className={classNames(
-        `grid items-center py-2 px-3 rounded-bl-2xl${
-          signedIn ? ' background-gradient' : ''
-        }`,
+        `grid items-center py-2 px-2 rounded-bl-2xl`,
+        { 'bg-gradient-primary': signedIn },
         className,
       )}
     >
@@ -35,7 +34,7 @@ const UserBar = ({ className }: { className?: string }) => {
         </Box>
       ) : (
         <Button
-          className="background-gradient"
+          className="bg-gradient-primary"
           variant="contained"
           onClick={handleClickSignIn}
           endIcon={<Login />}

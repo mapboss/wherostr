@@ -10,17 +10,23 @@ import {
   useRef,
   useState,
 } from 'react'
-import { NDKNip07Signer, NDKUser } from '@nostr-dev-kit/ndk'
+import {
+  NDKNip07Signer,
+  NDKSubscriptionCacheUsage,
+  NDKUser,
+} from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 
 interface Account {
   user?: NDKUser
+  follows: NDKUser[]
   signIn: () => Promise<NDKUser | void>
   signOut: () => Promise<void>
 }
 
 export const AccountContext = createContext<Account>({
   user: undefined,
+  follows: [],
   signIn: async () => {},
   signOut: async () => {},
 })
@@ -28,14 +34,19 @@ export const AccountContext = createContext<Account>({
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const { ndk, getUser, connectRelays } = useContext(NostrContext)
   const [user, setUser] = useState<NDKUser>()
+  const [follows, setFollows] = useState<NDKUser[]>([])
   const nostrRef = useRef<typeof window.nostr>()
   nostrRef.current = typeof window !== 'undefined' ? window.nostr : undefined
 
-  useEffect(() => {
-    if (ndk && nostrRef.current) {
-      ndk.signer = new NDKNip07Signer()
-    }
-  }, [ndk])
+  const hasNip7Extension = useCallback(() => {
+    return !!nostrRef.current
+  }, [])
+  // useEffect(() => {
+  //   if (ndk && nostrRef.current) {
+  //     ndk.signer = new NDKPrivateKeySigner()
+  //     ndk.signer = new NDKNip07Signer()
+  //   }
+  // }, [ndk])
 
   const connect = useCallback(
     async (user?: NDKUser) => {
@@ -51,8 +62,16 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     [connectRelays],
   )
 
+  const fetchFollows = useCallback(async (user: NDKUser) => {
+    const follows = await user.follows({
+      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+    })
+    setFollows(Array.from(follows))
+  }, [])
+
   const signIn = useCallback(async () => {
-    if (ndk && nostrRef.current) {
+    if (hasNip7Extension()) {
+      ndk.signer = new NDKNip07Signer()
       const signerUser = await ndk.signer?.user()
       if (signerUser) {
         const user = ndk.getUser({ hexpubkey: signerUser.hexpubkey })
@@ -60,52 +79,58 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
         if (profile) {
           user.profile = profile
         }
-        if (user) {
-          localStorage.setItem('npub', user.npub)
-        }
+        await fetchFollows(user)
+        localStorage.setItem(
+          'session',
+          JSON.stringify({ pubkey: user.hexpubkey, type: 'nip7' }),
+        )
+
         setUser(user)
         await connect(user)
         return user
       }
     }
-  }, [ndk, connect])
+  }, [ndk, hasNip7Extension, connect, fetchFollows])
 
   const signOut = useCallback(async () => {
-    if (ndk && nostrRef.current) {
+    if (hasNip7Extension()) {
       ndk.signer = new NDKNip07Signer()
-      localStorage.removeItem('npub')
+      localStorage.removeItem('session')
       setUser(undefined)
       await connectRelays()
     }
-  }, [ndk, connectRelays])
+  }, [ndk, hasNip7Extension, connectRelays])
 
   useEffect(() => {
-    if (!ndk.signer) return
     const func = async () => {
-      if (!ndk.signer) return
       let user: NDKUser | undefined
-      if (localStorage.getItem('npub')) {
+      const session = JSON.parse(localStorage.getItem('session') || '{}')
+      if (session?.pubkey) {
+        await connect()
+        if (!hasNip7Extension()) return
+        ndk.signer = new NDKNip07Signer()
         const signerUser = await ndk.signer.user()
         if (signerUser?.hexpubkey) {
-          await connect()
-          user = await getUser(signerUser.hexpubkey)
+          user = await getUser(signerUser?.hexpubkey)
         }
       }
       await connect(user)
       if (user) {
         setUser(user)
+        await fetchFollows(user)
       }
     }
     func()
-  }, [ndk, connect, getUser])
+  }, [ndk, hasNip7Extension, connect, getUser, fetchFollows])
 
   const value = useMemo((): Account => {
     return {
       user,
+      follows,
       signIn,
       signOut,
     }
-  }, [user, signIn, signOut])
+  }, [user, follows, signIn, signOut])
 
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>

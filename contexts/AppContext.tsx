@@ -13,6 +13,7 @@ import {
 import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import { ErrorCode } from '@/constants/app'
+import { Alert, Snackbar, SnackbarProps } from '@mui/material'
 
 export enum ProfileActionType {
   View = 0,
@@ -56,6 +57,11 @@ export interface AppContextProps {
   setEvents: Dispatch<SetStateAction<NDKEvent[]>>
   eventAction?: EventAction
   setEventAction: (eventAction?: EventActionOptions) => void
+  showSnackbar: (
+    message: string,
+    props?: Omit<SnackbarProps, 'message'>,
+  ) => void
+  hideSnackbar: () => void
 }
 
 export const AppContext = createContext<AppContextProps>({
@@ -63,6 +69,8 @@ export const AppContext = createContext<AppContextProps>({
   events: [],
   setEvents: () => {},
   setEventAction: () => {},
+  showSnackbar: () => {},
+  hideSnackbar: () => {},
 })
 
 export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -70,6 +78,10 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [profileAction, _setProfileAction] = useState<ProfileAction>()
   const [events, setEvents] = useState<NDKEvent[]>([])
   const [eventAction, _setEventAction] = useState<EventAction>()
+  const [snackProps, setSnackProps] = useState<SnackbarProps>({
+    anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+  })
+
   const setProfileAction = useCallback(
     async (profileAction?: ProfileActionOptions) => {
       if (!profileAction) {
@@ -118,6 +130,26 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
     },
     [getEvent],
   )
+
+  const handleClose = useCallback(
+    (event?: React.SyntheticEvent | Event, reason?: string) => {
+      if (reason === 'clickaway') {
+        return
+      }
+      setSnackProps((prev) => ({ ...prev, open: false }))
+    },
+    [],
+  )
+  const showSnackbar = useCallback(
+    (message: string, props?: Omit<SnackbarProps, 'message'>) => {
+      setSnackProps((prev) => ({ ...prev, ...props, open: true, message }))
+    },
+    [],
+  )
+  const hideSnackbar = useCallback(() => {
+    handleClose()
+  }, [handleClose])
+
   const value = useMemo((): AppContextProps => {
     return {
       profileAction,
@@ -126,8 +158,27 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
       setEvents,
       eventAction,
       setEventAction,
+      showSnackbar,
+      hideSnackbar,
     }
-  }, [profileAction, setProfileAction, events, eventAction, setEventAction])
+  }, [
+    profileAction,
+    setProfileAction,
+    events,
+    eventAction,
+    setEventAction,
+    showSnackbar,
+    hideSnackbar,
+  ])
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
+  return (
+    <AppContext.Provider value={value}>
+      {children}
+      <Snackbar onClose={handleClose} {...snackProps}>
+        <Alert onClose={handleClose} severity="warning" sx={{ width: '100%' }}>
+          {snackProps?.message}
+        </Alert>
+      </Snackbar>
+    </AppContext.Provider>
+  )
 }

@@ -8,6 +8,7 @@ import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import {
   Box,
+  Hidden,
   IconButton,
   Paper,
   Tooltip,
@@ -294,15 +295,17 @@ const MainPane = () => {
           onSearch={(payload) => setPayload(payload || {})}
         />
         {user?.npub && (
-          <Tooltip title="Post">
-            <IconButton
-              className="background-gradient"
-              size="large"
-              onClick={handleClickPost}
-            >
-              <Draw />
-            </IconButton>
-          </Tooltip>
+          <Hidden mdDown>
+            <Tooltip title="Post">
+              <IconButton
+                className="bg-gradient-primary"
+                size="large"
+                onClick={handleClickPost}
+              >
+                <Draw />
+              </IconButton>
+            </Tooltip>
+          </Hidden>
         )}
       </Box>
       <Box className="w-full h-0.5 shrink-0 background-gradient" />
@@ -384,12 +387,12 @@ const MainPane = () => {
         </>
       )} */}
       {eventAction && (
-        <Box className="absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur z-10">
+        <Box className="fixed left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur z-50">
           <EventActionModal />
         </Box>
       )}
       {profileAction && (
-        <Box className="absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur z-10">
+        <Box className="fixed left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur z-50">
           <ProfileActionModal />
         </Box>
       )}

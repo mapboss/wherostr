@@ -21,30 +21,39 @@ export function useMapLibre(
       // ...(opts ? opts : { style: "https://demotiles.maplibre.org/style.json" }),
       container: ref.current,
       antialias: false,
+      attributionControl: false,
     })
     mapContext.setMap?.(map)
   }, [ref, mapContext.map, mapContext.setMap])
 
-  const navigateContol = useMemo(() => {
-    console.debug('Create NavigationControl')
-    return new maplibregl.NavigationControl()
+  const attributetion = useMemo(() => {
+    console.debug('Create AttributionControl')
+    return new maplibregl.AttributionControl()
   }, [])
 
-  const geoControl = useMemo(() => {
-    console.debug('Create GeolocateControl')
-    return new maplibregl.GeolocateControl({
-      positionOptions: { enableHighAccuracy: true },
-      trackUserLocation: true,
-    })
-  }, [])
+  // const navigateContol = useMemo(() => {
+  //   console.debug('Create NavigationControl')
+  //   return new maplibregl.NavigationControl()
+  // }, [])
+
+  // const geoControl = useMemo(() => {
+  //   console.debug('Create GeolocateControl')
+  //   return new maplibregl.GeolocateControl({
+  //     positionOptions: { enableHighAccuracy: true },
+  //     trackUserLocation: true,
+  //   })
+  // }, [])
 
   useEffect(() => {
     if (!mapContext.map) return
-    if (!mapContext.map.hasControl(navigateContol)) {
-      mapContext.map?.addControl(navigateContol, 'bottom-right')
-    }
-    if (!mapContext.map.hasControl(geoControl)) {
-      mapContext.map?.addControl(geoControl, 'bottom-right')
+    // if (!mapContext.map.hasControl(navigateContol)) {
+    //   mapContext.map?.addControl(navigateContol, 'bottom-right')
+    // }
+    // if (!mapContext.map.hasControl(geoControl)) {
+    //   mapContext.map?.addControl(geoControl, 'bottom-right')
+    // }
+    if (!mapContext.map.hasControl(attributetion)) {
+      mapContext.map?.addControl(attributetion, 'bottom-left')
     }
   }, [mapContext.map])
 

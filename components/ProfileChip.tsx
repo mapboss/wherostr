@@ -32,7 +32,7 @@ const ProfileChip = ({
       className="flex overflow-hidden cursor-pointer hover:underline"
       onClick={user ? handleClickProfile : undefined}
     >
-      <Avatar className="border-2" src={user?.profile?.image} />
+      <Avatar className="min-w-[40px] border-2" src={user?.profile?.image} />
       {showName && (
         <Box className="flex flex-col pl-2 max-w-xs overflow-hidden">
           <Typography
