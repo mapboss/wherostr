@@ -14,8 +14,10 @@ import { Box, Chip, LinearProgress, Slide, Typography } from '@mui/material'
 import { ViewportList, ViewportListRef } from 'react-viewport-list'
 import { SubscribeResult } from '@/hooks/useSubscribe'
 import { ArrowUpward } from '@mui/icons-material'
+import classNames from 'classnames'
 
 export interface EventListProps {
+  className?: string
   events?: NDKEvent[]
   parentRef?: RefObject<HTMLElement> | null
   onFetchMore?: SubscribeResult[1]
@@ -24,6 +26,7 @@ export interface EventListProps {
 }
 
 const EventList: FC<EventListProps> = ({
+  className,
   events = [],
   parentRef = null,
   newItems = [],
@@ -61,7 +64,7 @@ const EventList: FC<EventListProps> = ({
     <>
       <Box
         ref={!parentRef ? noteRef : undefined}
-        className="overflow-y-auto relative"
+        className={classNames('overflow-y-auto relative', className)}
       >
         <Slide in={!!newItems.length} unmountOnExit>
           <Box className="sticky z-10 top-2 left-0 right-0 text-center opacity-80">

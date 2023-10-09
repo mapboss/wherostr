@@ -39,6 +39,7 @@ import {
 import numeral from 'numeral'
 import { requestProvider } from 'webln'
 import usePromise from 'react-use-promise'
+import { nanoid } from 'nanoid'
 
 const amountFormat = '0,0.[0]a'
 
@@ -76,6 +77,23 @@ const CreateEventForm = ({
       const newEvent = new NDKEvent(ndk)
       newEvent.content = content
       newEvent.tags = []
+
+      // const ll = geohash ? Geohash.decode(geohash) : undefined
+      // if (ll?.lat && ll?.lon) {
+      //   const nid = nanoid(8)
+      //   newEvent.content += `\nMap https://w3.do/${nid}`
+      //   const w3 = new NDKEvent(ndk)
+      //   w3.kind = 1994
+      //   w3.tags = [
+      //     ['d', nid],
+      //     [
+      //       'r',
+      //       `https://duckduckgo.com/?va=n&t=hs&iaxm=maps&q=${ll.lat},${ll.lon}`,
+      //     ],
+      //   ]
+      //   await w3.publish()
+      // }
+
       switch (type) {
         case EventActionType.Create:
           newEvent.kind = NDKKind.Text
@@ -361,9 +379,7 @@ const ShortTextNotePane = ({
           _comments.push(item)
         }
       })
-      return [...repostEvents, ..._quotes, ..._comments].sort(
-        (a, b) => b.created_at! - a.created_at!,
-      )
+      return [...repostEvents, ..._quotes, ..._comments]
     }
   }, [connected, ndk, event, reposts, quotes, comments])
   const relatedEventElements = useMemo(
@@ -462,6 +478,13 @@ const EventActionModal = () => {
   return (
     eventAction && (
       <Box className="max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
+        <IconButton
+          className="!absolute top-12 right-12 z-10 !bg-[#0000001f]"
+          size="small"
+          onClick={handleClickCloseModal}
+        >
+          <Close />
+        </IconButton>
         <Paper className="w-full overflow-y-auto pt-3 !rounded-2xl">
           <Box className="flex justify-between items-center px-4">
             {eventAction.type === EventActionType.View ? (
@@ -469,9 +492,6 @@ const EventActionModal = () => {
             ) : (
               <ProfileChip user={user} />
             )}
-            <IconButton size="small" onClick={handleClickCloseModal}>
-              <Close />
-            </IconButton>
           </Box>
           <Box
             className={

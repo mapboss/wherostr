@@ -74,7 +74,7 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
   }, [querySearch])
 
   useEffect(() => {
-    if (state !== 'resolved' || !data.keyword) return
+    if (state !== 'resolved') return
     onSearch?.(data)
   }, [data, state, onSearch])
 

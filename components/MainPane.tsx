@@ -11,6 +11,7 @@ import {
   Hidden,
   IconButton,
   Paper,
+  Toolbar,
   Tooltip,
   useMediaQuery,
   useTheme,
@@ -38,24 +39,25 @@ const MainPane = () => {
     useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [payload, setPayload] = useState<SearchPayload>({})
-  const [tabIndex, setTabIndex] = useState(0)
   const theme = useTheme()
   const xlUp = useMediaQuery(theme.breakpoints.up('lg'))
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
-  const hasMap = searchParams.get('map') === '1'
+  const showMap = searchParams.get('map') === '1'
+  const showSearch = searchParams.get('search') === '1'
+  // const [tabIndex, setTabIndex] = useState(0)
 
   useEffect(() => {
     setEvents([])
   }, [payload, setEvents])
 
-  useEffect(() => {
-    if (!events.length && !!payload.places?.length) {
-      setTabIndex(1)
-    } else {
-      setTabIndex(0)
-    }
-  }, [events.length, payload.places?.length])
+  // useEffect(() => {
+  //   if (!events.length && !!payload.places?.length) {
+  //     setTabIndex(1)
+  //   } else {
+  //     setTabIndex(0)
+  //   }
+  // }, [events.length, payload.places?.length])
 
   const bounds = useMemo(() => new LngLatBounds(payload.bbox), [payload.bbox])
 
@@ -234,10 +236,10 @@ const MainPane = () => {
   }, [events, map])
 
   const showEvents = useMemo(
-    () => !!events?.length && (!mdDown || !hasMap),
-    [events, mdDown, hasMap],
+    () => !!events?.length && (!mdDown || !showMap),
+    [events, mdDown, showMap],
   )
-  const showOnlyMap = useMemo(() => mdDown && hasMap, [mdDown, hasMap])
+  const showOnlyMap = useMemo(() => mdDown && showMap, [mdDown, showMap])
 
   const showPanel = useMemo(
     () => profileAction || eventAction || showEvents || !showOnlyMap,
@@ -281,14 +283,14 @@ const MainPane = () => {
   return (
     <Paper
       className={classNames(
-        `absolute left-0 top-0 w-full md:w-[496px] xl:w-[640px] flex flex-col !rounded-none overflow-hidden`,
+        `absolute left-0 top-0 w-full md:w-[496px] lg:w-[640px] flex flex-col !rounded-none overflow-hidden`,
         {
-          'h-full': showPanel,
-          'h-[74px]': !showPanel,
+          'h-full': !showOnlyMap,
+          'h-[58px] sm:h-[66px]': showOnlyMap,
         },
       )}
     >
-      <Box className="px-4 py-2 flex gap-2 items-center">
+      <Toolbar className="gap-2 items-center">
         {user?.npub ? (
           <ProfileChip user={user} showName={false} />
         ) : (
@@ -296,7 +298,10 @@ const MainPane = () => {
         )}
         <Filter
           className="grow"
-          onSearch={(payload) => setPayload(payload || {})}
+          onSearch={(payload) => {
+            // setEvents([])
+            setPayload(payload || {})
+          }}
         />
         {user?.npub && (
           <Hidden mdDown>
@@ -311,7 +316,7 @@ const MainPane = () => {
             </Tooltip>
           </Hidden>
         )}
-      </Box>
+      </Toolbar>
       <Box className="w-full h-0.5 shrink-0 background-gradient" />
       <EventList
         events={events}
@@ -391,12 +396,12 @@ const MainPane = () => {
         </>
       )} */}
       {eventAction && (
-        <Box className="fixed left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur z-50">
+        <Box className="fixed left-0 top-0 w-full md:w-[496px] lg:w-[640px] h-full p-4 md:p-8 backdrop-blur z-50">
           <EventActionModal />
         </Box>
       )}
       {profileAction && (
-        <Box className="fixed left-0 top-0 w-full md:w-[496px] xl:w-[640px] h-full p-8 backdrop-blur z-50">
+        <Box className="fixed left-0 top-0 w-full md:w-[496px] lg:w-[640px] h-full p-4 md:p-8 backdrop-blur z-50">
           <ProfileActionModal />
         </Box>
       )}

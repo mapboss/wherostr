@@ -43,7 +43,7 @@ export interface MapProps extends PropsWithChildren {
   onLoad?: (map: maplibregl.Map) => void
 }
 
-const Map: React.FC<MapProps> = ({ children, className, onLoad }) => {
+const MapLoad: React.FC<MapProps> = ({ children, className, onLoad }) => {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useMapLibre(mapContainer, opts)
 
@@ -67,8 +67,8 @@ const Map: React.FC<MapProps> = ({ children, className, onLoad }) => {
   )
 }
 
-export default dynamic(
-  () => new Promise<React.FC<MapProps>>((resolve) => resolve(Map)),
+export const MapView = dynamic(
+  () => new Promise<React.FC<MapProps>>((resolve) => resolve(MapLoad)),
   {
     loading: () => <Paper className="fixed inset-0" />,
     ssr: false,

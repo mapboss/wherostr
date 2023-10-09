@@ -25,7 +25,8 @@ const BottomActions = () => {
     <>
       <BottomNavigation
         value={value}
-        showLabels
+        showLabels={false}
+        sx={{ height: 48 }}
         onChange={(_, value) => {
           setValue(value)
           const keyword = query.get('keyword') || ''
@@ -38,16 +39,16 @@ const BottomActions = () => {
           }
         }}
       >
-        <BottomNavigationAction value="home" label="Home" icon={<Home />} />
+        <BottomNavigationAction value="home" icon={<Home />} />
         {/* <BottomNavigationAction
           value="search"
           label="Search"
           icon={<Search />}
         /> */}
-        <BottomNavigationAction value="map" label="Map" icon={<Map />} />
+        <BottomNavigationAction value="map" icon={<Map />} />
       </BottomNavigation>
       <Fab
-        className="!absolute !bg-gradient-primary !z-40 bottom-16 right-4"
+        className="!absolute !bg-gradient-primary !z-40 bottom-14 right-4"
         size="medium"
         onClick={handleClickPost}
       >

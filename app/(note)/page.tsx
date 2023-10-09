@@ -1,6 +1,6 @@
 'use client'
 import MainPane from '@/components/MainPane'
-import Map from '@/components/Map'
+import { MapView } from '@/components/MapView'
 import { MapContextProvider } from '@/contexts/MapContext'
 import { Box, useMediaQuery, useTheme } from '@mui/material'
 import classNames from 'classnames'
@@ -8,6 +8,7 @@ import { RedirectType } from 'next/dist/client/components/redirect'
 import { redirect, useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
+import Geohash from 'latlon-geohash'
 
 export default function Page() {
   const theme = useTheme()
@@ -16,14 +17,20 @@ export default function Page() {
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const hash =
     typeof window !== 'undefined' ? window.location.hash.slice(1) : ''
-  const naddr = hash.startsWith('/n') ? hash.slice(1) : undefined
+  const naddr = hash.startsWith('/') ? hash.slice(1) : undefined
   const naddrDesc = useMemo(() => {
     try {
+      if (!naddr) return
       return nip19.decode(naddr as string)
     } catch (err) {}
   }, [naddr])
 
-  if (naddrDesc?.type === 'naddr') {
+  if (!naddrDesc && naddr) {
+    try {
+      const ll = Geohash.decode(naddr)
+      redirect(`/m?q=${ll.lat},${ll.lon}`, RedirectType.replace)
+    } catch (err) {}
+  } else if (naddrDesc?.type === 'naddr') {
     redirect(`/a?naddr=${naddr}`, RedirectType.replace)
   } else if (naddrDesc?.type === 'note') {
     redirect(`/n?naddr=${naddr}`, RedirectType.replace)
@@ -36,7 +43,7 @@ export default function Page() {
   return (
     <MapContextProvider>
       <Box className="flex-1 flex flex-col">
-        <Map
+        <MapView
           className={classNames('flex-1', {
             'invisible -z-10': !mdUp && !hasMap,
             'md:visible': true,

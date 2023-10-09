@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <AccountContextProvider>
       <AppContextProvider>
-        <main className="relative min-h-[calc(100%_-_56px)] h-[calc(100%-_56px)] md:min-h-full md:h-full flex flex-col flex-1 overflow-y-auto">
+        <main className="relative min-h-[calc(100%_-_48px)] h-[calc(100%-_48px)] md:min-h-full md:h-full flex flex-col flex-1 overflow-y-auto">
           <NoSsr>{children}</NoSsr>
         </main>
         <Hidden mdUp>
