@@ -35,7 +35,7 @@ export function LiveChat({
   //   }, [])
 
   return (
-    <Box {...props} display="flex" flexDirection="column">
+    <Box {...props} display="flex" flexDirection="column" minHeight={256}>
       <iframe
         // ref={ref}
         style={{ backgroundColor: 'transparent' }}

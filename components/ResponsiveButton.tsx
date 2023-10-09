@@ -1,18 +1,25 @@
 import { Button, ButtonProps, Hidden, Tooltip } from '@mui/material'
+import classNames from 'classnames'
 import { FC } from 'react'
 
 const ResponsiveButton: FC<ButtonProps> = (props) => {
-  const { startIcon, children, ...other } = props
+  const { startIcon, children, className, ...other } = props
   return (
     <>
-      <Hidden mdDown>
-        <Button startIcon={startIcon} {...other}>
+      <Hidden lgDown>
+        <Button
+          {...other}
+          startIcon={startIcon}
+          className={classNames(className, 'min-w-[auto]')}
+        >
           {children}
         </Button>
       </Hidden>
-      <Hidden mdUp>
+      <Hidden lgUp>
         <Tooltip title={children}>
-          <Button {...other}>{startIcon}</Button>
+          <Button {...other} className={classNames(className, 'min-w-[auto]')}>
+            {startIcon}
+          </Button>
         </Tooltip>
       </Hidden>
     </>

@@ -33,7 +33,7 @@ const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
 const MainPane = () => {
   const searchParams = useSearchParams()
   const { map } = useContext(MapContext)
-  const { user } = useContext(AccountContext)
+  const { user, follows } = useContext(AccountContext)
   const { profileAction, events, eventAction, setEvents, setEventAction } =
     useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -80,13 +80,17 @@ const MainPane = () => {
           payload.keyword.split(/\s|,/).map((d) => d.trim().toLowerCase()),
         )
       : undefined
+
     return {
       ...(tags ? { '#t': Array.from(tags) } : undefined),
-      kinds: [NDKKind.Text],
+      ...(!tags && user && follows.length > 0
+        ? { authors: follows.map((d) => d.hexpubkey) }
+        : undefined),
+      kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - MONTH,
       limit: 20,
     }
-  }, [payload.keyword])
+  }, [payload.keyword, user, follows])
 
   const [subGeoFilter] = useSubscribe(geohashFilter)
   const [subTagFilter, fetchMore, newItems, showNewItems] =

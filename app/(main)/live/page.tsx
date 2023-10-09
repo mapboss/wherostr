@@ -105,7 +105,7 @@ const CardEvent: FC<{
   )
   const [user] = useUserCache(pubkey)
   return (
-    <Card key={id}>
+    <Card>
       <CardMedia
         component={Link}
         href={`/a?naddr=${nostrLink}`}
@@ -155,7 +155,9 @@ const CardEvent: FC<{
         subheader={
           <Box component="span" display="flex" flexDirection="column">
             <Typography variant="caption">
-              {user?.profile?.displayName}
+              {user?.profile?.name ||
+                user?.profile?.displayName ||
+                user?.npub.substring(0, 12)}
             </Typography>
             <ReactTimeago date={new Date((isLive ? starts : ends) * 1000)} />
           </Box>

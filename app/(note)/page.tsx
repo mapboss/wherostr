@@ -6,18 +6,31 @@ import { Box, useMediaQuery, useTheme } from '@mui/material'
 import classNames from 'classnames'
 import { RedirectType } from 'next/dist/client/components/redirect'
 import { redirect, useSearchParams } from 'next/navigation'
+import { useMemo } from 'react'
+import { nip19 } from 'nostr-tools'
 
 export default function Page() {
   const theme = useTheme()
   const searchParams = useSearchParams()
   const hasMap = searchParams.get('map') === '1'
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
-  if (typeof window == 'undefined') return <div />
-  const hash = window.location.hash.slice(1)
+  const hash =
+    typeof window !== 'undefined' ? window.location.hash.slice(1) : ''
+  const naddr = hash.startsWith('/n') ? hash.slice(1) : undefined
+  const naddrDesc = useMemo(() => {
+    try {
+      return nip19.decode(naddr as string)
+    } catch (err) {}
+  }, [naddr])
 
-  if (hash.startsWith('/n')) {
-    const naddr = hash.slice(1)
-    redirect(`/p?naddr=${naddr}`, RedirectType.replace)
+  if (naddrDesc?.type === 'naddr') {
+    redirect(`/a?naddr=${naddr}`, RedirectType.replace)
+  } else if (naddrDesc?.type === 'note') {
+    redirect(`/n?naddr=${naddr}`, RedirectType.replace)
+  } else if (naddrDesc?.type === 'npub' || naddrDesc?.type === 'nprofile') {
+    redirect(`/u?naddr=${naddr}`, RedirectType.replace)
+  } else if (naddrDesc?.type === 'nevent') {
+    redirect(`/e?naddr=${naddr}`, RedirectType.replace)
   }
 
   return (

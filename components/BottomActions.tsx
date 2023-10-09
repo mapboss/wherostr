@@ -10,7 +10,10 @@ const BottomActions = () => {
   const pathname = usePathname()
   const query = useSearchParams()
   const hasMap = query.get('map') === '1'
-  const [value, setValue] = useState(hasMap ? 'map' : 'home')
+  const hasSearch = !!query.get('keyword')
+  const [value, setValue] = useState(
+    hasMap ? 'map' : hasSearch ? 'search' : 'home',
+  )
 
   const handleClickPost = useCallback(() => {
     setEventAction({
@@ -28,8 +31,10 @@ const BottomActions = () => {
           const keyword = query.get('keyword') || ''
           if (value === 'map') {
             router.replace(`${pathname}?keyword=${keyword}&map=1`)
-          } else {
+          } else if (value === 'search') {
             router.replace(`${pathname}?keyword=${keyword}`)
+          } else {
+            router.replace(`${pathname}`)
           }
         }}
       >

@@ -7,9 +7,11 @@ import { useCallback, useContext, useMemo } from 'react'
 const ProfileChip = ({
   user,
   showName = true,
+  showNip5 = true,
 }: {
   user?: NDKUser | null
   showName?: boolean
+  showNip5?: boolean
 }) => {
   const { setProfileAction } = useContext(AppContext)
   const displayName = useMemo(
@@ -29,7 +31,7 @@ const ProfileChip = ({
 
   return (
     <Box
-      className="flex overflow-hidden cursor-pointer hover:underline"
+      className="flex overflow-hidden cursor-pointer hover:underline items-center"
       onClick={user ? handleClickProfile : undefined}
     >
       <Avatar className="min-w-[40px] border-2" src={user?.profile?.image} />
@@ -41,12 +43,14 @@ const ProfileChip = ({
           >
             {displayName}
           </Typography>
-          <Typography
-            className="overflow-hidden whitespace-nowrap text-ellipsis"
-            variant="caption"
-          >
-            {user?.profile?.nip05}
-          </Typography>
+          {showNip5 && (
+            <Typography
+              className="overflow-hidden whitespace-nowrap text-ellipsis"
+              variant="caption"
+            >
+              {user?.profile?.nip05}
+            </Typography>
+          )}
         </Box>
       )}
     </Box>

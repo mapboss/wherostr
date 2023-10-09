@@ -1,4 +1,4 @@
-import { Box, BoxProps } from '@mui/material'
+import { Box, BoxProps, Fade, Typography } from '@mui/material'
 import { HTMLProps, useCallback, useEffect, useState } from 'react'
 import ReactPlayer from 'react-player'
 
@@ -34,6 +34,13 @@ export function LiveVideoPlayer({
 
   return (
     <Box {...props}>
+      <Fade in={status === VideoStatus.Offline}>
+        <Box className="absolute inset-0 bg-[black] bg-opacity-50 flex justify-center items-center">
+          <Typography variant="h4" fontWeight="bold" color="text.secondary">
+            OFFLINE
+          </Typography>
+        </Box>
+      </Fade>
       <ReactPlayer
         url={url}
         controls={status !== VideoStatus.Offline}
@@ -43,9 +50,12 @@ export function LiveVideoPlayer({
         width="100%"
         height="100%"
         style={{ aspectRatio: '16/9', flex: 1, maxHeight: '100%' }}
+        playsinline
         onStart={() => {
-          setStatus(VideoStatus.Online)
-          load(stream)
+          if (status === VideoStatus.Offline) {
+            setStatus(VideoStatus.Online)
+            load(stream)
+          }
         }}
         onError={(error: any, data: any) => {
           const errorType = data?.type
