@@ -6,14 +6,9 @@ import {
   NDKSubscription,
   NDKSubscriptionCacheUsage,
 } from '@nostr-dev-kit/ndk'
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { nanoid } from 'nanoid'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNDK, useRelaySet } from './useNostr'
 
 export type SubscribeResult = [
   NDKEvent[],
@@ -38,41 +33,50 @@ export const useSubscribe = (
     onStop?: () => void
   },
 ) => {
-  const { ndk, connected } = useContext(NostrContext)
+  const ndk = useNDK()
+  const relaySet = useRelaySet()
   const [sub, setSub] = useState<NDKSubscription>()
   const [items, setItems] = useState<NDKEvent[]>([])
   const [newItems, setNewItems] = useState<NDKEvent[]>([])
   const eos = useRef(false)
 
   useEffect(() => {
-    if (!connected) return
-    if (!filter) {
-      setNewItems([])
-      setItems([])
-      return setSub((prev) => {
-        prev?.removeAllListeners()
-        prev?.stop()
-        return undefined
-      })
-    }
+    if (!ndk) return
+    if (!filter) return
+    if (!relaySet) return
+    // if (!filter || !relaySet) {
+    //   setNewItems([])
+    //   setItems([])
+    //   return setSub((prev) => {
+    //     prev?.removeAllListeners()
+    //     prev?.stop()
+    //     return undefined
+    //   })
+    // }
+    console.log('sub:init', relaySet)
     setNewItems([])
     setItems([])
     eos.current = false
-    const subscribe = ndk.subscribe(
-      filter,
-      { closeOnEose: false, cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
-      undefined,
-      false,
-    )
     setSub((prev) => {
+      const subscribe = ndk.subscribe(
+        filter,
+        {
+          closeOnEose: false,
+          cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+          subId: nanoid(8),
+        },
+        relaySet,
+        false,
+      )
       prev?.removeAllListeners()
       prev?.stop()
       return subscribe
     })
-  }, [ndk, connected, filter])
+  }, [ndk, relaySet, filter])
 
   useEffect(() => {
-    if (!connected || !sub) return
+    if (!ndk || !sub) return
+    console.log('sub:postCreate', sub)
     eos.current = false
     let evetns = new Map<string, NDKEvent>()
 
@@ -91,7 +95,7 @@ export const useSubscribe = (
       evetns.set(dedupKey, event)
       if (eos.current) {
         if (!existingEvent) {
-          setNewItems((prev) => [event, ...prev])
+          setNewItems((prev) => sortItems([event, ...prev]))
         }
       } else {
         setItems(sortItems(evetns.values()))
@@ -102,7 +106,7 @@ export const useSubscribe = (
       evetns.set(dedupKey, event)
       if (eos.current) {
         if (!existingEvent) {
-          setNewItems((prev) => [event, ...prev])
+          setNewItems((prev) => sortItems([event, ...prev]))
         }
       } else {
         setItems(sortItems(evetns.values()))
@@ -126,15 +130,16 @@ export const useSubscribe = (
       sub.removeAllListeners()
       sub.stop()
     }
-  }, [connected, sub, ndk])
+  }, [sub, ndk])
 
   const oldestEvent = useMemo(() => items[items.length - 1], [items])
   const fetchMore = useCallback(async () => {
-    if (!connected || !filter || !oldestEvent) return
+    if (!relaySet || !filter || !oldestEvent) return
     const { since, ...original } = filter
     const events = await ndk.fetchEvents(
       { ...original, until: oldestEvent.created_at, limit: 20 },
       { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+      relaySet,
     )
     const items = sortItems(events)
     let nonDupItems: NDKEvent[] = []
@@ -146,7 +151,7 @@ export const useSubscribe = (
       return [...prev, ...nonDupItems]
     })
     return nonDupItems
-  }, [connected, ndk, filter, oldestEvent])
+  }, [relaySet, ndk, filter, oldestEvent])
 
   const showNewItems = useCallback(() => {
     if (!newItems.length) return

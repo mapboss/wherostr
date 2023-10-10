@@ -1,15 +1,10 @@
 import { Box, Fade, FadeProps, LinearProgress, Paper } from '@mui/material'
-import { ForwardRefRenderFunction, forwardRef } from 'react'
-import Image from 'next/image'
-// https://rightshift.to/wp-content/uploads/2022/12/logo_Right_Shift_BGorange-09.png
+import { FC } from 'react'
 
 interface SplashScreenProps extends Omit<FadeProps, 'children'> {}
-const SplashScreen: ForwardRefRenderFunction<HTMLElement, SplashScreenProps> = (
-  props,
-  ref,
-) => {
+const SplashScreen: FC<SplashScreenProps> = (props) => {
   return (
-    <Fade {...props} ref={ref}>
+    <Fade {...props}>
       <Paper className="fixed inset-0 z-50 flex justify-center items-center flex-col">
         {/* <Box className="relative w-[128px] h-[128px] rounded-full">
           <Image
@@ -28,4 +23,4 @@ const SplashScreen: ForwardRefRenderFunction<HTMLElement, SplashScreenProps> = (
   )
 }
 
-export default forwardRef(SplashScreen)
+export default SplashScreen

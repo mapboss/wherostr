@@ -4,12 +4,12 @@ import { Box, Chip, Hidden, Paper, Toolbar, Typography } from '@mui/material'
 import { LiveVideoPlayer } from './LiveVideoPlayer'
 import { LiveChat } from './LiveChat'
 import { useContext, useMemo } from 'react'
-import { useUserCache } from '@/hooks/useCache'
 import ProfileChip from './ProfileChip'
 import { Bolt, Share, SubscriptionsSharp } from '@mui/icons-material'
 import { LiveStreamTime } from './LiveStreamTime'
 import ResponsiveButton from './ResponsiveButton'
 import { AccountContext } from '@/contexts/AccountContext'
+import { useUserProfile } from '@/hooks/useUserProfile'
 
 export interface LiveActivityItem {
   id: string
@@ -66,7 +66,7 @@ const LiveActivity = ({
   }, [event])
 
   const autoplay = useMemo(() => liveItem.status === 'live', [liveItem.status])
-  const [author] = useUserCache(liveItem.pubkey)
+  const author = useUserProfile(liveItem.pubkey)
 
   return (
     <Box className="grid gap-2 lg:gap-6 flex-1 overflow-hidden lg:mt-16 grid-cols-1 lg:grid-cols-[auto_440px]">

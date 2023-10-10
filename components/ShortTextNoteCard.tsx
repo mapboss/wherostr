@@ -14,7 +14,6 @@ import {
 import { useCallback, useContext, useMemo } from 'react'
 import {
   ArrowRightAlt,
-  MoreVert,
   Repeat,
   TravelExploreOutlined,
 } from '@mui/icons-material'
@@ -22,11 +21,11 @@ import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import { EventExt } from '@snort/system'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
-import { useUserCache } from '@/hooks/useCache'
 import { extractLngLat } from '@/utils/extractLngLat'
 import { MapContext } from '@/contexts/MapContext'
 import { LngLatBounds } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useUserProfile } from '@/hooks/useUserProfile'
 
 const ShortTextNoteCard = ({
   event,
@@ -42,7 +41,7 @@ const ShortTextNoteCard = ({
   const router = useRouter()
   const { ndk, getEvent } = useContext(NostrContext)
   const { map } = useContext(MapContext)
-  const [user, error, state] = useUserCache(event.pubkey)
+  const user = useUserProfile(event.pubkey)
   const createdDate = useMemo(
     () => (event.created_at ? new Date(event.created_at * 1000) : undefined),
     [event],

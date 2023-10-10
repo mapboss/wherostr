@@ -18,6 +18,7 @@ const ProfileChip = ({
     () =>
       user?.profile?.displayName ||
       user?.profile?.name ||
+      user?.profile?.username ||
       user?.npub.substring(0, 12),
     [user],
   )
@@ -31,7 +32,7 @@ const ProfileChip = ({
 
   return (
     <Box
-      className="flex overflow-hidden cursor-pointer hover:underline items-center"
+      className="min-w-[40px] flex overflow-hidden cursor-pointer hover:underline items-center"
       onClick={user ? handleClickProfile : undefined}
     >
       <Avatar className="min-w-[40px] border-2" src={user?.profile?.image} />

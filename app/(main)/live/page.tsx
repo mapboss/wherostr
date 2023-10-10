@@ -15,8 +15,8 @@ import { FC, useMemo, useRef } from 'react'
 import ReactTimeago from 'react-timeago'
 import { nip19 } from 'nostr-tools'
 import Link from 'next/link'
-import { useUserCache } from '@/hooks/useCache'
 import { WEEK, unixNow } from '@/utils/time'
+import { useUserProfile } from '@/hooks/useUserProfile'
 
 export default function Page() {
   const since = useMemo(() => unixNow() - WEEK, [])
@@ -103,7 +103,7 @@ const CardEvent: FC<{
       }),
     [ev.kind, ev.pubkey, id],
   )
-  const [user] = useUserCache(pubkey)
+  const user = useUserProfile(pubkey)
   return (
     <Card>
       <CardMedia

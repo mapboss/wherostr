@@ -25,7 +25,7 @@ import { AccountContext } from '@/contexts/AccountContext'
 const amountFormat = '0,0.[0]a'
 
 const NoteActionBar = ({ event }: { event: NDKEvent }) => {
-  const { ndk, connected } = useContext(NostrContext)
+  const { ndk, relaySet } = useContext(NostrContext)
   const { user } = useContext(AccountContext)
   const { setEventAction } = useContext(AppContext)
   const [reacted, setReacted] = useState<'+' | '-' | undefined>()
@@ -34,7 +34,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     disliked: 0,
   })
   usePromise(async () => {
-    if (ndk && connected && user && event) {
+    if (ndk && relaySet && user && event) {
       let [reactedEvent, relatedEvents] = await Promise.all([
         ndk.fetchEvent(
           {
@@ -43,6 +43,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
             '#e': [event.id],
           },
           { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+          relaySet,
         ),
         Array.from(
           await ndk.fetchEvents(
@@ -51,6 +52,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
               '#e': [event.id],
             },
             { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+            relaySet,
           ),
         ),
       ])
@@ -66,7 +68,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         disliked: relatedEvents.filter(({ content }) => content === '-').length,
       })
     }
-  }, [ndk, connected, user, event])
+  }, [ndk, relaySet, user, event])
   const reactionPercentage = useMemo(() => {
     return liked ? `${((liked / (liked + disliked)) * 100).toFixed(0)}%` : '-'
   }, [liked, disliked])
@@ -78,7 +80,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
       zaps: [],
     },
   ] = usePromise(async () => {
-    if (connected && ndk && event) {
+    if (relaySet && ndk && event) {
       const [repostEvents, quoteAndCommentEvents, zapEvents] =
         await Promise.all([
           Array.from(
@@ -88,6 +90,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
                 '#e': [event.id],
               },
               { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+              relaySet,
             ),
           ),
           Array.from(
@@ -97,6 +100,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
                 '#e': [event.id],
               },
               { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+              relaySet,
             ),
           ),
           Array.from(
@@ -106,6 +110,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
                 '#e': [event.id],
               },
               { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+              relaySet,
             ),
           ),
         ])
@@ -135,7 +140,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         ),
       }
     }
-  }, [connected, ndk, event])
+  }, [relaySet, ndk, event])
   const { repostAmount, quoteAmount, commentAmount, zapAmount } = useMemo(
     () => ({
       repostAmount: numeral(reposts.length).format(amountFormat),

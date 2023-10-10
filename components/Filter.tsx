@@ -5,6 +5,10 @@ import {
   InputAdornment,
   Box,
   TextField,
+  BaseTextFieldProps,
+  TextFieldProps,
+  Menu,
+  Chip,
 } from '@mui/material'
 import { FC, useEffect, useState } from 'react'
 import axios, { AxiosResponse } from 'axios'
@@ -14,8 +18,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import bbox from '@turf/bbox'
 import bboxPolygon from '@turf/bbox-polygon'
 import buffer from '@turf/buffer'
+import { NDKUser } from '@nostr-dev-kit/ndk'
 
-// https://nominatim.openstreetmap.org/search?<params>
 export async function search<TOutput = any[], TInput = string>(
   payload?: TInput,
 ) {
@@ -25,10 +29,12 @@ export async function search<TOutput = any[], TInput = string>(
   )
   return res.data
 }
-export interface FilterProps {
+export interface FilterProps extends BaseTextFieldProps {
+  user?: NDKUser
   precision?: number
   className?: string
   onSearch?: (payload?: SearchPayload) => void
+  InputProps?: TextFieldProps['InputProps']
 }
 
 export interface SearchPayload {
@@ -38,12 +44,19 @@ export interface SearchPayload {
   places?: any[]
 }
 
-const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
+const Filter: FC<FilterProps> = ({
+  user,
+  precision = 9,
+  className,
+  onSearch,
+  ...props
+}) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const querySearch = searchParams.get('keyword') || ''
   const [keyword, setKeyword] = useState<string>(querySearch)
+  // const [placeList, setPlaceList] = useState<any[]>(placeList)
 
   useEffect(() => {
     setKeyword(querySearch)
@@ -74,8 +87,14 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
   }, [querySearch])
 
   useEffect(() => {
+    if (!onSearch) return
     if (state !== 'resolved') return
-    onSearch?.(data)
+    if (!data.places?.length || data.places?.length === 1) {
+      onSearch?.(data)
+    } else if (data.places.length > 1) {
+      onSearch?.(data)
+      console.log('data.places', data.places)
+    }
   }, [data, state, onSearch])
 
   return (
@@ -89,6 +108,7 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
       }}
     >
       <TextField
+        {...props}
         fullWidth
         value={keyword}
         onChange={(evt) => setKeyword(evt.target.value)}
@@ -99,6 +119,14 @@ const Filter: FC<FilterProps> = ({ precision = 9, className, onSearch }) => {
         sx={{ my: 1 }}
         autoComplete="off"
         InputProps={{
+          ...props.InputProps,
+          sx: { pl: 0.5 },
+
+          startAdornment: (
+            <InputAdornment position="start">
+              {user ? <Chip label="All Following" /> : <Chip label="Global" />}
+            </InputAdornment>
+          ),
           endAdornment: (
             <InputAdornment position="end">
               {state === 'pending' ? (

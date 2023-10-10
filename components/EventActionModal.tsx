@@ -335,9 +335,9 @@ const ShortTextNotePane = ({
   quotes: boolean
   comments: boolean
 }) => {
-  const { ndk, connected } = useContext(NostrContext)
+  const { ndk, relaySet } = useContext(NostrContext)
   const [relatedEvents] = usePromise(async () => {
-    if (connected && ndk && event) {
+    if (relaySet && ndk && event) {
       const [repostEvents, quoteAndCommentEvents] = await Promise.all([
         reposts
           ? Array.from(
@@ -347,6 +347,7 @@ const ShortTextNotePane = ({
                   '#e': [event.id],
                 },
                 { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+                relaySet,
               ),
             )
           : [],
@@ -358,6 +359,7 @@ const ShortTextNotePane = ({
                   '#e': [event.id],
                 },
                 { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+                relaySet,
               ),
             )
           : [],
@@ -381,7 +383,7 @@ const ShortTextNotePane = ({
       })
       return [...repostEvents, ..._quotes, ..._comments]
     }
-  }, [connected, ndk, event, reposts, quotes, comments])
+  }, [relaySet, ndk, event, reposts, quotes, comments])
   const relatedEventElements = useMemo(
     () =>
       relatedEvents?.map((item) => (

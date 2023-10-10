@@ -7,7 +7,7 @@ import {
   transformText,
   tryParseNostrLink,
 } from '@snort/system'
-import { Box, Icon, Link, Paper, Typography } from '@mui/material'
+import { Box, Link, Paper, Typography } from '@mui/material'
 import { Fragment } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
@@ -18,9 +18,10 @@ import {
   AppContext,
   ProfileActionType,
 } from '@/contexts/AppContext'
-import { useEventCache, useUserCache } from '@/hooks/useCache'
+import { useEventCache } from '@/hooks/useCache'
 import { Variant } from '@mui/material/styles/createTypography'
 import { PhotoProvider, PhotoView } from 'react-photo-view'
+import { useUserProfile } from '@/hooks/useUserProfile'
 
 const youtubeRegExp =
   /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
@@ -31,9 +32,13 @@ type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
 const UserMentionLink = ({ id }: { id: string }) => {
   const { setProfileAction } = useContext(AppContext)
-  const [user] = useUserCache(id)
+  const user = useUserProfile(id)
   const displayName = useMemo(
-    () => user?.profile?.displayName || user?.profile?.name || user?.npub,
+    () =>
+      user?.profile?.displayName ||
+      user?.profile?.name ||
+      user?.profile?.username ||
+      user?.npub.substring(0, 12),
     [user],
   )
   const handleClickProfile = useCallback(() => {

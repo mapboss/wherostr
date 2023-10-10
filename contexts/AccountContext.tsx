@@ -15,7 +15,7 @@ import {
   NDKSubscriptionCacheUsage,
   NDKUser,
 } from '@nostr-dev-kit/ndk'
-import { NostrContext } from '@/contexts/NostrContext'
+import { NostrContext, defaultRelays } from '@/contexts/NostrContext'
 
 interface Account {
   user?: NDKUser
@@ -32,37 +32,16 @@ export const AccountContext = createContext<Account>({
 })
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { ndk, getUser, connectRelays } = useContext(NostrContext)
+  const { ndk, relaySet, updateRelaySet } = useContext(NostrContext)
   const [user, setUser] = useState<NDKUser>()
   const [follows, setFollows] = useState<NDKUser[]>([])
   const nostrRef = useRef<typeof window.nostr>()
   nostrRef.current = typeof window !== 'undefined' ? window.nostr : undefined
-
   const hasNip7Extension = useCallback(() => {
     return !!nostrRef.current
   }, [])
-  // useEffect(() => {
-  //   if (ndk && nostrRef.current) {
-  //     ndk.signer = new NDKPrivateKeySigner()
-  //     ndk.signer = new NDKNip07Signer()
-  //   }
-  // }, [ndk])
 
-  const connect = useCallback(
-    async (user?: NDKUser) => {
-      if (!user) {
-        return connectRelays()
-      }
-      return user.relayList().then((relayList) => {
-        if (relayList?.readRelayUrls.length) {
-          return connectRelays(relayList.readRelayUrls)
-        }
-      })
-    },
-    [connectRelays],
-  )
-
-  const fetchFollows = useCallback(async (user: NDKUser) => {
+  const updateFollowers = useCallback(async (user: NDKUser) => {
     const follows = await user.follows({
       cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
     })
@@ -73,54 +52,62 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     if (hasNip7Extension()) {
       ndk.signer = new NDKNip07Signer()
       const signerUser = await ndk.signer?.user()
+      console.log('signIn:signerUser', defaultRelays)
       if (signerUser) {
-        const user = ndk.getUser({ hexpubkey: signerUser.hexpubkey })
-        const profile = await user.fetchProfile()
-        if (profile) {
-          user.profile = profile
-        }
-        await fetchFollows(user)
+        const user = ndk.getUser({
+          hexpubkey: signerUser.hexpubkey,
+          relayUrls: defaultRelays,
+        })
+        console.log('signIn:user', user)
+        user
+          .fetchProfile({
+            cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+          })
+          .then((profile) => {
+            console.log('signIn:profile', profile)
+            if (profile) {
+              user.profile = profile
+            }
+          })
+          .catch((err) => console.log(err))
+        console.log('signIn:profile')
+        updateFollowers(user)
+        console.log('signIn:fetchFollows')
         localStorage.setItem(
           'session',
           JSON.stringify({ pubkey: user.hexpubkey, type: 'nip7' }),
         )
-
+        updateRelaySet(user)
+        console.log('signIn:updateRelaySet')
         setUser(user)
-        await connect(user)
         return user
       }
     }
-  }, [ndk, hasNip7Extension, connect, fetchFollows])
+  }, [ndk, hasNip7Extension, updateFollowers, updateRelaySet])
 
   const signOut = useCallback(async () => {
-    if (hasNip7Extension()) {
-      ndk.signer = new NDKNip07Signer()
-      localStorage.removeItem('session')
-      setUser(undefined)
-      await connectRelays()
+    ndk.signer = undefined
+    localStorage.removeItem('session')
+    setUser(undefined)
+    updateRelaySet()
+  }, [ndk, updateRelaySet])
+
+  const initUser = useCallback(async () => {
+    let user: NDKUser | undefined
+    const session = JSON.parse(localStorage.getItem('session') || '{}')
+    if (session?.pubkey) {
+      if (!hasNip7Extension()) return
+      signIn()
+    } else {
+      updateRelaySet(user)
     }
-  }, [ndk, hasNip7Extension, connectRelays])
+  }, [hasNip7Extension, updateRelaySet, signIn])
 
   useEffect(() => {
-    const func = async () => {
-      let user: NDKUser | undefined
-      const session = JSON.parse(localStorage.getItem('session') || '{}')
-      if (session?.pubkey) {
-        if (!hasNip7Extension()) return
-        ndk.signer = new NDKNip07Signer()
-        const signerUser = await ndk.signer.user()
-        if (signerUser?.hexpubkey) {
-          user = await getUser(signerUser?.hexpubkey)
-        }
-      }
-      await connect(user)
-      if (user) {
-        setUser(user)
-        await fetchFollows(user)
-      }
-    }
-    func()
-  }, [ndk, hasNip7Extension, connect, getUser, fetchFollows])
+    if (typeof window === 'undefined') return
+    if (user || relaySet) return
+    initUser()
+  }, [user, relaySet, initUser])
 
   const value = useMemo((): Account => {
     return {

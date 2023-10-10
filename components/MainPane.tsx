@@ -8,8 +8,10 @@ import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import {
   Box,
+  Chip,
   Hidden,
   IconButton,
+  InputAdornment,
   Paper,
   Toolbar,
   Tooltip,
@@ -27,6 +29,7 @@ import ProfileChip from './ProfileChip'
 import UserBar from './UserBar'
 import classNames from 'classnames'
 import { MONTH, unixNow } from '@/utils/time'
+import { useFollowing, useUser } from '@/hooks/useAccount'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -34,7 +37,8 @@ const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
 const MainPane = () => {
   const searchParams = useSearchParams()
   const { map } = useContext(MapContext)
-  const { user, follows } = useContext(AccountContext)
+  const user = useUser()
+  const follows = useFollowing()
   const { profileAction, events, eventAction, setEvents, setEventAction } =
     useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -71,7 +75,7 @@ const MainPane = () => {
     const bboxhash4 = Geohash.encode(bbox[3], bbox[0], 1)
     geohashFilter = new Set([bboxhash1, bboxhash2, bboxhash3, bboxhash4])
     return {
-      kinds: [NDKKind.Text],
+      kinds: [NDKKind.Text, NDKKind.Repost],
       '#g': Array.from(geohashFilter),
     }
   }, [payload.bbox])
@@ -280,6 +284,10 @@ const MainPane = () => {
     }
   }, [map, showPanel, mdUp, xlUp])
 
+  const onSearch = useCallback((payload: SearchPayload = {}) => {
+    setPayload(payload)
+  }, [])
+
   return (
     <Paper
       className={classNames(
@@ -296,13 +304,7 @@ const MainPane = () => {
         ) : (
           <UserBar />
         )}
-        <Filter
-          className="grow"
-          onSearch={(payload) => {
-            // setEvents([])
-            setPayload(payload || {})
-          }}
-        />
+        <Filter user={user} className="grow" onSearch={onSearch} />
         {user?.npub && (
           <Hidden mdDown>
             <Tooltip title="Post">

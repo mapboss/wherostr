@@ -18,7 +18,11 @@ import { MILLISECONDS, unixNow } from '@/utils/time'
 
 const ProfileCard = ({ user }: { user?: NDKUser }) => {
   const displayName = useMemo(
-    () => user?.profile?.displayName || user?.profile?.name || user?.npub,
+    () =>
+      user?.profile?.displayName ||
+      user?.profile?.name ||
+      user?.profile?.username ||
+      user?.npub.substring(0, 12),
     [user],
   )
   return (

@@ -3,16 +3,12 @@ import { AppContextProvider } from '@/contexts/AppContext'
 import { AccountContextProvider } from '@/contexts/AccountContext'
 import { Hidden, NoSsr } from '@mui/material'
 import BottomActions from '@/components/BottomActions'
-import { useContext } from 'react'
-import { NostrContext } from '@/contexts/NostrContext'
-import SplashScreen from '@/components/SplashScreen'
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { connected } = useContext(NostrContext)
   return (
     <AccountContextProvider>
       <AppContextProvider>
@@ -24,7 +20,6 @@ export default function RootLayout({
             <BottomActions />
           </footer>
         </Hidden>
-        <SplashScreen in={!connected} />
       </AppContextProvider>
     </AccountContextProvider>
   )
