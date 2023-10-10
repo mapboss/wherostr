@@ -19,11 +19,14 @@ interface Nostr {
   ndk: NDK
   connected: boolean
   connectRelays: (relays?: string[]) => Promise<void>
-  getUser: (hexpubkey: string) => Promise<NDKUser | undefined>
+  getUser: (
+    hexpubkey: string,
+    relayUrls?: string[],
+  ) => Promise<NDKUser | undefined>
   getEvent: (id: string) => Promise<NDKEvent | null>
 }
 
-const defaultRelays = (process.env.NEXT_PUBLIC_RELAY_URLS || '')
+export const defaultRelays = (process.env.NEXT_PUBLIC_RELAY_URLS || '')
   .split(',')
   .filter((item) => !!item)
 
@@ -63,21 +66,25 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
     [],
   )
 
-  const getUser = useCallback(async (hexpubkey: string) => {
-    const user = ndk.getUser({ hexpubkey })
-    const profile = await user.fetchProfile({
-      closeOnEose: true,
-      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-    })
-    if (profile) {
-      user.profile = profile
-    }
-    return user
-  }, [])
+  const getUser = useCallback(
+    async (hexpubkey: string, relayUrls: string[] = defaultRelays) => {
+      const user = ndk.getUser({
+        hexpubkey,
+        relayUrls: connected ? undefined : relayUrls,
+      })
+      const profile = await user.fetchProfile({
+        cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      })
+      if (profile) {
+        user.profile = profile
+      }
+      return user
+    },
+    [connected],
+  )
 
   const getEvent = useCallback(async (id: string) => {
     return ndk.fetchEvent(id, {
-      closeOnEose: true,
       cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
     })
   }, [])

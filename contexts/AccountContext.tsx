@@ -106,7 +106,6 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       let user: NDKUser | undefined
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       if (session?.pubkey) {
-        await connect()
         if (!hasNip7Extension()) return
         ndk.signer = new NDKNip07Signer()
         const signerUser = await ndk.signer.user()
