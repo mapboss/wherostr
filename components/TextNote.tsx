@@ -146,22 +146,23 @@ export const NostrAddressBox = ({
     return (
       <Box className="flex items-center justify-center bg-gradient-to-r to-primary from-secondary w-full p-8 rounded-2xl overflow-hidden">
         {state === 'resolved' ? (
-          <Box className="flex flex-1 items-center justify-between">
-            <Box className="flex">
+          <Box className="flex flex-1 items-center overflow-hidden">
+            <Box className="flex flex-1 overflow-hidden">
               <ProfileChip showName={false} showNip5={false} user={user} />
-              <Box ml={1}>
-                <Typography variant="h6" fontWeight="bold">
+              <Box className="ml-2 flex-1 overflow-hidden">
+                <Typography variant="h6" fontWeight="bold" noWrap>
                   {title}
                 </Typography>
                 {status === 'live' ? (
-                  <Typography>
+                  <Typography noWrap>
                     <Sensors /> Live
                   </Typography>
                 ) : (
-                  <Typography>ENDED</Typography>
+                  <Typography>Ended</Typography>
                 )}
               </Box>
             </Box>
+            <Box mx={1} />
             <Button
               LinkComponent={NextLink}
               target="_blank"
