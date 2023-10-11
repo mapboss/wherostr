@@ -285,8 +285,14 @@ const renderChunk = (
           </Link>
         </NextLink>
       )
-    // case 'custom_emoji':
-    //   return `custom_emoji: ${content}`
+    case 'custom_emoji':
+      return (
+        <img
+          alt="emoji"
+          className="inline-block max-h-[1.5em] max-w-[1.5em]"
+          src={content}
+        />
+      )
     // case 'mention':
     //   return `mention: ${content}`
     // case 'invoice':

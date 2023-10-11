@@ -24,7 +24,7 @@ const BottomActions = () => {
   return (
     <>
       <BottomNavigation
-        value={value}
+        value={hasMap ? 'map' : value}
         showLabels={false}
         sx={{ height: 48 }}
         onChange={(_, value) => {
@@ -35,7 +35,7 @@ const BottomActions = () => {
           } else if (value === 'search') {
             router.replace(`${pathname}?keyword=${keyword}`)
           } else {
-            router.replace(`${pathname}`)
+            router.replace(`${pathname}?keyword=${keyword}`)
           }
         }}
       >

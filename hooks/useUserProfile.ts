@@ -37,7 +37,7 @@ export const useUserProfile = (hexpubkey?: string) => {
         const d = {
           ...user,
           hexpubkey: user.hexpubkey,
-          profile: profile,
+          profile: { ...profile },
         } as NDKUser
         return d
       })

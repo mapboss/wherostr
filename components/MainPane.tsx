@@ -30,6 +30,7 @@ import UserBar from './UserBar'
 import classNames from 'classnames'
 import { MONTH, unixNow } from '@/utils/time'
 import { useFollowing, useUser } from '@/hooks/useAccount'
+import MenuButton from './DrawerMenu'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -231,6 +232,9 @@ const MainPane = () => {
       .filter((event) => !!event)
 
     try {
+      if (!zoomBounds.isEmpty()) {
+        map.fitBounds(zoomBounds, { animate: false })
+      }
       ;(map.getSource('nostr-event') as any)?.setData({
         type: 'FeatureCollection',
         features,
@@ -300,11 +304,7 @@ const MainPane = () => {
       )}
     >
       <Toolbar className="gap-2 items-center">
-        {user?.npub ? (
-          <ProfileChip user={user} showName={false} onClick={handleMenuClick} />
-        ) : (
-          <UserBar />
-        )}
+        {user?.npub ? <MenuButton user={user} /> : <UserBar />}
         <Filter user={user} className="grow" onSearch={onSearch} />
         {user?.npub && (
           <Hidden mdDown>

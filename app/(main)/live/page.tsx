@@ -146,18 +146,15 @@ const CardEvent: FC<{
         </Box>
       </CardMedia>
       <CardHeader
-        avatar={
-          <Avatar src={user?.profile?.image}>
-            {user?.profile?.displayName?.substring(0, 1)}
-          </Avatar>
-        }
+        avatar={<Avatar src={user?.profile?.image} />}
         title={title}
         subheader={
           <Box component="span" display="flex" flexDirection="column">
             <Typography variant="caption">
-              {user?.profile?.name ||
-                user?.profile?.displayName ||
-                user?.npub.substring(0, 12)}
+              {user?.profile?.displayName ||
+                user?.profile?.name ||
+                user?.profile?.username ||
+                user?.npub?.substring(0, 12)}
             </Typography>
             <ReactTimeago date={new Date((isLive ? starts : ends) * 1000)} />
           </Box>
