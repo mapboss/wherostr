@@ -49,6 +49,7 @@ const MainPane = () => {
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const showMap = searchParams.get('map') === '1'
   const showSearch = searchParams.get('search') === '1'
+  // const [showReply, setShowReply] = useState(false)
   // const [tabIndex, setTabIndex] = useState(0)
 
   useEffect(() => {
@@ -153,9 +154,7 @@ const MainPane = () => {
         type: EventActionType.View,
         event,
         options: {
-          quotes: true,
           comments: true,
-          reposts: true,
         },
       })
     },

@@ -58,7 +58,7 @@ const CreateEventForm = ({
   useEffect(() => {
     if (!map) return
     const handleClickMap = ({ lngLat }: maplibregl.MapMouseEvent) => {
-      setValue('geohash', Geohash.encode(lngLat.lat, lngLat.lng, 10))
+      setValue('geohash', Geohash.encode(lngLat.lat, lngLat.lng, 9))
     }
     map.on('click', handleClickMap)
     return () => {

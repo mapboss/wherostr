@@ -1,7 +1,7 @@
 'use client'
 import NoteActionBar from '@/components/NoteActionBar'
 import ProfileChip from '@/components/ProfileChip'
-import TextNote from '@/components/TextNote'
+import TextNote, { QuotedEvent } from '@/components/TextNote'
 import TimeFromNow from '@/components/TimeFromNow'
 import {
   Box,
@@ -61,7 +61,6 @@ const ShortTextNoteCard = ({
           type: EventActionType.View,
           event: rootEvent,
           options: {
-            quotes: true,
             comments: true,
           },
         })
@@ -70,6 +69,7 @@ const ShortTextNoteCard = ({
   }, [ndk, fromNote, getEvent, setEventAction])
 
   const lnglat = useMemo(() => extractLngLat(event), [event])
+  const repostId = useMemo(() => event.tagValue('e'), [event])
 
   return (
     <Card className="!rounded-none">
@@ -105,10 +105,10 @@ const ShortTextNoteCard = ({
               router.replace(`${pathname}?keyword=${keyword}&map=1`)
               setTimeout(() => {
                 map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
+                  animate: false,
                   maxZoom: 15,
-                  duration: 1000,
                 })
-              }, 100)
+              }, 300)
             }}
           >
             {/* <MoreVert /> */}
@@ -116,7 +116,7 @@ const ShortTextNoteCard = ({
           </IconButton>
         ) : null}
       </Box>
-      {event.kind === NDKKind.Text && (
+      {event.kind === NDKKind.Text ? (
         <Box className="flex">
           <CardContent className="flex-1 !pt-3 !pb-0 overflow-hidden">
             <TextNote event={event} relatedNoteVariant={relatedNoteVariant} />
@@ -127,7 +127,16 @@ const ShortTextNoteCard = ({
             )}
           </CardContent>
         </Box>
-      )}
+      ) : event.kind === NDKKind.Repost && repostId ? (
+        <Box className="flex">
+          <CardContent className="flex-1 !pt-3 !pb-0 overflow-hidden">
+            <QuotedEvent
+              id={repostId}
+              relatedNoteVariant={relatedNoteVariant}
+            />
+          </CardContent>
+        </Box>
+      ) : null}
       <Divider className="!mt-3" />
     </Card>
   )

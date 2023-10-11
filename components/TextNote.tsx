@@ -2,16 +2,30 @@
 import 'react-photo-view/dist/react-photo-view.css'
 import { useCallback, useContext, useMemo, useState } from 'react'
 import {
+  NostrLink,
   NostrPrefix,
   ParsedFragment,
   transformText,
   tryParseNostrLink,
 } from '@snort/system'
-import { Box, Link, Paper, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Link,
+  Paper,
+  Typography,
+} from '@mui/material'
 import { Fragment } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
-import { FormatQuote, InfoOutlined } from '@mui/icons-material'
+import {
+  ChevronRight,
+  FormatQuote,
+  InfoOutlined,
+  PlayCircle,
+  Sensors,
+} from '@mui/icons-material'
 import NextLink from 'next/link'
 import {
   EventActionType,
@@ -22,15 +36,13 @@ import { useEventCache } from '@/hooks/useCache'
 import { Variant } from '@mui/material/styles/createTypography'
 import { PhotoProvider, PhotoView } from 'react-photo-view'
 import { useUserProfile } from '@/hooks/useUserProfile'
-
-const youtubeRegExp =
-  /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:live\/|shorts\/|embed\/|v\/|watch(?:\?|.+&)v=))([^#\&\?]*).*/
-const youtubePlaylistRegExp =
-  /(?:https?:\/\/)?(?:www|m\.)?(?:youtu\.be\/|youtube\.com\/(?:(?:playlist|embed)(?:\?|.+&)list=))([^#\&\?]*).*/
+import ReactPlayer from 'react-player/lazy'
+import ProfileChip from './ProfileChip'
+import { useEvent } from '@/hooks/useEvent'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
-const UserMentionLink = ({ id }: { id: string }) => {
+export const UserMentionLink = ({ id }: { id: string }) => {
   const { setProfileAction } = useContext(AppContext)
   const user = useUserProfile(id)
   const displayName = useMemo(
@@ -38,7 +50,7 @@ const UserMentionLink = ({ id }: { id: string }) => {
       user?.profile?.displayName ||
       user?.profile?.name ||
       user?.profile?.username ||
-      user?.npub.substring(0, 12),
+      user?.npub?.substring?.(0, 12),
     [user],
   )
   const handleClickProfile = useCallback(() => {
@@ -51,6 +63,7 @@ const UserMentionLink = ({ id }: { id: string }) => {
 
   return (
     <Link
+      className="cursor-pointer"
       component="a"
       underline="hover"
       color="primary"
@@ -61,7 +74,7 @@ const UserMentionLink = ({ id }: { id: string }) => {
   )
 }
 
-const QuotedEvent = ({
+export const QuotedEvent = ({
   id,
   relatedNoteVariant,
 }: {
@@ -76,7 +89,7 @@ const QuotedEvent = ({
         type: EventActionType.View,
         event,
         options: {
-          quotes: true,
+          // quotes: true,
           comments: true,
         },
       })
@@ -116,6 +129,72 @@ const QuotedEvent = ({
   )
 }
 
+export const NostrAddressBox = ({
+  nostrLink,
+  naddr,
+}: {
+  nostrLink: NostrLink
+  naddr: string
+}) => {
+  const [event, error, state] = useEvent(naddr)
+  const pubkey = useMemo(() => event?.tagValue('p') || event?.pubkey, [event])
+  const title = useMemo(() => event?.tagValue('title'), [event])
+  const status = useMemo(() => event?.tagValue('status'), [event])
+  const user = useUserProfile(pubkey)
+
+  if (nostrLink.kind === 30311) {
+    return (
+      <Box className="flex items-center justify-center bg-gradient-to-r to-primary from-secondary w-full p-8 rounded-2xl overflow-hidden">
+        {state === 'resolved' ? (
+          <Box className="flex flex-1 items-center justify-between">
+            <Box className="flex">
+              <ProfileChip showName={false} showNip5={false} user={user} />
+              <Box ml={1}>
+                <Typography variant="h6" fontWeight="bold">
+                  {title}
+                </Typography>
+                {status === 'live' ? (
+                  <Typography>
+                    <Sensors /> Live
+                  </Typography>
+                ) : (
+                  <Typography>ENDED</Typography>
+                )}
+              </Box>
+            </Box>
+            <Button
+              LinkComponent={NextLink}
+              target="_blank"
+              href={`/a/?naddr=${naddr}`}
+              color="inherit"
+              variant="contained"
+              sx={{ fontWeight: 'bold' }}
+              endIcon={status === 'live' ? <ChevronRight /> : <PlayCircle />}
+            >
+              {status === 'live' ? 'Join Stream' : 'Watch'}
+            </Button>
+          </Box>
+        ) : (
+          <CircularProgress color="inherit" />
+        )}
+      </Box>
+    )
+  }
+
+  return (
+    <Link
+      className="block text-ellipsis whitespace-nowrap overflow-hidden"
+      href={`https://snort.social/${naddr}`}
+      target="_blank"
+      component="a"
+      underline="hover"
+      color="secondary"
+    >
+      {naddr}
+    </Link>
+  )
+}
+
 const renderChunk = (
   { type, content, mimeType }: ParsedFragment,
   { relatedNoteVariant }: { relatedNoteVariant: RelatedNoteVariant },
@@ -139,59 +218,51 @@ const renderChunk = (
         )
       } else if (mimeType?.startsWith('video/')) {
         return (
-          <Box className="rounded-2xl overflow-hidden">
-            <video className="w-full max-h-[344px]" src={content} controls />
+          <Box className="border-none rounded-2xl overflow-hidden w-full aspect-video">
+            <ReactPlayer
+              url={content}
+              width="100%"
+              height="100%"
+              controls
+              playsinline
+              muted
+            />
           </Box>
         )
       }
     case 'link':
-      const youtubeId = (content.match(youtubeRegExp) || [])[1]
-      if (youtubeId) {
+      if (ReactPlayer.canPlay(content)) {
         return (
-          <iframe
-            className="border-none rounded-2xl overflow-hidden w-full aspect-video"
-            src={`https://www.youtube.com/embed/${youtubeId}`}
-          />
-        )
-      }
-      const youtubePlaylistId = (content.match(youtubePlaylistRegExp) || [])[1]
-      if (youtubePlaylistId) {
-        return (
-          <iframe
-            className="border-none rounded-2xl overflow-hidden w-full aspect-video"
-            src={`https://www.youtube.com/embed?listType=playlist&list=${youtubePlaylistId}`}
-          />
+          <Box className="border-none rounded-2xl overflow-hidden w-full aspect-video">
+            <ReactPlayer
+              url={content}
+              width="100%"
+              height="100%"
+              controls
+              playsinline
+              muted
+            />
+          </Box>
         )
       }
       const { protocol } = new URL(content)
       if (protocol === 'nostr:' || protocol === 'web+nostr:') {
         const nostrLink = tryParseNostrLink(content)
-        const npub = nostrLink?.encode()
+        const naddr = nostrLink?.encode() || ''
         switch (nostrLink?.type) {
           case NostrPrefix.PublicKey:
           case NostrPrefix.Profile:
             return <UserMentionLink id={nostrLink.id} />
           case NostrPrefix.Event:
+          case NostrPrefix.Note:
             return (
               <QuotedEvent
                 id={nostrLink.id}
                 relatedNoteVariant={relatedNoteVariant}
               />
             )
-          case NostrPrefix.Note:
           case NostrPrefix.Address:
-            return (
-              <Link
-                className="block text-ellipsis whitespace-nowrap overflow-hidden"
-                href={`https://snort.social/${npub}`}
-                target="_blank"
-                component="a"
-                underline="hover"
-                color="secondary"
-              >
-                {content}
-              </Link>
-            )
+            return <NostrAddressBox nostrLink={nostrLink} naddr={naddr} />
         }
       }
       return (
