@@ -42,7 +42,7 @@ export const useUserProfile = (hexpubkey?: string) => {
         return d
       })
       if (!profile.nip05) return profile
-      if (!verifyCache[profile.nip05]) {
+      if (typeof verifyCache[profile.nip05] === 'undefined') {
         const validNip05 = await user
           .validateNip05(profile.nip05)
           .catch((err) => false)
