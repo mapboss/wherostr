@@ -141,6 +141,9 @@ const CreateEventForm = ({
           newEvent.tags.push(['g', geohash.substring(0, i)])
         }
       }
+      // https://api.imgur.com/3/image
+      // Method: POST
+      // Authorization: Client-ID e4f58fc81daec99
       await newEvent.publish()
       setEventAction(undefined)
     },

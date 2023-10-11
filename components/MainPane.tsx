@@ -287,6 +287,8 @@ const MainPane = () => {
     setPayload(payload)
   }, [])
 
+  const handleMenuClick = useCallback(() => {}, [])
+
   return (
     <Paper
       className={classNames(
@@ -299,7 +301,7 @@ const MainPane = () => {
     >
       <Toolbar className="gap-2 items-center">
         {user?.npub ? (
-          <ProfileChip user={user} showName={false} />
+          <ProfileChip user={user} showName={false} onClick={handleMenuClick} />
         ) : (
           <UserBar />
         )}

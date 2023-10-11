@@ -124,7 +124,7 @@ const Filter: FC<FilterProps> = ({
 
           startAdornment: (
             <InputAdornment position="start">
-              {user ? <Chip label="All Following" /> : <Chip label="Global" />}
+              {user ? <Chip label="All Follows" /> : <Chip label="Global" />}
             </InputAdornment>
           ),
           endAdornment: (
