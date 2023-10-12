@@ -10,7 +10,7 @@ import {
   Menu,
   Chip,
 } from '@mui/material'
-import { FC, useEffect, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import axios, { AxiosResponse } from 'axios'
 import { Search } from '@mui/icons-material'
 import usePromise from 'react-use-promise'
@@ -56,46 +56,61 @@ const Filter: FC<FilterProps> = ({
   const searchParams = useSearchParams()
   const querySearch = searchParams.get('keyword') || ''
   const [keyword, setKeyword] = useState<string>(querySearch)
+  const [loading, setLoading] = useState(false)
   // const [placeList, setPlaceList] = useState<any[]>(placeList)
+
+  const fetchSearch = useCallback(
+    async (querySearch: string) => {
+      if (!querySearch || !onSearch) return {}
+      try {
+        setLoading(true)
+        const result = await search(querySearch)
+        const place = result?.[0]
+        if (!place?.boundingbox) {
+          return { keyword: querySearch, places: [] }
+        }
+        // const lat = Number(place.lat)
+        // const lon = Number(place.lon)
+        // const g = geohash.encode(lat, lon, precision)
+        const [y1, y2, x1, x2] = place.boundingbox.map((b: string) => Number(b))
+        const polygon = buffer(bboxPolygon([x1, y1, x2, y2]), 1, {
+          units: 'kilometers',
+        })
+        const bounds = bbox(polygon)
+        const data = {
+          bbox: bounds as SearchPayload['bbox'],
+          keyword: querySearch,
+          places: result,
+          // geohash: g,
+          // places: data,
+        }
+        onSearch(data)
+        return data
+      } catch (err) {
+      } finally {
+        setLoading(false)
+      }
+    },
+    [onSearch],
+  )
 
   useEffect(() => {
     setKeyword(querySearch)
-  }, [querySearch])
+    if (querySearch) {
+      fetchSearch(querySearch)
+    }
+  }, [fetchSearch, querySearch])
 
-  const [data, error, state] = usePromise<SearchPayload>(async () => {
-    if (!querySearch) return {}
-    const result = await search(querySearch)
-    const place = result?.[0]
-    if (!place?.boundingbox) {
-      return { keyword: querySearch, places: [] }
-    }
-    // const lat = Number(place.lat)
-    // const lon = Number(place.lon)
-    // const g = geohash.encode(lat, lon, precision)
-    const [y1, y2, x1, x2] = place.boundingbox.map((b: string) => Number(b))
-    const polygon = buffer(bboxPolygon([x1, y1, x2, y2]), 1, {
-      units: 'kilometers',
-    })
-    const bounds = bbox(polygon)
-    return {
-      bbox: bounds as SearchPayload['bbox'],
-      keyword: querySearch,
-      places: result,
-      // geohash: g,
-      // places: data,
-    }
-  }, [querySearch])
-
-  useEffect(() => {
-    if (!onSearch) return
-    if (state !== 'resolved') return
-    if (!data.places?.length || data.places?.length === 1) {
-      onSearch?.(data)
-    } else if (data.places.length > 1) {
-      onSearch?.(data)
-      console.log('data.places', data.places)
-    }
-  }, [data, state, onSearch])
+  // useEffect(() => {
+  //   if (!onSearch) return
+  //   if (state !== 'resolved') return
+  //   if (!data.places?.length || data.places?.length === 1) {
+  //     onSearch?.(data)
+  //   } else if (data.places.length > 1) {
+  //     onSearch?.(data)
+  //     console.log('data.places', data.places)
+  //   }
+  // }, [data, state, onSearch])
 
   return (
     <Box
@@ -121,15 +136,14 @@ const Filter: FC<FilterProps> = ({
         InputProps={{
           ...props.InputProps,
           sx: { pl: 0.5 },
-
           startAdornment: (
             <InputAdornment position="start">
-              {user ? <Chip label="All Follows" /> : <Chip label="Global" />}
+              {user ? <Chip label="Following" /> : <Chip label="Global" />}
             </InputAdornment>
           ),
           endAdornment: (
             <InputAdornment position="end">
-              {state === 'pending' ? (
+              {loading === true ? (
                 <CircularProgress color="inherit" size={20} />
               ) : null}
               <IconButton type="submit">

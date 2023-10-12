@@ -1,6 +1,7 @@
 'use client'
 import { useNDK, useRelaySet } from './useNostr'
 import {
+  NDKEvent,
   NDKFilter,
   NDKKind,
   NDKRelaySet,
@@ -28,5 +29,27 @@ export const useEvent = (
         relaySet,
       ),
     [idOrFilter, relaySet],
+  )
+}
+
+export const useEvents = (
+  filter: NDKFilter<NDKKind>,
+  optRelaySet?: NDKRelaySet,
+) => {
+  const ndk = useNDK()
+  const defaultRelaySet = useRelaySet()
+  const relaySet = useMemo(
+    () => optRelaySet || defaultRelaySet,
+    [optRelaySet, defaultRelaySet],
+  )
+
+  return usePromise(
+    async () =>
+      (await ndk.fetchEvents(
+        filter,
+        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+        relaySet,
+      )) || new Set<NDKEvent>(),
+    [filter, relaySet],
   )
 }

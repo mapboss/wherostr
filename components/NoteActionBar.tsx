@@ -71,6 +71,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   const reactionPercentage = useMemo(() => {
     return liked ? `${((liked / (liked + disliked)) * 100).toFixed(0)}%` : '-'
   }, [liked, disliked])
+
   const [
     { reposts, quotes, comments, zaps } = {
       reposts: [],
@@ -80,39 +81,29 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     },
   ] = usePromise(async () => {
     if (relaySet && ndk && event) {
-      const [repostEvents, quoteAndCommentEvents, zapEvents] =
-        await Promise.all([
-          Array.from(
-            await ndk.fetchEvents(
-              {
-                kinds: [NDKKind.Repost],
-                '#e': [event.id],
-              },
-              { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
-              relaySet,
-            ),
-          ),
-          Array.from(
-            await ndk.fetchEvents(
-              {
-                kinds: [NDKKind.Text],
-                '#e': [event.id],
-              },
-              { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
-              relaySet,
-            ),
-          ),
-          Array.from(
-            await ndk.fetchEvents(
-              {
-                kinds: [NDKKind.Zap],
-                '#e': [event.id],
-              },
-              { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
-              relaySet,
-            ),
-          ),
-        ])
+      const events = await ndk.fetchEvents(
+        {
+          kinds: [NDKKind.Repost, NDKKind.Text, NDKKind.Zap],
+          '#e': [event.id],
+        },
+        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+        relaySet,
+      )
+
+      const repostEvents: NDKEvent[] = []
+      const quoteAndCommentEvents: NDKEvent[] = []
+      const zapEvents: NDKEvent[] = []
+
+      events.forEach((evt) => {
+        if (evt.kind === NDKKind.Text) {
+          quoteAndCommentEvents.push(evt)
+        } else if (evt.kind === NDKKind.Repost) {
+          repostEvents.push(evt)
+        } else if (evt.kind === NDKKind.Zap) {
+          zapEvents.push(evt)
+        }
+      })
+
       const quotes: NDKEvent[] = []
       const comments: NDKEvent[] = []
       quoteAndCommentEvents.forEach((item) => {

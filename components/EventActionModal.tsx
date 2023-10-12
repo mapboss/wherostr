@@ -4,6 +4,7 @@ import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import {
   Box,
   Button,
+  CircularProgress,
   IconButton,
   InputAdornment,
   Paper,
@@ -40,6 +41,7 @@ import numeral from 'numeral'
 import { requestProvider } from 'webln'
 import usePromise from 'react-use-promise'
 import TextNote from './TextNote'
+import { useEvent, useEvents } from '@/hooks/useEvent'
 
 const amountFormat = '0,0.[0]a'
 
@@ -224,13 +226,22 @@ const CreateEventForm = ({
             </Box>
           </Box>
         ))}
+        {previewEvent?.content && (
+          <>
+            <Typography color="text.secondary" className="pl-2">
+              Preview:
+            </Typography>
+            <Box className="rounded-2xl border border-[rgba(255,255,255,0.2)] p-2">
+              <TextNote event={previewEvent} relatedNoteVariant="full" />
+            </Box>
+          </>
+        )}
         <Box className="flex justify-end">
           <Button variant="contained" type="submit">
             {type === EventActionType.Repost ? 'Repost' : 'Post'}
           </Button>
         </Box>
       </Box>
-      <TextNote event={previewEvent} relatedNoteVariant="full" />
     </form>
   )
 }
@@ -349,44 +360,35 @@ const ShortTextNotePane = ({
   quotes: boolean
   comments: boolean
 }) => {
-  const { ndk, relaySet } = useContext(NostrContext)
-  const [relatedEvents] = usePromise(async () => {
-    if (relaySet && ndk && event) {
-      const [repostEvents, quoteAndCommentEvents] = await Promise.all([
-        reposts
-          ? Array.from(
-              await ndk.fetchEvents(
-                {
-                  kinds: [NDKKind.Repost],
-                  '#e': [event.id],
-                },
-                { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
-                relaySet,
-              ),
-            )
-          : [],
-        quotes || comments
-          ? Array.from(
-              await ndk.fetchEvents(
-                {
-                  kinds: [NDKKind.Text],
-                  '#e': [event.id],
-                },
-                { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
-                relaySet,
-              ),
-            )
-          : [],
-      ])
-      const _quotes: NDKEvent[] = []
-      const _comments: NDKEvent[] = []
-      quoteAndCommentEvents.forEach((item) => {
-        const { content, tags } = item
+  const filter = useMemo(() => {
+    const kinds: NDKKind[] = []
+    if (comments || quotes) {
+      kinds.push(NDKKind.Text)
+    }
+    if (reposts) {
+      kinds.push(NDKKind.Repost)
+    }
+    return { kinds, '#e': [event.id] }
+  }, [event.id, reposts, quotes, comments])
+
+  const [relatedEvents, error, state] = useEvents(filter)
+
+  const relatedEventElements = useMemo(() => {
+    if (!relatedEvents) return
+    const repostEvents: NDKEvent[] = []
+    const _quotes: NDKEvent[] = []
+    const _comments: NDKEvent[] = []
+    relatedEvents.forEach((item) => {
+      const { content, tags, kind } = item
+      if (kind === NDKKind.Repost) {
+        repostEvents.push(item)
+      } else {
         const linkFound =
           transformText(content, tags).filter(
             ({ type, content }) =>
               type === 'link' &&
-              content.startsWith('nostr:nevent1') &&
+              (content.startsWith('nostr:nevent1') ||
+                content.startsWith('nostr:note1')) &&
               tryParseNostrLink(content)?.id === event.id,
           ).length > 0
         if (quotes && linkFound) {
@@ -394,22 +396,24 @@ const ShortTextNotePane = ({
         } else if (comments && !linkFound) {
           _comments.push(item)
         }
-      })
-      return [...repostEvents, ..._quotes, ..._comments]
-    }
-  }, [relaySet, ndk, event, reposts, quotes, comments])
-  const relatedEventElements = useMemo(
-    () =>
-      relatedEvents?.map((item) => (
-        <ShortTextNoteCard key={item.id} event={item} />
-      )),
-    [relatedEvents],
-  )
+      }
+    })
+    return [...repostEvents, ..._quotes, ..._comments].map((item) => (
+      <ShortTextNoteCard key={item.id} event={item} />
+    ))
+  }, [comments, event.id, quotes, relatedEvents])
+
   return (
     <Box>
       <ShortTextNoteCard event={event} />
       <Box className="ml-4 border-l border-[rgba(255,255,255,0.12)]">
-        {relatedEventElements}
+        {relatedEventElements ? (
+          relatedEventElements
+        ) : (
+          <Box p={1} textAlign="center">
+            <CircularProgress color="inherit" />
+          </Box>
+        )}
       </Box>
     </Box>
   )

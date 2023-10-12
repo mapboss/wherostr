@@ -86,7 +86,7 @@ export const QuotedEvent = ({
   relatedNoteVariant: RelatedNoteVariant
 }) => {
   const { setEventAction } = useContext(AppContext)
-  const [event] = useEventCache(id)
+  const [event, error, state] = useEventCache(id)
   const handleClickNote = useCallback(() => {
     if (event) {
       setEventAction({
@@ -116,12 +116,16 @@ export const QuotedEvent = ({
       }`}
       onClick={handleClickNote}
     >
-      {event && (
+      {state === 'resolved' && event ? (
         <ShortTextNoteCard
           event={event}
           action={false}
           relatedNoteVariant="link"
         />
+      ) : (
+        <Box p={1} textAlign="center">
+          <CircularProgress color="inherit" />
+        </Box>
       )}
       {relatedNoteVariant === 'fraction' && (
         <Box className="absolute top-0 left-0 w-full h-full min-h-[320px] bg-gradient-to-t from-[#000000] to-50%" />
@@ -317,7 +321,7 @@ const renderChunk = (
     default:
       // console.log('text:content', content)
       // return content
-      return content
+      return content || ''
   }
 }
 
@@ -333,7 +337,9 @@ const TextNote = ({
   const [show, setShow] = useState(false)
   const chunks = useMemo(() => {
     const _ = transformText(' ' + event.content || '', event.tags || [])
-    _[0].content = _[0].content.slice(1) || ''
+    if (_?.[0]?.content) {
+      _[0].content = _[0]?.content?.slice?.(1) || ''
+    }
     return _
   }, [event])
 
