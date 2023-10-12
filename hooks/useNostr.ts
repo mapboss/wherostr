@@ -1,5 +1,7 @@
 'use client'
+import { streamRelayUrls } from '@/constants/app'
 import { NostrContext } from '@/contexts/NostrContext'
+import { NDKRelay, NDKRelaySet } from '@nostr-dev-kit/ndk'
 import { useContext, useMemo } from 'react'
 
 export const useNDK = () => {
@@ -10,4 +12,12 @@ export const useNDK = () => {
 export const useRelaySet = () => {
   const { relaySet } = useContext(NostrContext)
   return useMemo(() => relaySet, [relaySet])
+}
+
+export const useStreamRelaySet = () => {
+  const { ndk } = useContext(NostrContext)
+  return useMemo(() => {
+    const relays = streamRelayUrls.map((d) => new NDKRelay(d))
+    return new NDKRelaySet(new Set(relays), ndk)
+  }, [ndk])
 }

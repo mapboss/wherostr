@@ -33,13 +33,13 @@ import Geohash from 'latlon-geohash'
 import {
   NostrPrefix,
   createNostrLink,
-  transformText,
   tryParseNostrLink,
+  transformText,
 } from '@snort/system'
 import numeral from 'numeral'
 import { requestProvider } from 'webln'
 import usePromise from 'react-use-promise'
-import { nanoid } from 'nanoid'
+import TextNote from './TextNote'
 
 const amountFormat = '0,0.[0]a'
 
@@ -55,6 +55,7 @@ const CreateEventForm = ({
   const { setEventAction } = useContext(AppContext)
   const { register, handleSubmit, setValue, watch } = useForm()
   const geohashValue = watch('geohash')
+  const contentValue = watch('content')
   useEffect(() => {
     if (!map) return
     const handleClickMap = ({ lngLat }: maplibregl.MapMouseEvent) => {
@@ -161,6 +162,14 @@ const CreateEventForm = ({
         return undefined
     }
   }, [type])
+
+  const previewEvent = useMemo(() => {
+    return {
+      content: contentValue,
+      tags: [],
+    } as unknown as NDKEvent
+  }, [contentValue])
+
   return (
     <form onSubmit={handleSubmit(_handleSubmit)}>
       <Box className="mt-3 grid gap-3 grid-cols-1">
@@ -221,6 +230,7 @@ const CreateEventForm = ({
           </Button>
         </Box>
       </Box>
+      <TextNote event={previewEvent} relatedNoteVariant="full" />
     </form>
   )
 }
@@ -257,6 +267,7 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
     },
     [setValue],
   )
+
   return (
     <form onSubmit={handleSubmit(_handleSubmit)}>
       <Box className="mt-3 grid gap-3 grid-cols-1">

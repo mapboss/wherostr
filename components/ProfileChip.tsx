@@ -1,6 +1,6 @@
 'use client'
 import { AppContext, ProfileActionType } from '@/contexts/AppContext'
-import { Check, CheckCircle, Info } from '@mui/icons-material'
+import { CheckCircle, Report } from '@mui/icons-material'
 import { Avatar, Box, Typography } from '@mui/material'
 import { NDKUser } from '@nostr-dev-kit/ndk'
 import classNames from 'classnames'
@@ -24,7 +24,7 @@ const ProfileChip = ({
       user?.profile?.displayName ||
       user?.profile?.name ||
       user?.profile?.username ||
-      user?.npub.substring(0, 12),
+      user?.npub?.substring(0, 12),
     [user],
   )
   const handleClickProfile = useCallback(() => {
@@ -69,7 +69,7 @@ const ProfileChip = ({
             {validNip05 === true ? (
               <CheckCircle className="text-[black] flex-1" />
             ) : (
-              <Info className="text-primary-light flex-1" />
+              <Report className="text-error flex-1" />
             )}
           </Box>
         )}

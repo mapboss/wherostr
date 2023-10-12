@@ -8,10 +8,8 @@ import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import {
   Box,
-  Chip,
   Hidden,
   IconButton,
-  InputAdornment,
   Paper,
   Toolbar,
   Tooltip,
@@ -23,9 +21,7 @@ import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import { Draw } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { AccountContext } from '@/contexts/AccountContext'
 import { useSearchParams } from 'next/navigation'
-import ProfileChip from './ProfileChip'
 import UserBar from './UserBar'
 import classNames from 'classnames'
 import { MONTH, unixNow } from '@/utils/time'
@@ -96,7 +92,7 @@ const MainPane = () => {
         : undefined),
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - MONTH,
-      limit: 20,
+      limit: 10,
     }
   }, [payload.keyword, user, follows])
 
@@ -233,7 +229,7 @@ const MainPane = () => {
 
     try {
       if (!zoomBounds.isEmpty()) {
-        map.fitBounds(zoomBounds, { animate: false })
+        map.fitBounds(zoomBounds, { animate: false, maxZoom: 15 })
       }
       ;(map.getSource('nostr-event') as any)?.setData({
         type: 'FeatureCollection',
@@ -261,7 +257,7 @@ const MainPane = () => {
   useEffect(() => {
     if (!map) return
     const basePadding = 32
-    const left = xlUp ? 640 : mdUp ? 496 : 0
+    const left = xlUp ? 640 : mdUp ? 640 : 0
     if (showPanel) {
       map.easeTo({
         padding: {
@@ -270,7 +266,7 @@ const MainPane = () => {
           top: basePadding,
           bottom: basePadding,
         },
-        duration: 0,
+        animate: false,
         easeId: 'mainpane',
       })
     } else {
@@ -281,7 +277,7 @@ const MainPane = () => {
           top: basePadding,
           bottom: basePadding,
         },
-        duration: 0,
+        animate: false,
         easeId: 'mainpane',
       })
     }
@@ -291,12 +287,10 @@ const MainPane = () => {
     setPayload(payload)
   }, [])
 
-  const handleMenuClick = useCallback(() => {}, [])
-
   return (
     <Paper
       className={classNames(
-        `absolute left-0 top-0 w-full md:w-[496px] lg:w-[640px] flex flex-col !rounded-none overflow-hidden`,
+        `absolute left-0 top-0 w-full md:w-[640px] flex flex-col !rounded-none overflow-hidden`,
         {
           'h-full': !showOnlyMap,
           'h-[58px] sm:h-[66px]': showOnlyMap,
@@ -327,84 +321,13 @@ const MainPane = () => {
         newItems={newItems}
         onShowNewItems={showNewItems}
       />
-      {/* {showEvents && (
-        <>
-          <Box>
-            <Tabs value={tabIndex} onChange={(_, value) => setTabIndex(value)}>
-              {!!events.length ? (
-                <Tab
-                  value={0}
-                  label="Notes"
-                  icon={<DescriptionOutlined />}
-                  iconPosition="start"
-                  sx={{ minHeight: 48 }}
-                />
-              ) : null}
-              {!!payload?.places?.length ? (
-                <Tab
-                  value={1}
-                  label="Places"
-                  icon={<Place />}
-                  iconPosition="start"
-                  sx={{ minHeight: 48 }}
-                />
-              ) : null}
-            </Tabs>
-          </Box>
-          {tabIndex === 0 && (
-            <EventList events={events} onNeedFetch={fetchMore} />
-          )}
-          {tabIndex === 1 && (
-            <Box className="overflow-y-auto">
-              <List disablePadding>
-                {payload.places?.map((item) => {
-                  return (
-                    <ListItem key={item.place_id}>
-                      <ListItemAvatar>
-                        <Avatar>
-                          <Place />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={item.name}
-                        secondary={item.display_name}
-                      />
-                      <ListItemSecondaryAction>
-                        <IconButton
-                          onClick={() => {
-                            const [y1, y2, x1, x2] = item.boundingbox.map(
-                              (b: string) => Number(b),
-                            )
-                            const bounds: [number, number, number, number] = [
-                              x1,
-                              y1,
-                              x2,
-                              y2,
-                            ]
-                            map?.fitBounds(bounds, {
-                              maxZoom: 14,
-                              duration: 1000,
-                            })
-                          }}
-                        >
-                          <TravelExplore />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  )
-                })}
-              </List>
-            </Box>
-          )}
-        </>
-      )} */}
       {eventAction && (
-        <Box className="fixed left-0 top-0 w-full md:w-[496px] lg:w-[640px] h-full p-4 md:p-8 backdrop-blur z-50">
+        <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-4 md:p-8 backdrop-blur z-50">
           <EventActionModal />
         </Box>
       )}
       {profileAction && (
-        <Box className="fixed left-0 top-0 w-full md:w-[496px] lg:w-[640px] h-full p-4 md:p-8 backdrop-blur z-50">
+        <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-4 md:p-8 backdrop-blur z-50">
           <ProfileActionModal />
         </Box>
       )}

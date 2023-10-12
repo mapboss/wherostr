@@ -10,13 +10,20 @@ import {
   Divider,
   Typography,
 } from '@mui/material'
-import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
+import {
+  NDKEvent,
+  NDKFilter,
+  NDKKind,
+  NDKRelay,
+  NDKRelaySet,
+} from '@nostr-dev-kit/ndk'
 import { FC, useMemo, useRef } from 'react'
 import ReactTimeago from 'react-timeago'
 import { nip19 } from 'nostr-tools'
 import Link from 'next/link'
 import { WEEK, unixNow } from '@/utils/time'
 import { useUserProfile } from '@/hooks/useUserProfile'
+import { useStreamRelaySet } from '@/hooks/useNostr'
 
 export default function Page() {
   const since = useMemo(() => unixNow() - WEEK, [])
@@ -26,8 +33,8 @@ export default function Page() {
       since,
     } as NDKFilter
   }, [since])
-
-  const [liveEvent] = useSubscribe(liveFilter, true)
+  const relaySet = useStreamRelaySet()
+  const [liveEvent] = useSubscribe(liveFilter, true, relaySet)
 
   const liveItems = useMemo(() => {
     const items = liveEvent

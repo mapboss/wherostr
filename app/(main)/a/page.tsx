@@ -1,6 +1,7 @@
 'use client'
 import LiveActivity from '@/components/LiveActivity'
 import ResponsiveButton from '@/components/ResponsiveButton'
+import { useStreamRelaySet } from '@/hooks/useNostr'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { ChevronLeft } from '@mui/icons-material'
 import { Box, LinearProgress, Typography } from '@mui/material'
@@ -39,9 +40,8 @@ export default function Page() {
       '#d': [naddrDesc.data.identifier],
     }
   }, [naddrDesc])
-
-  const [events] = useSubscribe(filter, true)
-
+  const relaySet = useStreamRelaySet()
+  const [events] = useSubscribe(filter, true, relaySet)
   const event = useMemo(() => events?.[0], [events])
 
   if (!event) {

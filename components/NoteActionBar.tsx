@@ -5,7 +5,6 @@ import {
   ElectricBolt,
   FormatQuote,
   Repeat,
-  ThumbDown,
   ThumbUp,
 } from '@mui/icons-material'
 import { useCallback, useContext, useMemo, useState } from 'react'
@@ -19,7 +18,7 @@ import {
 import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
 import numeral from 'numeral'
-import { transformText, tryParseNostrLink } from '@snort/system'
+import { tryParseNostrLink, transformText } from '@snort/system'
 import { AccountContext } from '@/contexts/AccountContext'
 
 const amountFormat = '0,0.[0]a'
@@ -193,9 +192,9 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           </IconButton>
         </Tooltip>
         <Typography className="w-8 text-center" variant="caption">
-          {reactionPercentage}
+          {liked}
         </Typography>
-        <Tooltip title="Dislike">
+        {/* <Tooltip title="Dislike">
           <IconButton
             className={reacted === '-' ? '!text-error' : undefined}
             size="small"
@@ -204,7 +203,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           >
             <ThumbDown />
           </IconButton>
-        </Tooltip>
+        </Tooltip> */}
       </Box>
       <Box className="flex flex-row gap-2 items-center">
         <Tooltip title="Repost">

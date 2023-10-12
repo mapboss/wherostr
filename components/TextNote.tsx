@@ -5,13 +5,14 @@ import {
   NostrLink,
   NostrPrefix,
   ParsedFragment,
-  transformText,
   tryParseNostrLink,
+  transformText,
 } from '@snort/system'
 import {
   Box,
   Button,
   CircularProgress,
+  IconButton,
   Link,
   Paper,
   Typography,
@@ -25,6 +26,8 @@ import {
   InfoOutlined,
   PlayCircle,
   Sensors,
+  ZoomIn,
+  ZoomOut,
 } from '@mui/icons-material'
 import NextLink from 'next/link'
 import {
@@ -39,6 +42,7 @@ import { useUserProfile } from '@/hooks/useUserProfile'
 import ReactPlayer from 'react-player/lazy'
 import ProfileChip from './ProfileChip'
 import { useEvent } from '@/hooks/useEvent'
+import { useStreamRelaySet } from '@/hooks/useNostr'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
@@ -136,7 +140,12 @@ export const NostrAddressBox = ({
   nostrLink: NostrLink
   naddr: string
 }) => {
-  const [event, error, state] = useEvent(naddr)
+  const streamRelaySet = useStreamRelaySet()
+  const optRelaySet = useMemo(
+    () => (nostrLink.kind === 30311 ? streamRelaySet : undefined),
+    [streamRelaySet, nostrLink.kind],
+  )
+  const [event, error, state] = useEvent(naddr, optRelaySet)
   const pubkey = useMemo(() => event?.tagValue('p') || event?.pubkey, [event])
   const title = useMemo(() => event?.tagValue('title'), [event])
   const status = useMemo(() => event?.tagValue('status'), [event])
@@ -250,17 +259,22 @@ const renderChunk = (
       if (protocol === 'nostr:' || protocol === 'web+nostr:') {
         const nostrLink = tryParseNostrLink(content)
         const naddr = nostrLink?.encode() || ''
+        if (!naddr) {
+          return (
+            <Typography component="span" color="error">
+              [invalid {nostrLink?.type}]
+            </Typography>
+          )
+        }
         switch (nostrLink?.type) {
           case NostrPrefix.PublicKey:
-          case NostrPrefix.Profile:
+          case NostrPrefix.Profile: {
             return <UserMentionLink id={nostrLink.id} />
+          }
           case NostrPrefix.Event:
           case NostrPrefix.Note:
             return (
-              <QuotedEvent
-                id={nostrLink.id}
-                relatedNoteVariant={relatedNoteVariant}
-              />
+              <QuotedEvent id={nostrLink.id} relatedNoteVariant="fraction" />
             )
           case NostrPrefix.Address:
             return <NostrAddressBox nostrLink={nostrLink} naddr={naddr} />
@@ -301,6 +315,8 @@ const renderChunk = (
     //   return `cashu: ${content}`
     // case 'text':
     default:
+      // console.log('text:content', content)
+      // return content
       return content
   }
 }
@@ -316,7 +332,9 @@ const TextNote = ({
 }) => {
   const [show, setShow] = useState(false)
   const chunks = useMemo(() => {
-    return transformText(event.content || '', event.tags || [])
+    const _ = transformText(' ' + event.content || '', event.tags || [])
+    _[0].content = _[0].content.slice(1) || ''
+    return _
   }, [event])
 
   const nsfw = useMemo(() => event.tagValue?.('content-warning'), [event])
@@ -328,7 +346,20 @@ const TextNote = ({
       component="div"
     >
       {!nsfw || show ? (
-        <PhotoProvider>
+        <PhotoProvider
+          toolbarRender={({ onScale, scale }) => {
+            return (
+              <>
+                <IconButton onClick={() => onScale(scale + 1)}>
+                  <ZoomIn />
+                </IconButton>
+                <IconButton onClick={() => onScale(scale - 1)}>
+                  <ZoomOut />
+                </IconButton>
+              </>
+            )
+          }}
+        >
           {chunks.map((chunk, index) => (
             <Fragment key={index}>
               {renderChunk(chunk, {

@@ -1,8 +1,8 @@
-import { NostrContext } from '@/contexts/NostrContext'
 import {
   NDKEvent,
   NDKFilter,
   NDKKind,
+  NDKRelaySet,
   NDKSubscription,
   NDKSubscriptionCacheUsage,
 } from '@nostr-dev-kit/ndk'
@@ -26,19 +26,19 @@ const sortItems = (
 export const useSubscribe = (
   filter?: NDKFilter<NDKKind>,
   alwaysShowNewItems: boolean = false,
-  options?: {
-    disabled?: boolean
-    onStart?: (events: NDKEvent[]) => void
-    onEvent?: (event: NDKEvent) => void
-    onStop?: () => void
-  },
+  optRelaySet?: NDKRelaySet,
 ) => {
   const ndk = useNDK()
-  const relaySet = useRelaySet()
+  const defaultRelaySet = useRelaySet()
   const [sub, setSub] = useState<NDKSubscription>()
   const [items, setItems] = useState<NDKEvent[]>([])
   const [newItems, setNewItems] = useState<NDKEvent[]>([])
   const eos = useRef(false)
+
+  const relaySet = useMemo(
+    () => optRelaySet || defaultRelaySet,
+    [optRelaySet, defaultRelaySet],
+  )
 
   useEffect(() => {
     if (!ndk) return
@@ -137,7 +137,7 @@ export const useSubscribe = (
     if (!relaySet || !filter || !oldestEvent) return
     const { since, ...original } = filter
     const events = await ndk.fetchEvents(
-      { ...original, until: oldestEvent.created_at, limit: 20 },
+      { ...original, until: oldestEvent.created_at, limit: 10 },
       { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
       relaySet,
     )

@@ -61,12 +61,12 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
         const relays = await Promise.all(
           relayList.readRelayUrls.map(async (d) => {
             const relay = new NDKRelay(d)
-            await relay.connect()
+            // await relay.connect()
             return relay
           }),
         )
         setRelaySet((prev) => {
-          prev?.relays.forEach((relay) => relay.disconnect())
+          // prev?.relays.forEach((relay) => relay.disconnect())
           return new NDKRelaySet(new Set(relays), ndk)
         })
         return
@@ -80,7 +80,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
       }),
     )
     setRelaySet((prev) => {
-      prev?.relays.forEach((relay) => relay.disconnect())
+      // prev?.relays.forEach((relay) => relay.disconnect())
       return new NDKRelaySet(new Set(relays), ndk)
     })
   }, [])
