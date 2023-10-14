@@ -4,22 +4,7 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 
-const options = [
-  'None',
-  'Atria',
-  'Callisto',
-  'Dione',
-  'Ganymede',
-  'Hangouts Call',
-  'Luna',
-  'Oberon',
-  'Phobos',
-  'Pyxis',
-  'Sedna',
-  'Titania',
-  'Triton',
-  'Umbriel',
-]
+const options = ['Coming soon']
 
 const ITEM_HEIGHT = 48
 
@@ -53,19 +38,17 @@ export default function MenuButton() {
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
-        PaperProps={{
-          style: {
-            maxHeight: ITEM_HEIGHT * 4.5,
-            width: '20ch',
+        slotProps={{
+          paper: {
+            style: {
+              maxHeight: ITEM_HEIGHT * 4.5,
+              width: '20ch',
+            },
           },
         }}
       >
         {options.map((option) => (
-          <MenuItem
-            key={option}
-            selected={option === 'Pyxis'}
-            onClick={handleClose}
-          >
+          <MenuItem key={option} onClick={handleClose}>
             {option}
           </MenuItem>
         ))}
