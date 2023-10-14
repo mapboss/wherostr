@@ -84,7 +84,7 @@ export const ProfileCard = ({
             </Typography>
           </Box>
         </Box>
-        {showAbout && (
+        {showAbout !== false && (
           <Box className="py-3 text-contrast-secondary">
             <TextNote
               event={{
