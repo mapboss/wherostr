@@ -41,7 +41,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     return !!nostrRef.current
   }, [])
 
-  const updateFollowers = useCallback(async (user: NDKUser) => {
+  const updateFollows = useCallback(async (user: NDKUser) => {
     const follows = await user.follows({
       cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
     })
@@ -56,7 +56,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       if (signerUser) {
         const user = await getUser(signerUser.hexpubkey)
         if (user) {
-          updateFollowers(user)
+          updateFollows(user)
           console.log('signIn:fetchFollows')
           localStorage.setItem(
             'session',
@@ -69,7 +69,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
         }
       }
     }
-  }, [hasNip7Extension, ndk, getUser, updateFollowers, updateRelaySet])
+  }, [hasNip7Extension, ndk, getUser, updateFollows, updateRelaySet])
 
   const signOut = useCallback(async () => {
     ndk.signer = undefined

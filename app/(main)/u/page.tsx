@@ -30,7 +30,6 @@ export default function Page() {
     const user = ndk.getUser({ hexpubkey: pubkey })
     await user.fetchProfile({
       cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-      closeOnEose: true,
     })
     return user
   }, [ndk, naddrDesc, naddr])
