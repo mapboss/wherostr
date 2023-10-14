@@ -23,10 +23,7 @@ import {
 import { NostrContext } from '@/contexts/NostrContext'
 import { AccountContext } from '@/contexts/AccountContext'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
-import {
-  NDKEvent,
-  NDKKind,
-} from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { useForm } from 'react-hook-form'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
@@ -508,7 +505,7 @@ const EventActionModal = () => {
             {eventAction.type === EventActionType.View ? (
               <Typography variant="body1">{title}</Typography>
             ) : (
-              <ProfileChip user={user} />
+              <ProfileChip hexpubkey={user?.hexpubkey} />
             )}
           </Box>
           <Box

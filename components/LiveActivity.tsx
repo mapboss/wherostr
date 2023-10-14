@@ -95,7 +95,7 @@ const LiveActivity = ({
               </Box>
             </Hidden>
             <Box className="flex items-center gap-2">
-              <ProfileChip user={author} showNip5={false} />
+              <ProfileChip hexpubkey={author?.hexpubkey} showNip5={false} />
               <Box className="flex-1 md:flex-auto" component="span" />
               <ResponsiveButton
                 color="inherit"
