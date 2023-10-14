@@ -20,7 +20,7 @@ const UserBar = ({ className }: { className?: string }) => {
   return (
     <Box
       className={classNames(
-        `grid items-center rounded-bl-2xl`,
+        'grid items-center rounded-bl-2xl',
         { 'bg-gradient-primary': signedIn },
         className,
       )}

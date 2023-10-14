@@ -32,7 +32,7 @@ export const AccountContext = createContext<Account>({
 })
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { ndk, relaySet, updateRelaySet } = useContext(NostrContext)
+  const { ndk, relaySet, updateRelaySet, getUser } = useContext(NostrContext)
   const [user, setUser] = useState<NDKUser>()
   const [follows, setFollows] = useState<NDKUser[]>([])
   const nostrRef = useRef<typeof window.nostr>()
@@ -54,36 +54,22 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       const signerUser = await ndk.signer?.user()
       console.log('signIn:signerUser', defaultRelays)
       if (signerUser) {
-        const user = ndk.getUser({
-          hexpubkey: signerUser.hexpubkey,
-          relayUrls: defaultRelays,
-        })
-        console.log('signIn:user', user)
-        user
-          .fetchProfile({
-            cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
-          })
-          .then((profile) => {
-            console.log('signIn:profile', profile)
-            if (profile) {
-              user.profile = profile
-            }
-          })
-          .catch((err) => console.log(err))
-        console.log('signIn:profile')
-        updateFollowers(user)
-        console.log('signIn:fetchFollows')
-        localStorage.setItem(
-          'session',
-          JSON.stringify({ pubkey: user.hexpubkey, type: 'nip7' }),
-        )
-        updateRelaySet(user)
-        console.log('signIn:updateRelaySet')
-        setUser(user)
-        return user
+        const user = await getUser(signerUser.hexpubkey)
+        if (user) {
+          updateFollowers(user)
+          console.log('signIn:fetchFollows')
+          localStorage.setItem(
+            'session',
+            JSON.stringify({ pubkey: user.hexpubkey, type: 'nip7' }),
+          )
+          updateRelaySet(user)
+          console.log('signIn:updateRelaySet')
+          setUser(user)
+          return user
+        }
       }
     }
-  }, [ndk, hasNip7Extension, updateFollowers, updateRelaySet])
+  }, [hasNip7Extension, ndk, getUser, updateFollowers, updateRelaySet])
 
   const signOut = useCallback(async () => {
     ndk.signer = undefined
