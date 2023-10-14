@@ -287,14 +287,14 @@ const MainPane = () => {
   return (
     <Paper
       className={classNames(
-        `absolute left-0 top-0 w-full md:w-[640px] flex flex-col !rounded-none overflow-hidden`,
+        'absolute left-0 top-0 w-full md:w-[640px] flex flex-col !rounded-none overflow-hidden',
         {
           'h-full': !showOnlyMap,
-          'h-[58px] sm:h-[66px]': showOnlyMap,
+          'h-[66px]': showOnlyMap,
         },
       )}
     >
-      <Toolbar className="gap-2 items-center">
+      <Toolbar className="gap-2 items-center !px-4 !min-h-[64px]">
         {user?.npub ? <MenuButton user={user} /> : <UserBar />}
         <Filter user={user} className="grow" onSearch={onSearch} />
         {user?.npub && (
@@ -320,12 +320,12 @@ const MainPane = () => {
         showComments={showComments}
       />
       {eventAction && (
-        <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-4 md:p-8 backdrop-blur z-50">
+        <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-4 md:p-8 backdrop-blur z-50">
           <EventActionModal />
         </Box>
       )}
       {profileAction && (
-        <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-4 md:p-8 backdrop-blur z-50">
+        <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-4 md:p-8 backdrop-blur z-50">
           <ProfileActionModal />
         </Box>
       )}

@@ -26,7 +26,6 @@ import { EventActionType, AppContext } from '@/contexts/AppContext'
 import {
   NDKEvent,
   NDKKind,
-  NDKSubscriptionCacheUsage,
 } from '@nostr-dev-kit/ndk'
 import { useForm } from 'react-hook-form'
 import { MapContext } from '@/contexts/MapContext'
@@ -496,9 +495,9 @@ const EventActionModal = () => {
   }, [eventAction])
   return (
     eventAction && (
-      <Box className="max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
+      <Box className="relative max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
         <IconButton
-          className="!absolute top-12 right-12 z-10 !bg-[#0000001f]"
+          className="!absolute top-4 right-4 z-10 !bg-[#0000001f]"
           size="small"
           onClick={handleClickCloseModal}
         >

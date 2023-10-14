@@ -14,7 +14,8 @@ import { AppContext } from '@/contexts/AppContext'
 import { NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
 import TextNote from './TextNote'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { MILLISECONDS, unixNow } from '@/utils/time'
+import { unixNow } from '@/utils/time'
+import ProfileValidBadge from './ProfileValidBadge'
 
 const ProfileCard = ({ user }: { user?: NDKUser }) => {
   const displayName = useMemo(
@@ -46,12 +47,15 @@ const ProfileCard = ({ user }: { user?: NDKUser }) => {
             src={user?.profile?.image}
           />
           <Box className="flex flex-col pt-3 pl-2 max-w-xs overflow-hidden">
-            <Typography
-              className="overflow-hidden whitespace-nowrap text-ellipsis"
-              variant="h6"
-            >
-              {displayName}
-            </Typography>
+            <Box className="flex items-center">
+              <Typography
+                className="overflow-hidden whitespace-nowrap text-ellipsis"
+                variant="h6"
+              >
+                {displayName}
+              </Typography>
+              <ProfileValidBadge className="ml-2" user={user} />
+            </Box>
             <Typography
               className="overflow-hidden whitespace-nowrap text-ellipsis"
               variant="body2"
@@ -93,9 +97,9 @@ const ProfileActionModal = () => {
   const ref = useRef<HTMLDivElement>(null)
 
   return (
-    <Box className="max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
+    <Box className="relative max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
       <IconButton
-        className="!absolute top-12 right-12 z-10 !bg-[#0000001f]"
+        className="!absolute top-4 right-4 z-10 !bg-[#0000001f]"
         size="small"
         onClick={handleClickCloseModal}
       >

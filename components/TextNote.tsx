@@ -219,7 +219,8 @@ const renderChunk = (
         return (
           <PhotoView src={content}>
             <img
-              className="rounded-2xl overflow-hidden max-h-[344px]"
+              className="mx-auto rounded-2xl overflow-hidden max-h-[50vh]"
+              alt="image"
               src={content}
             />
           </PhotoView>
@@ -306,8 +307,8 @@ const renderChunk = (
     case 'custom_emoji':
       return (
         <img
-          alt="emoji"
           className="inline-block max-h-[1.5em] max-w-[1.5em]"
+          alt="emoji"
           src={content}
         />
       )
