@@ -14,6 +14,7 @@ import {
 import { useCallback, useContext, useMemo } from 'react'
 import {
   ArrowRightAlt,
+  MoreVert,
   Repeat,
   TravelExploreOutlined,
 } from '@mui/icons-material'
@@ -26,6 +27,7 @@ import { MapContext } from '@/contexts/MapContext'
 import { LngLatBounds } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUserProfile } from '@/hooks/useUserProfile'
+import MenuButton from './MenuButton'
 
 const ShortTextNoteCard = ({
   event,
@@ -97,6 +99,7 @@ const ShortTextNoteCard = ({
             )}
           </Box>
         )}
+        <MenuButton />
         {action && lnglat ? (
           <IconButton
             size="small"
@@ -111,7 +114,6 @@ const ShortTextNoteCard = ({
               }, 300)
             }}
           >
-            {/* <MoreVert /> */}
             <TravelExploreOutlined className="text-contrast-secondary" />
           </IconButton>
         ) : null}

@@ -24,7 +24,7 @@ import { useSubscribe } from '@/hooks/useSubscribe'
 import { useSearchParams } from 'next/navigation'
 import UserBar from './UserBar'
 import classNames from 'classnames'
-import { MONTH, unixNow } from '@/utils/time'
+import { DAY, WEEK, unixNow } from '@/utils/time'
 import { useFollowing, useUser } from '@/hooks/useAccount'
 import MenuButton from './DrawerMenu'
 
@@ -46,7 +46,7 @@ const MainPane = () => {
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const showMap = searchParams.get('map') === '1'
   const showSearch = searchParams.get('search') === '1'
-  // const [showReply, setShowReply] = useState(false)
+  const [showComments, setShowComments] = useState(false)
   // const [tabIndex, setTabIndex] = useState(0)
 
   useEffect(() => {
@@ -91,8 +91,8 @@ const MainPane = () => {
         ? { authors: follows.map((d) => d.hexpubkey) }
         : undefined),
       kinds: [NDKKind.Text, NDKKind.Repost],
-      since: unixNow() - MONTH,
-      limit: 10,
+      since: unixNow() - DAY,
+      limit: 20,
     }
   }, [payload.keyword, user, follows])
 
@@ -117,16 +117,13 @@ const MainPane = () => {
     }
     let ids = new Set<string>()
     setEvents(
-      Array.from(data)
-        .filter((item) => {
-          if (!ids.has(item.id)) {
-            ids.add(item.id)
-            return true
-          }
-        })
-        .sort(handleSortDescending),
+      Array.from(data).filter((item) => {
+        if (ids.has(item.id)) return false
+        ids.add(item.id)
+        return true
+      }),
     )
-  }, [bounds, subGeoFilter, subTagFilter, setEvents])
+  }, [showComments, bounds, subGeoFilter, subTagFilter, setEvents])
 
   const mouseEnterHandler = useCallback((ev: maplibregl.MapMouseEvent) => {
     const style = ev.target.getCanvas().style
@@ -320,6 +317,7 @@ const MainPane = () => {
         onFetchMore={fetchMore}
         newItems={newItems}
         onShowNewItems={showNewItems}
+        showComments={showComments}
       />
       {eventAction && (
         <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-4 md:p-8 backdrop-blur z-50">

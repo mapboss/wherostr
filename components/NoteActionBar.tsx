@@ -7,7 +7,7 @@ import {
   Repeat,
   ThumbUp,
 } from '@mui/icons-material'
-import { useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
 import {
   NDKEvent,
@@ -32,115 +32,96 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     liked: 0,
     disliked: 0,
   })
-  usePromise(async () => {
-    if (ndk && relaySet && user && event) {
-      let [reactedEvent, relatedEvents] = await Promise.all([
-        ndk.fetchEvent(
-          {
-            authors: [user.hexpubkey],
-            kinds: [NDKKind.Reaction],
-            '#e': [event.id],
-          },
-          { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
-          relaySet,
-        ),
-        Array.from(
-          await ndk.fetchEvents(
-            {
-              kinds: [NDKKind.Reaction],
-              '#e': [event.id],
-            },
-            { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
-            relaySet,
-          ),
-        ),
-      ])
-      setReacted(
-        reactedEvent?.content === '+'
-          ? '+'
-          : reactedEvent?.content === '-'
-          ? '-'
-          : undefined,
-      )
-      setReaction({
-        liked: relatedEvents.filter(({ content }) => content === '+').length,
-        disliked: relatedEvents.filter(({ content }) => content === '-').length,
-      })
-    }
-  }, [ndk, relaySet, user, event])
-  const reactionPercentage = useMemo(() => {
-    return liked ? `${((liked / (liked + disliked)) * 100).toFixed(0)}%` : '-'
-  }, [liked, disliked])
 
-  const [
-    { reposts, quotes, comments, zaps } = {
-      reposts: [],
-      quotes: [],
-      comments: [],
-      zaps: [],
-    },
-  ] = usePromise(async () => {
-    if (relaySet && ndk && event) {
-      const events = await ndk.fetchEvents(
-        {
-          kinds: [NDKKind.Repost, NDKKind.Text, NDKKind.Zap],
-          '#e': [event.id],
-        },
-        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
-        relaySet,
-      )
+  const fetchRelatedEvent = useCallback(async () => {
+    if (!relaySet || !ndk || !event) return
+    const events = await ndk.fetchEvents(
+      {
+        kinds: [NDKKind.Repost, NDKKind.Text, NDKKind.Zap, NDKKind.Reaction],
+        '#e': [event.id],
+      },
+      { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+      relaySet,
+    )
 
-      const repostEvents: NDKEvent[] = []
-      const quoteAndCommentEvents: NDKEvent[] = []
-      const zapEvents: NDKEvent[] = []
+    const reactedEvent: NDKEvent[] = []
+    const reacts: NDKEvent[] = []
 
-      events.forEach((evt) => {
-        if (evt.kind === NDKKind.Text) {
-          quoteAndCommentEvents.push(evt)
-        } else if (evt.kind === NDKKind.Repost) {
-          repostEvents.push(evt)
-        } else if (evt.kind === NDKKind.Zap) {
-          zapEvents.push(evt)
+    const repostEvents: NDKEvent[] = []
+    const quoteAndCommentEvents: NDKEvent[] = []
+    const zapEvents: NDKEvent[] = []
+
+    events.forEach((evt) => {
+      if (evt.kind === NDKKind.Text) {
+        quoteAndCommentEvents.push(evt)
+      } else if (evt.kind === NDKKind.Repost) {
+        repostEvents.push(evt)
+      } else if (evt.kind === NDKKind.Zap) {
+        zapEvents.push(evt)
+      } else if (evt.kind === NDKKind.Reaction) {
+        if (evt.pubkey === user?.hexpubkey) {
+          setReacted(evt.content === '-' ? '-' : '+')
         }
-      })
-
-      const quotes: NDKEvent[] = []
-      const comments: NDKEvent[] = []
-      quoteAndCommentEvents.forEach((item) => {
-        const { content, tags } = item
-        if (
-          transformText(content, tags).filter(
-            ({ type, content }) =>
-              type === 'link' &&
-              content.startsWith('nostr:nevent1') &&
-              tryParseNostrLink(content)?.id === event.id,
-          ).length > 0
-        ) {
-          quotes.push(item)
-        } else {
-          comments.push(item)
-        }
-      })
-      return {
-        reposts: repostEvents,
-        quotes,
-        comments,
-        zaps: zapEvents.map(
-          (item) => zapInvoiceFromEvent(item) || { amount: 0 },
-        ),
+        reacts.push(evt)
       }
+    })
+
+    const quotes: NDKEvent[] = []
+    const comments: NDKEvent[] = []
+    quoteAndCommentEvents.forEach((item) => {
+      const { content, tags } = item
+      if (
+        transformText(content, tags).filter(
+          ({ type, content }) =>
+            type === 'link' &&
+            (content.startsWith('nostr:nevent1') ||
+              content.startsWith('nostr:note1')) &&
+            tryParseNostrLink(content)?.id === event.id,
+        ).length > 0
+      ) {
+        quotes.push(item)
+      } else {
+        comments.push(item)
+      }
+    })
+    return {
+      reacted: reactedEvent,
+      reacts,
+      reposts: repostEvents,
+      quotes,
+      comments,
+      zaps: zapEvents.map((item) => zapInvoiceFromEvent(item) || { amount: 0 }),
     }
-  }, [relaySet, ndk, event])
+  }, [relaySet, ndk, event, user?.hexpubkey])
+
+  const [data] = usePromise(fetchRelatedEvent, [fetchRelatedEvent])
+
+  useEffect(() => {
+    if (!data) return
+    const reaction = data.reacts.reduce(
+      (a, b) => {
+        if (b.content !== '-') {
+          a.liked += 1
+        } else {
+          a.disliked += 1
+        }
+        return a
+      },
+      { liked: 0, disliked: 0 },
+    )
+    setReaction(reaction)
+  }, [data])
+
   const { repostAmount, quoteAmount, commentAmount, zapAmount } = useMemo(
     () => ({
-      repostAmount: numeral(reposts.length).format(amountFormat),
-      quoteAmount: numeral(quotes.length).format(amountFormat),
-      commentAmount: numeral(comments.length).format(amountFormat),
+      repostAmount: numeral(data?.reposts.length).format(amountFormat),
+      quoteAmount: numeral(data?.quotes.length).format(amountFormat),
+      commentAmount: numeral(data?.comments.length).format(amountFormat),
       zapAmount: numeral(
-        zaps.reduce((sum, { amount }) => sum + amount / 1000, 0),
+        data?.zaps.reduce((sum, { amount }) => sum + amount / 1000, 0),
       ).format(amountFormat),
     }),
-    [comments, quotes, reposts, zaps],
+    [data],
   )
   const handleClickReact = useCallback(
     (reaction: '+' | '-') => async () => {
@@ -150,12 +131,12 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
       newEvent.tags = [
         ['e', event.id, event.relay?.url || ''].filter((item) => !!item),
       ]
-      await newEvent.publish()
       setReacted(reaction)
       setReaction({
         liked: liked + (reaction === '+' ? 1 : 0),
         disliked: disliked + (reaction === '-' ? 1 : 0),
       })
+      await newEvent.publish()
     },
     [event, ndk, liked, disliked],
   )

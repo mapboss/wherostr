@@ -98,8 +98,13 @@ const Filter: FC<FilterProps> = ({
     setKeyword(querySearch)
     if (querySearch) {
       fetchSearch(querySearch)
+    } else {
+      onSearch?.({
+        keyword: '',
+        places: [],
+      })
     }
-  }, [fetchSearch, querySearch])
+  }, [onSearch, fetchSearch, querySearch])
 
   // useEffect(() => {
   //   if (!onSearch) return

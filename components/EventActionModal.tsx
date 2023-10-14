@@ -39,9 +39,8 @@ import {
 } from '@snort/system'
 import numeral from 'numeral'
 import { requestProvider } from 'webln'
-import usePromise from 'react-use-promise'
 import TextNote from './TextNote'
-import { useEvent, useEvents } from '@/hooks/useEvent'
+import { useEvents } from '@/hooks/useEvent'
 
 const amountFormat = '0,0.[0]a'
 
