@@ -38,10 +38,19 @@ const EventList: FC<EventListProps> = ({
 }) => {
   const noteRef = useRef<HTMLElement>(null)
   const scrollRef = useRef<ViewportListRef>(null)
-  const totalEvent = useMemo(() => events.length || 0, [events.length])
   const [scrollEnd, setScrollEnd] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [hasNext, setHasNext] = useState(true)
+
+  const notes = useMemo(() => {
+    return events.filter((d) => showComments || !isComment(d))
+  }, [showComments, events])
+
+  const newNotes = useMemo(() => {
+    return newItems.filter((d) => showComments || !isComment(d))
+  }, [showComments, newItems])
+
+  const totalEvent = useMemo(() => notes.length || 0, [notes.length])
 
   useEffect(() => {
     if (totalEvent > 0) {
@@ -62,14 +71,6 @@ const EventList: FC<EventListProps> = ({
     },
     [hasNext, fetching, totalEvent, onFetchMore],
   )
-
-  const notes = useMemo(() => {
-    return events.filter((d) => showComments || !isComment(d))
-  }, [showComments, events])
-
-  const newNotes = useMemo(() => {
-    return newItems.filter((d) => showComments || !isComment(d))
-  }, [showComments, newItems])
 
   return (
     <>
