@@ -42,7 +42,12 @@ export default function Page() {
 
   return (
     <MapContextProvider>
-      <Box className="flex-1 flex flex-col">
+      <Box
+        className={classNames(
+          'flex-1 flex flex-col',
+          'md:[&_.maplibregl-ctrl-bottom-left]:!left-[640px]',
+        )}
+      >
         <MapView
           className={classNames('flex-1', {
             'invisible -z-10': !mdUp && !hasMap,
