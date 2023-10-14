@@ -10,15 +10,11 @@ const ProfileChip = ({
   showName = true,
   showNip5 = true,
   onClick,
-  slotProps,
 }: {
   hexpubkey?: string
   showName?: boolean
   showNip5?: boolean
   onClick?: (hexpubkey: string) => void | boolean
-  slotProps?: {
-    avatar?: AvatarProps
-  }
 }) => {
   const user = useUserProfile(hexpubkey)
   const { setProfileAction } = useContext(AppContext)
@@ -47,11 +43,7 @@ const ProfileChip = ({
       onClick={user ? handleClickProfile : undefined}
     >
       <Box className="relative">
-        <Avatar
-          className="min-w-[40px] border-2"
-          src={user?.profile?.image}
-          {...slotProps?.avatar}
-        />
+        <Avatar className="min-w-[40px] border-2" src={user?.profile?.image} />
         <ProfileValidBadge
           className="absolute top-0 right-0 w-4 h-4"
           user={user}

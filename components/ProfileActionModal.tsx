@@ -11,14 +11,23 @@ import {
 import { useCallback, useContext, useMemo, useRef } from 'react'
 import { Close } from '@mui/icons-material'
 import { AppContext } from '@/contexts/AppContext'
-import { NDKKind } from '@nostr-dev-kit/ndk'
+import { NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
 import TextNote from './TextNote'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { unixNow } from '@/utils/time'
 import ProfileValidBadge from './ProfileValidBadge'
 import { useUserProfile } from '@/hooks/useUserProfile'
+import classNames from 'classnames'
 
-const ProfileCard = ({ hexpubkey }: { hexpubkey?: string }) => {
+export const ProfileCard = ({
+  hexpubkey,
+  showAbout,
+  onClick,
+}: {
+  hexpubkey?: string
+  showAbout?: boolean
+  onClick?: (user?: NDKUser) => void
+}) => {
   const user = useUserProfile(hexpubkey)
   const displayName = useMemo(
     () =>
@@ -28,6 +37,9 @@ const ProfileCard = ({ hexpubkey }: { hexpubkey?: string }) => {
       user?.npub.substring(0, 12),
     [user],
   )
+
+  const clickable = useMemo(() => !!onClick, [onClick])
+
   return (
     <Box>
       <Box
@@ -43,7 +55,13 @@ const ProfileCard = ({ hexpubkey }: { hexpubkey?: string }) => {
         }
       />
       <Box className="px-4">
-        <Box className="flex">
+        <Box
+          onClick={() => onClick?.(user)}
+          className={classNames('flex', {
+            'cursor-pointer [&:hover_h6]:underline [&:hover_p]:underline':
+              clickable,
+          })}
+        >
           <Avatar
             className="border-2 !w-36 !h-36 -mt-[72px]"
             src={user?.profile?.image}
@@ -66,14 +84,16 @@ const ProfileCard = ({ hexpubkey }: { hexpubkey?: string }) => {
             </Typography>
           </Box>
         </Box>
-        <Box className="py-3 text-contrast-secondary">
-          <TextNote
-            event={{
-              content: user?.profile?.about,
-            }}
-            textVariant="subtitle2"
-          />
-        </Box>
+        {showAbout && (
+          <Box className="py-3 text-contrast-secondary">
+            <TextNote
+              event={{
+                content: user?.profile?.about,
+              }}
+              textVariant="subtitle2"
+            />
+          </Box>
+        )}
       </Box>
     </Box>
   )

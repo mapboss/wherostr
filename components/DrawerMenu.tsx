@@ -18,11 +18,16 @@ import {
 } from '@mui/material'
 import ProfileChip from './ProfileChip'
 import { useAccount } from '@/hooks/useAccount'
+import Link from 'next/link'
+import { ProfileCard } from './ProfileActionModal'
+import { useAction } from '@/hooks/useApp'
+import { ProfileActionType } from '@/contexts/AppContext'
 
 export interface MenuButtonProps extends IconButtonProps {
   hexpubkey: string
 }
 const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, ...props }) => {
+  const { setProfileAction } = useAction()
   const { signOut } = useAccount()
   const [open, setOpen] = useState(false)
 
@@ -51,7 +56,7 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, ...props }) => {
       >
         <Toolbar
           disableGutters
-          className="px-2 w-[320px] !min-h-[0px] bg-inherit !sticky top-0 z-10"
+          className="px-2 w-[344px] !min-h-[0px] bg-inherit !sticky top-0 z-10"
           variant="regular"
         >
           {/* <Avatar src={user.profile?.image} sx={{ width: 64, height: 64 }} />
@@ -61,9 +66,20 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, ...props }) => {
           <div className="mx-1" />
           <Typography>Title</Typography> */}
         </Toolbar>
-        <ProfileChip hexpubkey={hexpubkey} onClick={closeDrawer} />
+        <ProfileCard
+          hexpubkey={hexpubkey}
+          showAbout={false}
+          onClick={async () => {
+            setProfileAction({
+              hexpubkey: hexpubkey,
+              type: ProfileActionType.View,
+            })
+            closeDrawer()
+          }}
+        />
+        {/* <ProfileChip hexpubkey={hexpubkey} onClick={closeDrawer} size="large" /> */}
         <List>
-          <ListItemButton>
+          <ListItemButton LinkComponent={Link} href="/">
             <ListItemIcon>
               <NotesOutlined />
             </ListItemIcon>
@@ -77,7 +93,7 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, ...props }) => {
             <ListItemText primary="Articles" />
           </ListItemButton>
 
-          <ListItemButton>
+          <ListItemButton LinkComponent={Link} href="/live">
             <ListItemIcon>
               <SensorsOutlined />
             </ListItemIcon>
