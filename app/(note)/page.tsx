@@ -5,13 +5,14 @@ import { MapContextProvider } from '@/contexts/MapContext'
 import { Box, useMediaQuery, useTheme } from '@mui/material'
 import classNames from 'classnames'
 import { RedirectType } from 'next/dist/client/components/redirect'
-import { redirect, useSearchParams } from 'next/navigation'
+import { redirect, useRouter, useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
 import Geohash from 'latlon-geohash'
 
 export default function Page() {
   const theme = useTheme()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const hasMap = searchParams.get('map') === '1'
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
@@ -25,19 +26,23 @@ export default function Page() {
     } catch (err) {}
   }, [naddr])
 
+  console.log('naddrDesc', naddr)
   if (!naddrDesc && naddr) {
     try {
       const ll = Geohash.decode(naddr)
-      redirect(`/m?q=${ll.lat},${ll.lon}`, RedirectType.replace)
-    } catch (err) {}
+      console.log('Geohash', ll)
+      return router.replace(`/m?q=${ll.lat},${ll.lon}`)
+    } catch (err) {
+      console.log('err', err)
+    }
   } else if (naddrDesc?.type === 'naddr') {
-    redirect(`/a?naddr=${naddr}`, RedirectType.replace)
+    return redirect(`/a?naddr=${naddr}`, RedirectType.replace)
   } else if (naddrDesc?.type === 'note') {
-    redirect(`/n?naddr=${naddr}`, RedirectType.replace)
+    return redirect(`/n?naddr=${naddr}`, RedirectType.replace)
   } else if (naddrDesc?.type === 'npub' || naddrDesc?.type === 'nprofile') {
-    redirect(`/u?naddr=${naddr}`, RedirectType.replace)
+    return redirect(`/u?naddr=${naddr}`, RedirectType.replace)
   } else if (naddrDesc?.type === 'nevent') {
-    redirect(`/e?naddr=${naddr}`, RedirectType.replace)
+    return redirect(`/e?naddr=${naddr}`, RedirectType.replace)
   }
 
   return (

@@ -9,14 +9,23 @@ import {
   InputAdornment,
   Paper,
   TextField,
+  ToggleButton,
   Typography,
 } from '@mui/material'
-import { useCallback, useContext, useEffect, useMemo } from 'react'
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   Close,
   Comment,
   ElectricBolt,
   FormatQuote,
+  LocationOff,
   Place,
   Repeat,
 } from '@mui/icons-material'
@@ -37,6 +46,15 @@ import numeral from 'numeral'
 import { requestProvider } from 'webln'
 import TextNote from './TextNote'
 import { useEvents } from '@/hooks/useEvent'
+import {
+  PostingOptions,
+  PostingOptionsProps,
+  PostingOptionsValues,
+} from './PostingOptions'
+import { useDropzone } from 'react-dropzone'
+import { upload } from '@/utils/upload'
+import { shortenUrl } from '@/utils/shortenUrl'
+import { LoadingButton } from '@mui/lab'
 
 const amountFormat = '0,0.[0]a'
 
@@ -51,11 +69,17 @@ const CreateEventForm = ({
   const { map } = useContext(MapContext)
   const { setEventAction } = useContext(AppContext)
   const { register, handleSubmit, setValue, watch } = useForm()
-  const geohashValue = watch('geohash')
-  const contentValue = watch('content')
+  const [busy, setBusy] = useState(false)
+  const [positingOptions, setPostingOptions] = useState<PostingOptionsValues>()
+  const geohashValue = watch('geohash', '')
+  const contentValue = watch('content', '')
+  const enableLocation = useRef<boolean | undefined>(positingOptions?.location)
+  enableLocation.current = positingOptions?.location
+
   useEffect(() => {
     if (!map) return
     const handleClickMap = ({ lngLat }: maplibregl.MapMouseEvent) => {
+      if (!enableLocation.current) return
       setValue('geohash', Geohash.encode(lngLat.lat, lngLat.lng, 9))
     }
     map.on('click', handleClickMap)
@@ -69,29 +93,34 @@ const CreateEventForm = ({
     },
     [setValue],
   )
+
+  const previewGeohashUrl = useMemo(() => {
+    if (!positingOptions?.location || !geohashValue) return ''
+    const ll = Geohash.decode(geohashValue)
+    if (ll?.lat && ll?.lon) {
+      const duckduck = shortenUrl(
+        `https://duckduckgo.com/?va=n&t=hs&iaxm=maps&q=${ll.lat},${ll.lon}`,
+        ndk,
+      )
+      const google = shortenUrl(
+        `https://www.google.com/maps/place/${ll.lat},${ll.lon}`,
+        ndk,
+      )
+      let content = `\n---`
+      content += `\nDuck Duck Go Maps | ${duckduck.url}`
+      content += `\nGoogle Maps | ${google.url}`
+      content += `\nWherostr Map | https://wherostr.social/m/?q=${geohashValue}`
+      return content
+    }
+  }, [ndk, geohashValue, positingOptions?.location])
+
   const _handleSubmit = useCallback(
     async (data: any) => {
+      setBusy(true)
       const { content, geohash } = data
       const newEvent = new NDKEvent(ndk)
       newEvent.content = content
       newEvent.tags = []
-
-      // const ll = geohash ? Geohash.decode(geohash) : undefined
-      // if (ll?.lat && ll?.lon) {
-      //   const nid = nanoid(8)
-      //   newEvent.content += `\nMap https://w3.do/${nid}`
-      //   const w3 = new NDKEvent(ndk)
-      //   w3.kind = 1994
-      //   w3.tags = [
-      //     ['d', nid],
-      //     [
-      //       'r',
-      //       `https://duckduckgo.com/?va=n&t=hs&iaxm=maps&q=${ll.lat},${ll.lon}`,
-      //     ],
-      //   ]
-      //   await w3.publish()
-      // }
-
       switch (type) {
         case EventActionType.Create:
           newEvent.kind = NDKKind.Text
@@ -139,10 +168,30 @@ const CreateEventForm = ({
           newEvent.tags.push(['g', geohash.substring(0, i)])
         }
       }
-      // https://api.imgur.com/3/image
-      // Method: POST
-      // Authorization: Client-ID e4f58fc81daec99
+
+      /**
+       * TODO: Create short link
+       */
+      const ll = geohash ? Geohash.decode(geohash) : undefined
+      if (ll?.lat && ll?.lon) {
+        const duckduck = shortenUrl(
+          `https://duckduckgo.com/?va=n&t=hs&iaxm=maps&q=${ll.lat},${ll.lon}`,
+          ndk,
+        )
+        const google = shortenUrl(
+          `https://www.google.com/maps/place/${ll.lat},${ll.lon}`,
+          ndk,
+        )
+        newEvent.content += `\n---`
+        newEvent.content += `\nDuck Duck Go Maps | ${duckduck.url}`
+        newEvent.content += `\nGoogle Maps | ${google.url}`
+        newEvent.content += `\nWherostr Map | https://wherostr.social/m/?q=${geohash}`
+
+        await Promise.all([duckduck.event.publish(), google.event.publish()])
+      }
+
       await newEvent.publish()
+      setBusy(false)
       setEventAction(undefined)
     },
     [ndk, relatedEvents, setEventAction, type],
@@ -162,13 +211,53 @@ const CreateEventForm = ({
 
   const previewEvent = useMemo(() => {
     return {
-      content: contentValue,
+      content: contentValue + previewGeohashUrl,
       tags: [],
     } as unknown as NDKEvent
-  }, [contentValue])
+  }, [contentValue, previewGeohashUrl])
+
+  const handleUploadFile = useCallback((acceptedFiles: File[]) => {
+    console.log('onDrop', acceptedFiles)
+    setBusy(true)
+    /**
+     * TODO: Upload Image
+     */
+    // https://api.imgur.com/3/image
+    // Method: POST
+    // Authorization: Client-ID e4f58fc81daec99
+    // upload(acceptedFiles[0]).then(console.log)
+    setBusy(false)
+  }, [])
+
+  const dropzoneOptions = useMemo(
+    () => ({
+      noClick: true,
+      noKeyboard: true,
+      accept: { 'image/*': [] },
+      onDrop: handleUploadFile,
+    }),
+    [handleUploadFile],
+  )
+  const { getRootProps } = useDropzone(dropzoneOptions)
+
+  const handlePostingOptionsChange = useCallback<
+    NonNullable<PostingOptionsProps['onChange']>
+  >(
+    (name, values) => {
+      if (name === 'image') {
+        values.image && handleUploadFile(values.image)
+      } else {
+        setPostingOptions(values)
+      }
+    },
+    [handleUploadFile],
+  )
 
   return (
-    <form onSubmit={handleSubmit(_handleSubmit)}>
+    <form
+      onSubmit={handleSubmit(_handleSubmit)}
+      {...getRootProps({ className: 'dropzone' })}
+    >
       <Box className="mt-3 grid gap-3 grid-cols-1">
         {type !== EventActionType.Repost && (
           <>
@@ -181,28 +270,30 @@ const CreateEventForm = ({
               required
               {...register('content', { required: true })}
             />
-            <TextField
-              placeholder="Select location on the map."
-              variant="outlined"
-              fullWidth
-              InputProps={{
-                readOnly: true,
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Place />
-                  </InputAdornment>
-                ),
-                endAdornment: geohashValue && (
-                  <IconButton
-                    size="small"
-                    onClick={handleClickClear('geohash')}
-                  >
-                    <Close />
-                  </IconButton>
-                ),
-              }}
-              {...register('geohash')}
-            />
+            {positingOptions?.location === true && (
+              <TextField
+                placeholder="Select location on the map."
+                variant="outlined"
+                fullWidth
+                InputProps={{
+                  readOnly: true,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Place />
+                    </InputAdornment>
+                  ),
+                  endAdornment: geohashValue && (
+                    <IconButton
+                      size="small"
+                      onClick={handleClickClear('geohash')}
+                    >
+                      <Close />
+                    </IconButton>
+                  ),
+                }}
+                {...register('geohash')}
+              />
+            )}
           </>
         )}
         {relatedEvents.map((item, index) => (
@@ -226,15 +317,22 @@ const CreateEventForm = ({
             <Typography color="text.secondary" className="pl-2">
               Preview:
             </Typography>
-            <Box className="rounded-2xl border border-[rgba(255,255,255,0.2)] p-2">
+            <Box className="rounded-2xl border border-[rgba(255,255,255,0.2)] p-2 pointer-events-none">
               <TextNote event={previewEvent} relatedNoteVariant="full" />
             </Box>
           </>
         )}
-        <Box className="flex justify-end">
-          <Button variant="contained" type="submit">
+        <Box className="flex">
+          <PostingOptions onChange={handlePostingOptionsChange} />
+          <Box flex={1} />
+          <LoadingButton
+            loading={busy}
+            loadingPosition="start"
+            variant="contained"
+            type="submit"
+          >
             {type === EventActionType.Repost ? 'Repost' : 'Post'}
-          </Button>
+          </LoadingButton>
         </Box>
       </Box>
     </form>
