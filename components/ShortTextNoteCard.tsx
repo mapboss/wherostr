@@ -43,7 +43,6 @@ const ShortTextNoteCard = ({
   const router = useRouter()
   const { ndk, getEvent } = useContext(NostrContext)
   const { map } = useContext(MapContext)
-  const user = useUserProfile(event.pubkey)
   const createdDate = useMemo(
     () => (event.created_at ? new Date(event.created_at * 1000) : undefined),
     [event],
@@ -76,7 +75,7 @@ const ShortTextNoteCard = ({
   return (
     <Card className="!rounded-none">
       <Box className="px-4 pt-3 flex items-center gap-2 text-contrast-secondary">
-        <ProfileChip user={user} />
+        <ProfileChip hexpubkey={event.pubkey} />
         {createdDate && (
           <Box className="grow flex flex-col items-end shrink-0">
             <Typography variant="caption">

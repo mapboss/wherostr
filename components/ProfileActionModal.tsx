@@ -11,13 +11,15 @@ import {
 import { useCallback, useContext, useMemo, useRef } from 'react'
 import { Close } from '@mui/icons-material'
 import { AppContext } from '@/contexts/AppContext'
-import { NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
+import { NDKKind } from '@nostr-dev-kit/ndk'
 import TextNote from './TextNote'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { unixNow } from '@/utils/time'
 import ProfileValidBadge from './ProfileValidBadge'
+import { useUserProfile } from '@/hooks/useUserProfile'
 
-const ProfileCard = ({ user }: { user?: NDKUser }) => {
+const ProfileCard = ({ hexpubkey }: { hexpubkey?: string }) => {
+  const user = useUserProfile(hexpubkey)
   const displayName = useMemo(
     () =>
       user?.profile?.displayName ||
@@ -84,14 +86,14 @@ const ProfileActionModal = () => {
   }, [setProfileAction])
 
   const filter = useMemo(() => {
-    if (!profileAction?.user.hexpubkey) return
+    if (!profileAction?.hexpubkey) return
     return {
       kinds: [NDKKind.Text],
-      authors: [profileAction?.user.hexpubkey],
+      authors: [profileAction?.hexpubkey],
       until: unixNow(),
       limit: 10,
     }
-  }, [profileAction?.user.hexpubkey])
+  }, [profileAction?.hexpubkey])
 
   const [events, fetchMore] = useSubscribe(filter)
   const ref = useRef<HTMLDivElement>(null)
@@ -106,7 +108,7 @@ const ProfileActionModal = () => {
         <Close />
       </IconButton>
       <Paper className="relative w-full overflow-y-auto !rounded-2xl" ref={ref}>
-        <ProfileCard user={profileAction?.user} />
+        <ProfileCard hexpubkey={profileAction?.hexpubkey} />
         <Divider />
         <EventList events={events} onFetchMore={fetchMore} parentRef={ref} />
       </Paper>

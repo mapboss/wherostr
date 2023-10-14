@@ -10,10 +10,9 @@ import {
   Menu,
   Chip,
 } from '@mui/material'
-import { FC, useCallback, useEffect, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import axios, { AxiosResponse } from 'axios'
 import { Search } from '@mui/icons-material'
-import usePromise from 'react-use-promise'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import bbox from '@turf/bbox'
 import bboxPolygon from '@turf/bbox-polygon'
@@ -30,7 +29,7 @@ export async function search<TOutput = any[], TInput = string>(
   return res.data
 }
 export interface FilterProps extends BaseTextFieldProps {
-  user?: NDKUser
+  feedType?: 'following' | 'global'
   precision?: number
   className?: string
   onSearch?: (payload?: SearchPayload) => void
@@ -45,7 +44,7 @@ export interface SearchPayload {
 }
 
 const Filter: FC<FilterProps> = ({
-  user,
+  feedType,
   precision = 9,
   className,
   onSearch,
@@ -67,7 +66,9 @@ const Filter: FC<FilterProps> = ({
         const result = await search(querySearch)
         const place = result?.[0]
         if (!place?.boundingbox) {
-          return { keyword: querySearch, places: [] }
+          const data = { keyword: querySearch, places: [] }
+          onSearch(data)
+          return data
         }
         // const lat = Number(place.lat)
         // const lon = Number(place.lon)
@@ -95,14 +96,10 @@ const Filter: FC<FilterProps> = ({
   )
 
   useEffect(() => {
-    setKeyword(querySearch)
     if (querySearch) {
       fetchSearch(querySearch)
     } else {
-      onSearch?.({
-        keyword: '',
-        places: [],
-      })
+      onSearch?.({ keyword: '', places: [] })
     }
   }, [onSearch, fetchSearch, querySearch])
 
@@ -117,6 +114,11 @@ const Filter: FC<FilterProps> = ({
   //   }
   // }, [data, state, onSearch])
 
+  const tags = useMemo(
+    () => querySearch.split(' ').filter((d) => !!d.trim()),
+    [querySearch],
+  )
+
   return (
     <Box
       className={className}
@@ -124,6 +126,7 @@ const Filter: FC<FilterProps> = ({
       onSubmit={async (evt) => {
         evt.preventDefault()
         const keyword = evt.currentTarget['search'].value
+        setKeyword('')
         router.push(`${pathname}?keyword=${keyword}`)
       }}
     >
@@ -143,7 +146,25 @@ const Filter: FC<FilterProps> = ({
           sx: { pl: 0.5 },
           startAdornment: (
             <InputAdornment position="start">
-              {user ? <Chip label="Following" /> : <Chip label="Global" />}
+              {!!tags.length ? (
+                tags.map((d) => (
+                  <Chip
+                    key={d}
+                    label={`#${d}`}
+                    onDelete={() => {
+                      router.push(
+                        `${pathname}?keyword=${tags
+                          .filter((_d) => d !== _d)
+                          .join(' ')}`,
+                      )
+                    }}
+                  />
+                ))
+              ) : feedType === 'following' ? (
+                <Chip label="Following" />
+              ) : (
+                <Chip label="Global" />
+              )}
             </InputAdornment>
           ),
           endAdornment: (

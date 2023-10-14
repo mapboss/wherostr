@@ -1,21 +1,26 @@
 'use client'
 import { AppContext, ProfileActionType } from '@/contexts/AppContext'
-import { Avatar, Box, Typography } from '@mui/material'
-import { NDKUser } from '@nostr-dev-kit/ndk'
+import { Avatar, AvatarProps, Box, Typography } from '@mui/material'
 import { useCallback, useContext, useMemo } from 'react'
 import ProfileValidBadge from './ProfileValidBadge'
+import { useUserProfile } from '@/hooks/useUserProfile'
 
 const ProfileChip = ({
-  user,
+  hexpubkey,
   showName = true,
   showNip5 = true,
   onClick,
+  slotProps,
 }: {
-  user?: NDKUser | null
+  hexpubkey?: string
   showName?: boolean
   showNip5?: boolean
-  onClick?: (user: NDKUser) => void
+  onClick?: (hexpubkey: string) => void | boolean
+  slotProps?: {
+    avatar?: AvatarProps
+  }
 }) => {
+  const user = useUserProfile(hexpubkey)
   const { setProfileAction } = useContext(AppContext)
   const displayName = useMemo(
     () =>
@@ -26,22 +31,27 @@ const ProfileChip = ({
     [user],
   )
   const handleClickProfile = useCallback(() => {
-    if (!user?.hexpubkey) return
-    if (onClick) {
-      return onClick(user)
+    if (!hexpubkey) return
+    if (onClick && onClick(hexpubkey) === false) {
+      return
     }
     setProfileAction({
       type: ProfileActionType.View,
-      hexpubkey: user?.hexpubkey,
+      hexpubkey: hexpubkey,
     })
-  }, [user, onClick, setProfileAction])
+  }, [hexpubkey, onClick, setProfileAction])
+
   return (
     <Box
       className="relative min-w-[40px] flex cursor-pointer hover:underline items-center"
       onClick={user ? handleClickProfile : undefined}
     >
       <Box className="relative">
-        <Avatar className="min-w-[40px] border-2" src={user?.profile?.image} />
+        <Avatar
+          className="min-w-[40px] border-2"
+          src={user?.profile?.image}
+          {...slotProps?.avatar}
+        />
         <ProfileValidBadge
           className="absolute top-0 right-0 w-4 h-4"
           user={user}

@@ -153,7 +153,6 @@ export const NostrAddressBox = ({
   const pubkey = useMemo(() => event?.tagValue('p') || event?.pubkey, [event])
   const title = useMemo(() => event?.tagValue('title'), [event])
   const status = useMemo(() => event?.tagValue('status'), [event])
-  const user = useUserProfile(pubkey)
 
   if (nostrLink.kind === 30311) {
     return (
@@ -161,7 +160,11 @@ export const NostrAddressBox = ({
         {state === 'resolved' ? (
           <Box className="flex flex-1 items-center overflow-hidden">
             <Box className="flex flex-1 overflow-hidden">
-              <ProfileChip showName={false} showNip5={false} user={user} />
+              <ProfileChip
+                showName={false}
+                showNip5={false}
+                hexpubkey={pubkey}
+              />
               <Box className="ml-2 flex-1 overflow-hidden">
                 <Typography variant="h6" fontWeight="bold" noWrap>
                   {title}

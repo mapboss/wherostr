@@ -31,7 +31,7 @@ export enum EventActionType {
 
 export interface ProfileAction {
   type: ProfileActionType
-  user: NDKUser
+  hexpubkey: string
   options?: any
 }
 export interface ProfileActionOptions {
@@ -74,7 +74,7 @@ export const AppContext = createContext<AppContextProps>({
 })
 
 export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { getUser, getEvent } = useContext(NostrContext)
+  const { getEvent } = useContext(NostrContext)
   const [profileAction, _setProfileAction] = useState<ProfileAction>()
   const [events, setEvents] = useState<NDKEvent[]>([])
   const [eventAction, _setEventAction] = useState<EventAction>()
@@ -89,20 +89,16 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
         return
       }
       try {
-        const user = await getUser(profileAction.hexpubkey)
-        if (!user) {
-          throw new Error(ErrorCode.ProfileNotFound)
-        }
         _setProfileAction({
           ...profileAction,
-          user,
+          hexpubkey: profileAction.hexpubkey,
         })
         _setEventAction(undefined)
       } catch (error) {
         console.log('error', error)
       }
     },
-    [getUser],
+    [],
   )
   const setEventAction = useCallback(
     async (eventAction?: EventActionOptions) => {

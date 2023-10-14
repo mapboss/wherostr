@@ -10,12 +10,21 @@ import {
   useState,
 } from 'react'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
-import { Box, Chip, LinearProgress, Slide, Typography } from '@mui/material'
+import {
+  AvatarGroup,
+  Box,
+  Chip,
+  LinearProgress,
+  Slide,
+  Typography,
+} from '@mui/material'
 import { ViewportList, ViewportListRef } from 'react-viewport-list'
 import { SubscribeResult } from '@/hooks/useSubscribe'
 import { ArrowUpward } from '@mui/icons-material'
 import classNames from 'classnames'
 import { isComment } from '@/utils/event'
+import ProfileAvatar from './ProfileAvatar'
+import _ from 'lodash'
 
 export interface EventListProps {
   className?: string
@@ -72,6 +81,42 @@ const EventList: FC<EventListProps> = ({
     [hasNext, fetching, totalEvent, onFetchMore],
   )
 
+  const pubkeys = useMemo(() => {
+    const obj = _.keyBy(newNotes, 'pubkey')
+    return Object.keys(obj)
+  }, [newNotes])
+  const avatars = useMemo(() => {
+    return (
+      <AvatarGroup
+        max={8}
+        sx={{
+          border: 'none',
+          bgcolor: 'transparent !important',
+          width: 'auto !important',
+          height: 'auto !important',
+        }}
+        slotProps={{
+          additionalAvatar: { sx: { width: 24, height: 24, display: 'none' } },
+        }}
+      >
+        {pubkeys.map((key) => (
+          <ProfileAvatar
+            sx={{ width: 24, height: 24 }}
+            key={key}
+            hexpubkey={key}
+          />
+        ))}
+      </AvatarGroup>
+    )
+  }, [pubkeys])
+
+  const handleShowNewItems = useCallback(() => {
+    onShowNewItems?.()
+    setTimeout(() => {
+      scrollRef.current?.scrollToIndex({ index: 0 })
+    }, 100)
+  }, [onShowNewItems])
+
   return (
     <>
       <Box
@@ -81,17 +126,14 @@ const EventList: FC<EventListProps> = ({
         <Slide in={!!newNotes.length} unmountOnExit>
           <Box className="sticky z-10 top-2 left-0 right-0 text-center opacity-80">
             <Chip
+              avatar={avatars}
               color="secondary"
               label={`${newNotes.length} new note${
                 newNotes.length > 1 ? 's' : ''
               }`}
-              onClick={() => {
-                onShowNewItems?.()
-                setTimeout(() => {
-                  scrollRef.current?.scrollToIndex({ index: 0 })
-                }, 100)
-              }}
-              icon={<ArrowUpward />}
+              deleteIcon={<ArrowUpward />}
+              onClick={handleShowNewItems}
+              onDelete={handleShowNewItems}
             />
           </Box>
         </Slide>

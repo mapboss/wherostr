@@ -24,9 +24,9 @@ import { useSubscribe } from '@/hooks/useSubscribe'
 import { useSearchParams } from 'next/navigation'
 import UserBar from './UserBar'
 import classNames from 'classnames'
-import { DAY, WEEK, unixNow } from '@/utils/time'
+import { DAY, unixNow } from '@/utils/time'
 import { useFollowing, useUser } from '@/hooks/useAccount'
-import MenuButton from './DrawerMenu'
+import DrawerMenu from './DrawerMenu'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -45,9 +45,9 @@ const MainPane = () => {
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const showMap = searchParams.get('map') === '1'
-  const showSearch = searchParams.get('search') === '1'
   const [showComments, setShowComments] = useState(false)
   // const [tabIndex, setTabIndex] = useState(0)
+  const feedType = useMemo(() => (user ? 'following' : 'global'), [user])
 
   useEffect(() => {
     setEvents([])
@@ -295,9 +295,13 @@ const MainPane = () => {
       )}
     >
       <Toolbar className="gap-2 items-center !px-4 !min-h-[64px]">
-        {user?.npub ? <MenuButton user={user} /> : <UserBar />}
-        <Filter user={user} className="grow" onSearch={onSearch} />
-        {user?.npub && (
+        {user?.hexpubkey ? (
+          <DrawerMenu hexpubkey={user.hexpubkey} />
+        ) : (
+          <UserBar />
+        )}
+        <Filter feedType={feedType} className="grow" onSearch={onSearch} />
+        {user?.hexpubkey && (
           <Hidden mdDown>
             <Tooltip title="Post">
               <IconButton

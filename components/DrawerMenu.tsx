@@ -1,15 +1,12 @@
 'use client'
 import { FC, Fragment, useCallback, useState } from 'react'
 import {
-  AccountCircle,
   ArticleOutlined,
   ExitToApp,
   NotesOutlined,
   SensorsOutlined,
-  Settings,
 } from '@mui/icons-material'
 import {
-  Avatar,
   Box,
   Drawer,
   IconButtonProps,
@@ -20,21 +17,18 @@ import {
   Toolbar,
 } from '@mui/material'
 import ProfileChip from './ProfileChip'
-import { NDKUser } from '@nostr-dev-kit/ndk'
 import { useAccount } from '@/hooks/useAccount'
-import { useAction } from '@/hooks/useApp'
-import { ProfileActionType } from '@/contexts/AppContext'
 
 export interface MenuButtonProps extends IconButtonProps {
-  user: NDKUser
+  hexpubkey: string
 }
-const MenuButton: FC<MenuButtonProps> = ({ user, ...props }) => {
+const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, ...props }) => {
   const { signOut } = useAccount()
-  const { setProfileAction } = useAction()
   const [open, setOpen] = useState(false)
 
   const toggleDrawer = useCallback(() => {
     setOpen((prev) => !prev)
+    return false
   }, [])
 
   const closeDrawer = useCallback(() => {
@@ -43,7 +37,11 @@ const MenuButton: FC<MenuButtonProps> = ({ user, ...props }) => {
 
   return (
     <Fragment>
-      <ProfileChip user={user} showName={false} onClick={toggleDrawer} />
+      <ProfileChip
+        hexpubkey={hexpubkey}
+        showName={false}
+        onClick={toggleDrawer}
+      />
       <Drawer
         anchor={'left'}
         open={open}
@@ -63,7 +61,7 @@ const MenuButton: FC<MenuButtonProps> = ({ user, ...props }) => {
           <div className="mx-1" />
           <Typography>Title</Typography> */}
         </Toolbar>
-        <Avatar src={user.profile?.image} sx={{ width: 64, height: 64 }} />
+        <ProfileChip hexpubkey={hexpubkey} onClick={closeDrawer} />
         <List>
           <ListItemButton>
             <ListItemIcon>
@@ -86,10 +84,10 @@ const MenuButton: FC<MenuButtonProps> = ({ user, ...props }) => {
             <ListItemText primary="Streams" />
           </ListItemButton>
 
-          <ListItemButton
+          {/* <ListItemButton
             onClick={async () => {
               setProfileAction({
-                hexpubkey: user.hexpubkey,
+                hexpubkey: hexpubkey,
                 type: ProfileActionType.View,
               })
               closeDrawer()
@@ -99,7 +97,7 @@ const MenuButton: FC<MenuButtonProps> = ({ user, ...props }) => {
               <AccountCircle />
             </ListItemIcon>
             <ListItemText primary="Profile" />
-          </ListItemButton>
+          </ListItemButton> */}
         </List>
         <Box flex={1} />
         <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
@@ -122,4 +120,4 @@ const MenuButton: FC<MenuButtonProps> = ({ user, ...props }) => {
   )
 }
 
-export default MenuButton
+export default DrawerMenu
