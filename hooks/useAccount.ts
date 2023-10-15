@@ -7,10 +7,10 @@ export const useUser = () => {
   return useMemo(() => user, [user])
 }
 export const useAccount = () => {
-  const { user, signIn, signOut } = useContext(AccountContext)
+  const { user, signing, signIn, signOut } = useContext(AccountContext)
   return useMemo(() => {
-    return { user, signIn, signOut }
-  }, [user, signIn, signOut])
+    return { user, signing, signIn, signOut }
+  }, [user, signing, signIn, signOut])
 }
 
 export const useFollowing = () => {

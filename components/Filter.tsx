@@ -7,18 +7,16 @@ import {
   TextField,
   BaseTextFieldProps,
   TextFieldProps,
-  Menu,
   Chip,
 } from '@mui/material'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
-import axios, { AxiosResponse } from 'axios'
-import { Search } from '@mui/icons-material'
+import { ArrowDownward, ArrowDropDown, Search } from '@mui/icons-material'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import bbox from '@turf/bbox'
 import bboxPolygon from '@turf/bbox-polygon'
 import buffer from '@turf/buffer'
-import { NDKUser } from '@nostr-dev-kit/ndk'
 import { search } from '@/services/osm'
+import { useUser } from '@/hooks/useAccount'
 
 export interface FilterProps extends BaseTextFieldProps {
   feedType?: 'following' | 'global'
@@ -31,7 +29,7 @@ export interface FilterProps extends BaseTextFieldProps {
 export interface SearchPayload {
   bbox?: [number, number, number, number]
   geohash?: string
-  keyword?: string
+  q?: string
   places?: any[]
 }
 
@@ -42,11 +40,12 @@ const Filter: FC<FilterProps> = ({
   onSearch,
   ...props
 }) => {
+  const user = useUser()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const querySearch = searchParams.get('keyword') || ''
-  const [keyword, setKeyword] = useState<string>(querySearch)
+  const querySearch = searchParams.get('q') || ''
+  const [keyword, setKeyword] = useState<string>()
   const [loading, setLoading] = useState(false)
   // const [placeList, setPlaceList] = useState<any[]>(placeList)
 
@@ -58,7 +57,7 @@ const Filter: FC<FilterProps> = ({
         const result = await search(querySearch)
         const place = result?.[0]
         if (!place?.boundingbox) {
-          const data = { keyword: querySearch, places: [] }
+          const data = { q: querySearch, places: [] }
           onSearch(data)
           return data
         }
@@ -72,7 +71,7 @@ const Filter: FC<FilterProps> = ({
         const bounds = bbox(polygon)
         const data = {
           bbox: bounds as SearchPayload['bbox'],
-          keyword: querySearch,
+          q: querySearch,
           places: result,
           // geohash: g,
           // places: data,
@@ -91,7 +90,7 @@ const Filter: FC<FilterProps> = ({
     if (querySearch) {
       fetchSearch(querySearch)
     } else {
-      onSearch?.({ keyword: '', places: [] })
+      onSearch?.({ q: '', places: [] })
     }
   }, [onSearch, fetchSearch, querySearch])
 
@@ -107,7 +106,10 @@ const Filter: FC<FilterProps> = ({
   // }, [data, state, onSearch])
 
   const tags = useMemo(
-    () => querySearch.split(' ').filter((d) => !!d.trim()),
+    () =>
+      querySearch !== 'global' && querySearch !== 'follows'
+        ? querySearch.split(' ').filter((d) => !!d.trim())
+        : [],
     [querySearch],
   )
 
@@ -117,9 +119,9 @@ const Filter: FC<FilterProps> = ({
       component={'form'}
       onSubmit={async (evt) => {
         evt.preventDefault()
-        const keyword = evt.currentTarget['search'].value
+        const q = evt.currentTarget['search'].value
         setKeyword('')
-        router.push(`${pathname}?keyword=${keyword}`)
+        router.push(`${pathname}?q=${q}`)
       }}
     >
       <TextField
@@ -145,7 +147,7 @@ const Filter: FC<FilterProps> = ({
                     label={`#${d}`}
                     onDelete={() => {
                       router.push(
-                        `${pathname}?keyword=${tags
+                        `${pathname}?q=${tags
                           .filter((_d) => d !== _d)
                           .join(' ')}`,
                       )
@@ -153,9 +155,21 @@ const Filter: FC<FilterProps> = ({
                   />
                 ))
               ) : feedType === 'following' ? (
-                <Chip label="Following" />
+                <Chip
+                  label="Following"
+                  deleteIcon={<ArrowDropDown />}
+                  onClick={() => router.replace(`${pathname}?q=global`)}
+                  onDelete={() => {}}
+                />
               ) : (
-                <Chip label="Global" />
+                <Chip
+                  label="Global"
+                  onClick={
+                    user ? () => router.replace(`${pathname}`) : undefined
+                  }
+                  deleteIcon={<ArrowDropDown />}
+                  onDelete={() => {}}
+                />
               )}
             </InputAdornment>
           ),

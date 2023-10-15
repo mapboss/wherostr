@@ -1,8 +1,8 @@
 'use client'
-import UserBar from '@/components/UserBar'
 import { AppContextProvider } from '@/contexts/AppContext'
 import { AccountContextProvider } from '@/contexts/AccountContext'
-import { Hidden } from '@mui/material'
+import { Hidden, NoSsr } from '@mui/material'
+import BottomActions from '@/components/BottomActions'
 
 export default function RootLayout({
   children,
@@ -12,14 +12,14 @@ export default function RootLayout({
   return (
     <AccountContextProvider>
       <AppContextProvider>
-        <Hidden mdDown>
-          <header className="absolute top-0 right-0 z-10">
-            <UserBar />
-          </header>
-        </Hidden>
-        <main className="relative min-h-full h-full flex flex-col flex-1">
-          {children}
+        <main className="relative min-h-[calc(100%_-_48px)] h-[calc(100%-_48px)] md:min-h-full md:h-full flex flex-col flex-1 overflow-y-auto">
+          <NoSsr>{children}</NoSsr>
         </main>
+        <Hidden mdUp>
+          <footer className="relative">
+            <BottomActions />
+          </footer>
+        </Hidden>
       </AppContextProvider>
     </AccountContextProvider>
   )

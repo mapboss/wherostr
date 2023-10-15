@@ -103,8 +103,8 @@ const ShortTextNoteCard = ({
           <IconButton
             size="small"
             onClick={() => {
-              const keyword = query.get('keyword') || ''
-              router.replace(`${pathname}?keyword=${keyword}&map=1`)
+              const q = query.get('q') || ''
+              router.replace(`${pathname}?q=${q}&map=1`)
               setTimeout(() => {
                 map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
                   animate: false,

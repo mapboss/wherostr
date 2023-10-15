@@ -83,12 +83,12 @@ export const CreateEventForm = ({
   enableLocation.current = positingOptions?.location
   mdDownRef.current = mdDown
 
-  const keyword = query.get('keyword')
+  const q = query.get('q')
 
   const handleShowMap = (show: boolean) => {
     let querystring = []
-    if (keyword) {
-      querystring.push('keyword=' + keyword)
+    if (q) {
+      querystring.push('q=' + q)
     }
     if (show) {
       querystring.push('map=1')

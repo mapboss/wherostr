@@ -10,7 +10,7 @@ const BottomActions = () => {
   const pathname = usePathname()
   const query = useSearchParams()
   const hasMap = query.get('map') === '1'
-  const hasSearch = !!query.get('keyword')
+  const hasSearch = !!query.get('q')
   const [value, setValue] = useState(
     hasMap ? 'map' : hasSearch ? 'search' : 'home',
   )
@@ -29,13 +29,13 @@ const BottomActions = () => {
         sx={{ height: 48 }}
         onChange={(_, value) => {
           setValue(value)
-          const keyword = query.get('keyword') || ''
+          const q = query.get('q') || ''
           if (value === 'map') {
-            router.replace(`${pathname}?keyword=${keyword}&map=1`)
+            router.replace(`${pathname}?q=${q}&map=1`)
           } else if (value === 'search') {
-            router.replace(`${pathname}?keyword=${keyword}`)
+            router.replace(`${pathname}?q=${q}`)
           } else {
-            router.replace(`${pathname}?keyword=${keyword}`)
+            router.replace(`${pathname}?q=${q}`)
           }
         }}
       >

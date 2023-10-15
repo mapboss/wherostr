@@ -19,6 +19,7 @@ import { NostrContext, defaultRelays } from '@/contexts/NostrContext'
 
 interface Account {
   user?: NDKUser
+  signing: boolean
   follows: NDKUser[]
   signIn: () => Promise<NDKUser | void>
   signOut: () => Promise<void>
@@ -27,19 +28,23 @@ interface Account {
 export const AccountContext = createContext<Account>({
   user: undefined,
   follows: [],
+  signing: true,
   signIn: async () => {},
   signOut: async () => {},
 })
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const { ndk, relaySet, updateRelaySet, getUser } = useContext(NostrContext)
+  const [signing, setSigning] = useState<boolean>(true)
   const [user, setUser] = useState<NDKUser>()
   const [follows, setFollows] = useState<NDKUser[]>([])
-  const nostrRef = useRef<typeof window.nostr>()
+  const nostrRef = useRef<typeof window.nostr>(
+    typeof window !== 'undefined' ? window.nostr : undefined,
+  )
   nostrRef.current = typeof window !== 'undefined' ? window.nostr : undefined
   const hasNip7Extension = useCallback(() => {
     return !!nostrRef.current
-  }, [])
+  }, [nostrRef])
 
   const updateFollows = useCallback(async (user: NDKUser) => {
     const follows = await user.follows({
@@ -79,13 +84,15 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [ndk, updateRelaySet])
 
   const initUser = useCallback(async () => {
-    let user: NDKUser | undefined
     const session = JSON.parse(localStorage.getItem('session') || '{}')
     if (session?.pubkey) {
       if (!hasNip7Extension()) return
-      signIn()
+      setSigning(true)
+      await signIn()
+      setSigning(false)
     } else {
-      updateRelaySet(user)
+      updateRelaySet()
+      setSigning(false)
     }
   }, [hasNip7Extension, updateRelaySet, signIn])
 
@@ -99,10 +106,11 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     return {
       user,
       follows,
+      signing,
       signIn,
       signOut,
     }
-  }, [user, follows, signIn, signOut])
+  }, [user, follows, signing, signIn, signOut])
 
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>

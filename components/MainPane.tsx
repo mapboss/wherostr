@@ -25,7 +25,7 @@ import { useSearchParams } from 'next/navigation'
 import UserBar from './UserBar'
 import classNames from 'classnames'
 import { DAY, unixNow } from '@/utils/time'
-import { useFollowing, useUser } from '@/hooks/useAccount'
+import { useAccount, useFollowing, useUser } from '@/hooks/useAccount'
 import DrawerMenu from './DrawerMenu'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
@@ -34,7 +34,8 @@ const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
 const MainPane = () => {
   const searchParams = useSearchParams()
   const { map } = useContext(MapContext)
-  const user = useUser()
+  const { user, signing } = useAccount()
+  // const user = useUser()
   const follows = useFollowing()
   const { profileAction, events, eventAction, setEvents, setEventAction } =
     useContext(AppContext)
@@ -45,9 +46,17 @@ const MainPane = () => {
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const showMap = searchParams.get('map') === '1'
+  const q = searchParams.get('q')
   const [showComments, setShowComments] = useState(false)
   // const [tabIndex, setTabIndex] = useState(0)
-  const feedType = useMemo(() => (user ? 'following' : 'global'), [user])
+  const feedType = useMemo(() => {
+    if (user) {
+      if (!q || q === 'follows') {
+        return 'following'
+      }
+    }
+    return 'global'
+  }, [user, q])
 
   useEffect(() => {
     setEvents([])
@@ -79,22 +88,25 @@ const MainPane = () => {
   }, [payload.bbox])
 
   const tagsFilter = useMemo(() => {
-    const tags = payload.keyword
-      ? new Set(
-          payload.keyword.split(/\s|,/).map((d) => d.trim().toLowerCase()),
-        )
-      : undefined
+    if (signing) return
+    const tags =
+      payload.q && payload.q !== 'follows' && payload.q !== 'global'
+        ? new Set(payload.q.split(/\s|,/).map((d) => d.trim().toLowerCase()))
+        : undefined
+
+    const authors =
+      user && (!payload.q || payload.q === 'follows') && follows.length > 0
+        ? follows.map((d) => d.hexpubkey)
+        : undefined
 
     return {
       ...(tags ? { '#t': Array.from(tags) } : undefined),
-      ...(!tags && user && follows.length > 0
-        ? { authors: follows.map((d) => d.hexpubkey) }
-        : undefined),
+      authors,
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - DAY,
       limit: 30,
     }
-  }, [payload.keyword, user, follows])
+  }, [signing, payload.q, user, follows])
 
   const [subGeoFilter] = useSubscribe(geohashFilter)
   const [subTagFilter, fetchMore, newItems, showNewItems] =

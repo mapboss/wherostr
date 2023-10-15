@@ -26,7 +26,6 @@ export default function Page() {
     } catch (err) {}
   }, [naddr])
 
-  console.log('naddrDesc', naddr)
   if (!naddrDesc && naddr) {
     try {
       const ll = Geohash.decode(naddr)
