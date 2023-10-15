@@ -10,10 +10,10 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import { ErrorCode } from '@/constants/app'
-import { Alert, Snackbar, SnackbarProps } from '@mui/material'
+import { Alert, AlertProps, Snackbar, SnackbarProps } from '@mui/material'
 
 export enum ProfileActionType {
   View = 0,
@@ -49,6 +49,9 @@ export interface EventActionOptions {
   event?: NDKEvent | string
   options?: any
 }
+export interface AppSnackbarProps extends SnackbarProps {
+  slotProps?: { alert?: AlertProps }
+}
 
 export interface AppContextProps {
   profileAction?: ProfileAction
@@ -57,10 +60,7 @@ export interface AppContextProps {
   setEvents: Dispatch<SetStateAction<NDKEvent[]>>
   eventAction?: EventAction
   setEventAction: (eventAction?: EventActionOptions) => void
-  showSnackbar: (
-    message: string,
-    props?: Omit<SnackbarProps, 'message'>,
-  ) => void
+  showSnackbar: (message: string, props?: AppSnackbarProps) => void
   hideSnackbar: () => void
 }
 
@@ -78,9 +78,10 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [profileAction, _setProfileAction] = useState<ProfileAction>()
   const [events, setEvents] = useState<NDKEvent[]>([])
   const [eventAction, _setEventAction] = useState<EventAction>()
-  const [snackProps, setSnackProps] = useState<SnackbarProps>({
-    anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
-  })
+  const [{ slotProps, ...snackProps }, setSnackProps] =
+    useState<AppSnackbarProps>({
+      anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+    })
 
   const setProfileAction = useCallback(
     async (profileAction?: ProfileActionOptions) => {
@@ -137,7 +138,7 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
     [],
   )
   const showSnackbar = useCallback(
-    (message: string, props?: Omit<SnackbarProps, 'message'>) => {
+    (message: string, props?: Omit<AppSnackbarProps, 'message'>) => {
       setSnackProps((prev) => ({ ...prev, ...props, open: true, message }))
     },
     [],
@@ -171,7 +172,12 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
     <AppContext.Provider value={value}>
       {children}
       <Snackbar onClose={handleClose} {...snackProps}>
-        <Alert onClose={handleClose} severity="warning" sx={{ width: '100%' }}>
+        <Alert
+          {...slotProps?.alert}
+          onClose={handleClose}
+          severity={slotProps?.alert?.severity || 'warning'}
+          sx={{ width: '100%' }}
+        >
           {snackProps?.message}
         </Alert>
       </Snackbar>

@@ -137,7 +137,7 @@ export const useSubscribe = (
     if (!relaySet || !filter || !oldestEvent) return
     const { since, ...original } = filter
     const events = await ndk.fetchEvents(
-      { ...original, until: oldestEvent.created_at, limit: 10 },
+      { ...original, until: oldestEvent.created_at, limit: 30 },
       { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
       relaySet,
     )

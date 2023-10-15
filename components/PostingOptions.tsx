@@ -1,3 +1,4 @@
+import { accept } from '@/utils/upload'
 import { AddPhotoAlternate, LocationOff, LocationOn } from '@mui/icons-material'
 import { IconButton, IconButtonProps } from '@mui/material'
 import { FC, useCallback, useState } from 'react'
@@ -9,6 +10,7 @@ export interface PostingOptionsValues {
 }
 
 export interface PostingOptionsProps {
+  disabled?: boolean
   slotProps?: {
     iconButton?: IconButtonProps
     imageButton?: IconButtonProps
@@ -21,6 +23,7 @@ export interface PostingOptionsProps {
   ) => void
 }
 export const PostingOptions: FC<PostingOptionsProps> = ({
+  disabled,
   slotProps,
   onChange,
 }) => {
@@ -39,17 +42,10 @@ export const PostingOptions: FC<PostingOptionsProps> = ({
     [onChange],
   )
 
-  const handleDrop = useCallback(
-    (files: File[]) => {
-      onChange?.('image', { ...values, image: files })
-    },
-    [onChange, values],
-  )
-
   const { getRootProps } = useDropzone({
     ...slotProps?.dropzone,
+    accept: accept,
     noDrag: true,
-    onDrop: handleDrop,
   })
 
   return (
@@ -58,6 +54,7 @@ export const PostingOptions: FC<PostingOptionsProps> = ({
         {...getRootProps({
           ...slotProps?.iconButton,
           ...slotProps?.imageButton,
+          disabled,
         })}
       >
         <AddPhotoAlternate className="opacity-70" />
@@ -65,6 +62,7 @@ export const PostingOptions: FC<PostingOptionsProps> = ({
       <IconButton
         {...slotProps?.iconButton}
         {...slotProps?.locationButton}
+        disabled={disabled}
         color={values.location ? 'secondary' : 'default'}
         onClick={handleClick('location')}
       >

@@ -12,8 +12,12 @@ export const upload = async (file: File[]): Promise<NostrBuildResponse> => {
 }
 
 export const accept = {
-  'image/*': ['.jpg', '.png', '.webp', '.gif'],
-  'video/*': ['.mp4', '.mov'],
+  'image/png': ['.png'],
+  'image/jpg': ['.jpg', '.jpeg'],
+  'image/gif': ['.gif'],
+  'image/webp': ['.webp'],
+  'video/mp4': ['.mp4'],
+  'video/quicktime': ['.mov'],
   'audio/mpeg': ['.mp3'],
 }
 

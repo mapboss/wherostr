@@ -92,7 +92,7 @@ const MainPane = () => {
         : undefined),
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - DAY,
-      limit: 20,
+      limit: 30,
     }
   }, [payload.keyword, user, follows])
 
@@ -117,11 +117,13 @@ const MainPane = () => {
     }
     let ids = new Set<string>()
     setEvents(
-      Array.from(data).filter((item) => {
-        if (ids.has(item.id)) return false
-        ids.add(item.id)
-        return true
-      }),
+      Array.from(data)
+        .filter((item) => {
+          if (ids.has(item.id)) return false
+          ids.add(item.id)
+          return true
+        })
+        .sort(handleSortDescending),
     )
   }, [showComments, bounds, subGeoFilter, subTagFilter, setEvents])
 

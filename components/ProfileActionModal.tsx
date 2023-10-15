@@ -111,7 +111,7 @@ const ProfileActionModal = () => {
       kinds: [NDKKind.Text],
       authors: [profileAction?.hexpubkey],
       until: unixNow(),
-      limit: 10,
+      limit: 30,
     }
   }, [profileAction?.hexpubkey])
 

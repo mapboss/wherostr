@@ -3,9 +3,29 @@ import { AppContext } from '@/contexts/AppContext'
 import { useContext, useMemo } from 'react'
 
 export const useAction = () => {
-  const { setProfileAction, setEventAction, eventAction, profileAction } =
-    useContext(AppContext)
+  const {
+    showSnackbar,
+    hideSnackbar,
+    setProfileAction,
+    setEventAction,
+    eventAction,
+    profileAction,
+  } = useContext(AppContext)
   return useMemo(() => {
-    return { setProfileAction, setEventAction, eventAction, profileAction }
-  }, [setProfileAction, setEventAction, eventAction, profileAction])
+    return {
+      showSnackbar,
+      hideSnackbar,
+      setProfileAction,
+      setEventAction,
+      eventAction,
+      profileAction,
+    }
+  }, [
+    showSnackbar,
+    hideSnackbar,
+    setProfileAction,
+    setEventAction,
+    eventAction,
+    profileAction,
+  ])
 }
