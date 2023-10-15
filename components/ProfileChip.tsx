@@ -1,5 +1,9 @@
 'use client'
-import { AppContext, ProfileActionType } from '@/contexts/AppContext'
+import {
+  AppContext,
+  EventActionType,
+  ProfileActionType,
+} from '@/contexts/AppContext'
 import { Avatar, AvatarProps, Box, Typography } from '@mui/material'
 import { useCallback, useContext, useMemo } from 'react'
 import ProfileValidBadge from './ProfileValidBadge'
@@ -7,46 +11,54 @@ import { useUserProfile } from '@/hooks/useUserProfile'
 
 const ProfileChip = ({
   hexpubkey,
+  eventActionType,
   showName = true,
   showNip5 = true,
   onClick,
 }: {
-  hexpubkey?: string
+  hexpubkey?: string | string[]
+  eventActionType?: EventActionType
   showName?: boolean
   showNip5?: boolean
   onClick?: (hexpubkey: string) => void | boolean
 }) => {
-  const user = useUserProfile(hexpubkey)
+  const userLeft = useUserProfile(
+    typeof hexpubkey === 'string' ? hexpubkey : hexpubkey?.[0],
+  )
+  const userRight = useUserProfile(hexpubkey?.[1])
   const { setProfileAction } = useContext(AppContext)
   const displayName = useMemo(
     () =>
-      user?.profile?.displayName ||
-      user?.profile?.name ||
-      user?.profile?.username ||
-      user?.npub?.substring(0, 12),
-    [user],
+      userLeft?.profile?.displayName ||
+      userLeft?.profile?.name ||
+      userLeft?.profile?.username ||
+      userLeft?.npub?.substring(0, 12),
+    [userLeft],
   )
   const handleClickProfile = useCallback(() => {
-    if (!hexpubkey) return
-    if (onClick && onClick(hexpubkey) === false) {
+    if (!userLeft?.hexpubkey) return
+    if (onClick && onClick(userLeft?.hexpubkey) === false) {
       return
     }
     setProfileAction({
       type: ProfileActionType.View,
-      hexpubkey: hexpubkey,
+      hexpubkey: userLeft?.hexpubkey,
     })
-  }, [hexpubkey, onClick, setProfileAction])
+  }, [userLeft, onClick, setProfileAction])
 
   return (
     <Box
       className="relative min-w-[40px] flex cursor-pointer hover:underline items-center"
-      onClick={user ? handleClickProfile : undefined}
+      onClick={userLeft ? handleClickProfile : undefined}
     >
       <Box className="relative">
-        <Avatar className="min-w-[40px] border-2" src={user?.profile?.image} />
+        <Avatar
+          className="min-w-[40px] border-2"
+          src={userLeft?.profile?.image}
+        />
         <ProfileValidBadge
           className="absolute top-0 right-0 w-4 h-4"
-          user={user}
+          user={userLeft}
         />
       </Box>
       {showName && (
@@ -62,7 +74,7 @@ const ProfileChip = ({
               className="overflow-hidden whitespace-nowrap text-ellipsis"
               variant="caption"
             >
-              {user?.profile?.nip05}
+              {userLeft?.profile?.nip05}
             </Typography>
           )}
         </Box>

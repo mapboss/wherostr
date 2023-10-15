@@ -8,9 +8,12 @@ import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import {
   Box,
+  Divider,
   Hidden,
   IconButton,
   Paper,
+  Tab,
+  Tabs,
   Toolbar,
   Tooltip,
   useMediaQuery,
@@ -330,6 +333,17 @@ const MainPane = () => {
         )}
       </Toolbar>
       <Box className="w-full h-0.5 shrink-0 background-gradient" />
+      <Tabs
+        variant="fullWidth"
+        value={showComments ? 1 : 0}
+        onChange={(_, value) =>
+          value === 0 ? setShowComments(false) : setShowComments(true)
+        }
+      >
+        <Tab label="Notes" value={0} />
+        <Tab label="Conversations" value={1} />
+      </Tabs>
+      <Divider />
       <EventList
         events={events}
         onFetchMore={fetchMore}
@@ -337,11 +351,18 @@ const MainPane = () => {
         onShowNewItems={showNewItems}
         showComments={showComments}
       />
-      {eventAction && (
-        <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-4 md:p-8 backdrop-blur z-50">
+      {eventAction ? (
+        <Box
+          className={classNames(
+            'fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-4 md:p-8 backdrop-blur z-50',
+            {
+              hidden: showMap && mdDown,
+            },
+          )}
+        >
           <EventActionModal />
         </Box>
-      )}
+      ) : null}
       {profileAction && (
         <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-4 md:p-8 backdrop-blur z-50">
           <ProfileActionModal />

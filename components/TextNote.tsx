@@ -300,7 +300,7 @@ const renderChunk = (
       )
     case 'hashtag':
       return (
-        <NextLink href={`/?keyword=${content}`}>
+        <NextLink href={`/?q=${content}`}>
           <Link underline="hover" color="secondary" component="span">
             #{content}
           </Link>

@@ -13,6 +13,7 @@ export const upload = async (file: File[]): Promise<NostrBuildResponse> => {
 
 export const accept = {
   'image/png': ['.png'],
+  'image/jpeg': ['.jpg', '.jpeg'],
   'image/jpg': ['.jpg', '.jpeg'],
   'image/gif': ['.gif'],
   'image/webp': ['.webp'],

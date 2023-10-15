@@ -74,8 +74,21 @@ export const CreateEventForm = ({
   const [uploading, setUploading] = useState(false)
   const [posting, setPosting] = useState(false)
   const [positingOptions, setPostingOptions] = useState<PostingOptionsValues>()
+  const nostrLink = useMemo(() => {
+    if (type !== EventActionType.Quote) return ''
+    if (!relatedEvents[0]?.id) return ''
+    const link = createNostrLink(
+      NostrPrefix.Note,
+      relatedEvents?.[0].id,
+      relatedEvents?.[0]?.relay ? [relatedEvents[0].relay.url] : undefined,
+      relatedEvents?.[0].kind,
+      relatedEvents?.[0].pubkey,
+    ).encode()
+    return link ? `nostr:${link}` : ''
+  }, [type, relatedEvents])
+
   const geohashValue = watch('geohash', '')
-  const contentValue = watch('content', '')
+  const contentValue = watch('content', nostrLink)
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const mdDownRef = useRef<boolean>(mdDown)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -84,6 +97,8 @@ export const CreateEventForm = ({
   mdDownRef.current = mdDown
 
   const q = query.get('q')
+  // const mentions = getContentMentions(correctContentMentions(contentValue))
+  // console.log('mentions', mentions)
 
   const handleShowMap = (show: boolean) => {
     let querystring = []
@@ -159,32 +174,34 @@ export const CreateEventForm = ({
             newEvent.kind = NDKKind.Text
             break
         }
-        if (type === EventActionType.Quote && relatedEvents.length > 0) {
-          newEvent.content = `${newEvent.content}\n${relatedEvents
-            .map(
-              ({ id, relay }) =>
-                `nostr:${createNostrLink(
-                  NostrPrefix.Event,
-                  id,
-                  relay ? [relay.url] : [],
-                ).encode()}`,
-            )
-            .join('\n')}`
+        // if (type === EventActionType.Quote && relatedEvents.length > 0) {
+        //   newEvent.content = `${newEvent.content}\n${relatedEvents
+        //     .map(
+        //       ({ id, relay }) =>
+        //         `nostr:${createNostrLink(
+        //           NostrPrefix.Event,
+        //           id,
+        //           relay ? [relay.url] : [],
+        //         ).encode()}`,
+        //     )
+        //     .join('\n')}`
+        // }
+        if (type !== EventActionType.Quote) {
+          newEvent.tags = newEvent.tags.concat(
+            relatedEvents.map(({ id, relay }) => [
+              'e',
+              id,
+              ...(relay ? [relay.url] : []),
+            ]),
+            Array.from(
+              new Set(
+                transformText(content, [])
+                  .filter(({ type }) => type === 'hashtag')
+                  .map(({ content }) => content.toLowerCase()),
+              ),
+            ).map((item) => ['t', item]),
+          )
         }
-        newEvent.tags = newEvent.tags.concat(
-          relatedEvents.map(({ id, relay }) => [
-            'e',
-            id,
-            ...(relay ? [relay.url] : []),
-          ]),
-          Array.from(
-            new Set(
-              transformText(content, [])
-                .filter(({ type }) => type === 'hashtag')
-                .map(({ content }) => content.toLowerCase()),
-            ),
-          ).map((item) => ['t', item]),
-        )
         if (positingOptions?.location && geohash) {
           const length = geohash.length
           for (let i = length - 1; i >= 0; i--) {
@@ -217,6 +234,7 @@ export const CreateEventForm = ({
             }
           }
         }
+        // console.log('newEvent', newEvent)
 
         await newEvent.publish()
         setEventAction(undefined)
@@ -350,6 +368,7 @@ export const CreateEventForm = ({
         {type !== EventActionType.Repost && (
           <>
             <TextField
+              value={contentValue}
               inputRef={inputRef}
               placeholder="What's on your mind?"
               variant="outlined"
@@ -358,6 +377,15 @@ export const CreateEventForm = ({
               rows={4}
               required
               disabled={disabled}
+              onPaste={(e) => {
+                const mimeTypes = Object.keys(accept)
+                const imageFile = Array.from(e.clipboardData.files).find(
+                  (f) => {
+                    return mimeTypes.includes(f.type)
+                  },
+                )
+                if (imageFile) handleUploadFile([imageFile], [])
+              }}
               InputProps={{
                 endAdornment: uploading && (
                   <InputAdornment position="end">
@@ -378,11 +406,12 @@ export const CreateEventForm = ({
                   label={!geohashValue ? 'Please select an option' : 'Location'}
                   variant="outlined"
                   fullWidth
-                  inputProps={
-                    geohashValue || locating || llState === 'pending'
-                      ? { style: { display: 'none' } }
-                      : undefined
-                  }
+                  inputProps={{
+                    style:
+                      geohashValue || locating || llState === 'pending'
+                        ? { display: 'none' }
+                        : undefined,
+                  }}
                   InputProps={{
                     readOnly: true,
                     startAdornment:
@@ -486,22 +515,23 @@ export const CreateEventForm = ({
             )}
           </>
         )}
-        {relatedEvents.map((item, index) => (
-          <Box
-            key={index}
-            className="relative max-h-80 border-2 border-secondary-dark rounded-2xl overflow-hidden"
-          >
-            <ShortTextNoteCard
-              event={item}
-              action={false}
-              relatedNoteVariant="link"
-            />
-            <Box className="absolute top-0 left-0 w-full h-full min-h-[320px] bg-gradient-to-t from-[#000000] to-50%" />
-            <Box className="absolute right-0 bottom-0 border-t-2 border-l-2 border-secondary-dark p-2 rounded-tl-2xl text-contrast-secondary">
-              {renderActionTypeIcon()}
+        {type !== EventActionType.Quote &&
+          relatedEvents.map((item, index) => (
+            <Box
+              key={index}
+              className="relative max-h-80 border-2 border-secondary-dark rounded-2xl overflow-hidden"
+            >
+              <ShortTextNoteCard
+                event={item}
+                action={false}
+                relatedNoteVariant="link"
+              />
+              <Box className="absolute top-0 left-0 w-full h-full min-h-[320px] bg-gradient-to-t from-[#000000] to-50%" />
+              <Box className="absolute right-0 bottom-0 border-t-2 border-l-2 border-secondary-dark p-2 rounded-tl-2xl text-contrast-secondary">
+                {renderActionTypeIcon()}
+              </Box>
             </Box>
-          </Box>
-        ))}
+          ))}
         {previewEvent?.content && (
           <>
             <Typography color="text.secondary" className="pl-2">
