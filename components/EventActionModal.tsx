@@ -52,7 +52,7 @@ import {
   PostingOptionsValues,
 } from './PostingOptions'
 import { useDropzone } from 'react-dropzone'
-import { upload } from '@/utils/upload'
+import { accept, upload } from '@/utils/upload'
 import { shortenUrl } from '@/utils/shortenUrl'
 import { LoadingButton } from '@mui/lab'
 
@@ -108,8 +108,8 @@ const CreateEventForm = ({
       )
       let content = `\n---`
       content += `\nDuck Duck Go Maps | ${duckduck.url}`
-      content += `\nGoogle Maps | ${google.url}`
       content += `\nWherostr Map | https://wherostr.social/m/?q=${geohashValue}`
+      content += `\nGoogle Maps | ${google.url}`
       return content
     }
   }, [ndk, geohashValue, positingOptions?.location])
@@ -162,39 +162,39 @@ const CreateEventForm = ({
           ),
         ).map((item) => ['t', item]),
       )
-      if (geohash) {
+      if (positingOptions?.location && geohash) {
         const length = geohash.length
         for (let i = length - 1; i >= 0; i--) {
           newEvent.tags.push(['g', geohash.substring(0, i)])
         }
-      }
 
-      /**
-       * TODO: Create short link
-       */
-      const ll = geohash ? Geohash.decode(geohash) : undefined
-      if (ll?.lat && ll?.lon) {
-        const duckduck = shortenUrl(
-          `https://duckduckgo.com/?va=n&t=hs&iaxm=maps&q=${ll.lat},${ll.lon}`,
-          ndk,
-        )
-        const google = shortenUrl(
-          `https://www.google.com/maps/place/${ll.lat},${ll.lon}`,
-          ndk,
-        )
-        newEvent.content += `\n---`
-        newEvent.content += `\nDuck Duck Go Maps | ${duckduck.url}`
-        newEvent.content += `\nGoogle Maps | ${google.url}`
-        newEvent.content += `\nWherostr Map | https://wherostr.social/m/?q=${geohash}`
+        /**
+         * TODO: Create short link
+         */
+        const ll = geohash ? Geohash.decode(geohash) : undefined
+        if (ll?.lat && ll?.lon) {
+          const duckduck = shortenUrl(
+            `https://duckduckgo.com/?va=n&t=hs&iaxm=maps&q=${ll.lat},${ll.lon}`,
+            ndk,
+          )
+          const google = shortenUrl(
+            `https://www.google.com/maps/place/${ll.lat},${ll.lon}`,
+            ndk,
+          )
+          newEvent.content += `\n---`
+          newEvent.content += `\nWherostr Map | https://wherostr.social/m/?q=${geohash}`
+          newEvent.content += `\nDuck Duck Go Maps | ${duckduck.url}`
+          newEvent.content += `\nGoogle Maps | ${google.url}`
 
-        await Promise.all([duckduck.event.publish(), google.event.publish()])
+          await Promise.all([duckduck.event.publish(), google.event.publish()])
+        }
       }
 
       await newEvent.publish()
       setBusy(false)
       setEventAction(undefined)
     },
-    [ndk, relatedEvents, setEventAction, type],
+    [ndk, positingOptions?.location, relatedEvents, setEventAction, type],
   )
   const renderActionTypeIcon = useCallback(() => {
     switch (type) {
@@ -216,24 +216,23 @@ const CreateEventForm = ({
     } as unknown as NDKEvent
   }, [contentValue, previewGeohashUrl])
 
-  const handleUploadFile = useCallback((acceptedFiles: File[]) => {
-    console.log('onDrop', acceptedFiles)
-    setBusy(true)
-    /**
-     * TODO: Upload Image
-     */
-    // https://api.imgur.com/3/image
-    // Method: POST
-    // Authorization: Client-ID e4f58fc81daec99
-    // upload(acceptedFiles[0]).then(console.log)
-    setBusy(false)
-  }, [])
+  const handleUploadFile = useCallback(
+    async (acceptedFiles: File[]) => {
+      console.log('onDrop', acceptedFiles)
+      setBusy(true)
+      const data = await upload(acceptedFiles).then((res) => res.data)
+      const urls = data.map((d) => d.url).join('\n')
+      setValue('content', contentValue + urls)
+      setBusy(false)
+    },
+    [contentValue, setValue],
+  )
 
   const dropzoneOptions = useMemo(
     () => ({
       noClick: true,
       noKeyboard: true,
-      accept: { 'image/*': [] },
+      accept: accept,
       onDrop: handleUploadFile,
     }),
     [handleUploadFile],
@@ -256,7 +255,12 @@ const CreateEventForm = ({
   return (
     <form
       onSubmit={handleSubmit(_handleSubmit)}
-      {...getRootProps({ className: 'dropzone' })}
+      {...getRootProps({
+        className: 'dropzone',
+        onDragOver: (e) => {
+          e.dataTransfer.dropEffect = 'copy'
+        },
+      })}
     >
       <Box className="mt-3 grid gap-3 grid-cols-1">
         {type !== EventActionType.Repost && (

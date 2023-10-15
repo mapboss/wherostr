@@ -1,7 +1,7 @@
 import { AddPhotoAlternate, LocationOff, LocationOn } from '@mui/icons-material'
-import { IconButton } from '@mui/material'
+import { IconButton, IconButtonProps } from '@mui/material'
 import { FC, useCallback, useState } from 'react'
-import { useDropzone } from 'react-dropzone'
+import { DropzoneProps, useDropzone } from 'react-dropzone'
 
 export interface PostingOptionsValues {
   image?: File[]
@@ -9,12 +9,21 @@ export interface PostingOptionsValues {
 }
 
 export interface PostingOptionsProps {
+  slotProps?: {
+    iconButton?: IconButtonProps
+    imageButton?: IconButtonProps
+    locationButton?: IconButtonProps
+    dropzone?: DropzoneProps
+  }
   onChange?: (
     name: keyof PostingOptionsValues,
     values: PostingOptionsValues,
   ) => void
 }
-export const PostingOptions: FC<PostingOptionsProps> = ({ onChange }) => {
+export const PostingOptions: FC<PostingOptionsProps> = ({
+  slotProps,
+  onChange,
+}) => {
   const [values, setValues] = useState<PostingOptionsValues>({
     location: false,
   })
@@ -38,16 +47,24 @@ export const PostingOptions: FC<PostingOptionsProps> = ({ onChange }) => {
   )
 
   const { getRootProps } = useDropzone({
+    ...slotProps?.dropzone,
     noDrag: true,
     onDrop: handleDrop,
   })
 
   return (
     <>
-      <IconButton {...getRootProps()}>
+      <IconButton
+        {...getRootProps({
+          ...slotProps?.iconButton,
+          ...slotProps?.imageButton,
+        })}
+      >
         <AddPhotoAlternate className="opacity-70" />
       </IconButton>
       <IconButton
+        {...slotProps?.iconButton}
+        {...slotProps?.locationButton}
         color={values.location ? 'secondary' : 'default'}
         onClick={handleClick('location')}
       >
