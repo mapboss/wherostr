@@ -18,16 +18,8 @@ import bbox from '@turf/bbox'
 import bboxPolygon from '@turf/bbox-polygon'
 import buffer from '@turf/buffer'
 import { NDKUser } from '@nostr-dev-kit/ndk'
+import { search } from '@/services/osm'
 
-export async function search<TOutput = any[], TInput = string>(
-  payload?: TInput,
-) {
-  const res = await axios.get<TInput, AxiosResponse<TOutput>>(
-    'https://nominatim.openstreetmap.org/search',
-    { params: { q: payload, format: 'jsonv2' } },
-  )
-  return res.data
-}
 export interface FilterProps extends BaseTextFieldProps {
   feedType?: 'following' | 'global'
   precision?: number

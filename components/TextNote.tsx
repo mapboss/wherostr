@@ -200,7 +200,6 @@ export const NostrAddressBox = ({
 
   return (
     <Link
-      className="block text-ellipsis whitespace-nowrap overflow-hidden"
       href={`https://snort.social/${naddr}`}
       target="_blank"
       component="a"

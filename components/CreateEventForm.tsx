@@ -20,6 +20,8 @@ import {
   Draw,
   FormatQuote,
   ImageSearch,
+  Link,
+  LinkOff,
   MyLocation,
   Place,
   Repeat,
@@ -27,22 +29,29 @@ import {
 import { FileRejection, useDropzone } from 'react-dropzone'
 import { accept, upload } from '@/utils/upload'
 import {
+  Avatar,
   Box,
   Chip,
   CircularProgress,
   IconButton,
   InputAdornment,
   ListItem,
+  ListItemAvatar,
   ListItemIcon,
   ListItemText,
+  Skeleton,
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import ShortTextNoteCard from './ShortTextNoteCard'
 import TextNote from './TextNote'
 import { LoadingButton } from '@mui/lab'
-import { LngLat, LngLatBounds } from 'maplibre-gl'
+import { reverse } from '@/services/osm'
+import usePromise from 'react-use-promise'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 export const CreateEventForm = ({
   type,
@@ -53,30 +62,53 @@ export const CreateEventForm = ({
 }) => {
   const ndk = useNDK()
   const map = useMap()
+  const theme = useTheme()
+  const router = useRouter()
+  const pathname = usePathname()
+  const query = useSearchParams()
   const { setEventAction, showSnackbar } = useAction()
   const { register, handleSubmit, setValue, watch } = useForm()
   const [busy, setBusy] = useState(false)
+  const [appendMapLink, setAppendMapLink] = useState(false)
   const [locating, setLocating] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [posting, setPosting] = useState(false)
   const [positingOptions, setPostingOptions] = useState<PostingOptionsValues>()
   const geohashValue = watch('geohash', '')
   const contentValue = watch('content', '')
+  const mdDown = useMediaQuery(theme.breakpoints.down('md'))
+  const mdDownRef = useRef<boolean>(mdDown)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const enableLocation = useRef<boolean | undefined>(positingOptions?.location)
   enableLocation.current = positingOptions?.location
+  mdDownRef.current = mdDown
+
+  const keyword = query.get('keyword')
+
+  const handleShowMap = (show: boolean) => {
+    let querystring = []
+    if (keyword) {
+      querystring.push('keyword=' + keyword)
+    }
+    if (show) {
+      querystring.push('map=1')
+    }
+    router.replace(`${pathname}?${querystring.join('&')}`)
+  }
 
   useEffect(() => {
     if (!map) return
     const handleClickMap = ({ lngLat }: maplibregl.MapMouseEvent) => {
       if (!enableLocation.current) return
       setValue('geohash', Geohash.encode(lngLat.lat, lngLat.lng, 9))
+      handleShowMap(false)
     }
     map.on('click', handleClickMap)
     return () => {
       map.off('click', handleClickMap)
     }
   }, [map, setValue])
+
   const handleClickClear = useCallback(
     (name: string) => () => {
       setValue(name, '')
@@ -85,7 +117,7 @@ export const CreateEventForm = ({
   )
 
   const previewGeohashUrl = useMemo(() => {
-    if (!positingOptions?.location || !geohashValue) return ''
+    if (!appendMapLink || !positingOptions?.location || !geohashValue) return ''
     const ll = Geohash.decode(geohashValue)
     if (ll?.lat && ll?.lon) {
       const duckduck = shortenUrl(
@@ -102,7 +134,7 @@ export const CreateEventForm = ({
       content += `\nGoogle Maps | ${google.url}`
       return content
     }
-  }, [ndk, geohashValue, positingOptions?.location])
+  }, [ndk, geohashValue, positingOptions?.location, appendMapLink])
 
   const _handleSubmit = useCallback(
     async (data: any) => {
@@ -162,25 +194,27 @@ export const CreateEventForm = ({
           /**
            * TODO: Create short link
            */
-          const ll = geohash ? Geohash.decode(geohash) : undefined
-          if (ll?.lat && ll?.lon) {
-            const duckduck = shortenUrl(
-              `https://duckduckgo.com/?va=n&t=hs&iaxm=maps&q=${ll.lat},${ll.lon}`,
-              ndk,
-            )
-            const google = shortenUrl(
-              `https://www.google.com/maps/place/${ll.lat},${ll.lon}`,
-              ndk,
-            )
-            newEvent.content += `\n---`
-            newEvent.content += `\nWherostr Map | https://wherostr.social/m/?q=${geohash}`
-            newEvent.content += `\nDuck Duck Go Maps | ${duckduck.url}`
-            newEvent.content += `\nGoogle Maps | ${google.url}`
+          if (appendMapLink) {
+            const ll = geohash ? Geohash.decode(geohash) : undefined
+            if (ll?.lat && ll?.lon) {
+              const duckduck = shortenUrl(
+                `https://duckduckgo.com/?va=n&t=hs&iaxm=maps&q=${ll.lat},${ll.lon}`,
+                ndk,
+              )
+              const google = shortenUrl(
+                `https://www.google.com/maps/place/${ll.lat},${ll.lon}`,
+                ndk,
+              )
+              newEvent.content += `\n---`
+              newEvent.content += `\nWherostr Map | https://wherostr.social/m/?q=${geohash}`
+              newEvent.content += `\nDuck Duck Go Maps | ${duckduck.url}`
+              newEvent.content += `\nGoogle Maps | ${google.url}`
 
-            await Promise.all([
-              duckduck.event.publish(),
-              google.event.publish(),
-            ])
+              await Promise.all([
+                duckduck.event.publish(),
+                google.event.publish(),
+              ])
+            }
           }
         }
 
@@ -191,7 +225,14 @@ export const CreateEventForm = ({
         setPosting(false)
       }
     },
-    [ndk, positingOptions?.location, relatedEvents, setEventAction, type],
+    [
+      ndk,
+      positingOptions?.location,
+      relatedEvents,
+      setEventAction,
+      type,
+      appendMapLink,
+    ],
   )
   const renderActionTypeIcon = useCallback(() => {
     switch (type) {
@@ -264,14 +305,36 @@ export const CreateEventForm = ({
     setPostingOptions(values)
   }, [])
 
-  const disabled = useMemo(
-    () => uploading || busy || posting || locating,
-    [uploading, busy, posting, locating],
-  )
-
-  const ll = useMemo(() => {
-    return geohashValue ? Geohash.decode(geohashValue) : undefined
+  const [location, llError, llState] = usePromise(async () => {
+    if (!geohashValue) return
+    const ll = Geohash.decode(geohashValue)
+    try {
+      const result = await reverse([ll.lon, ll.lat])
+      // const sub =
+      //   result.address.suburb ||
+      //   result.address.town ||
+      //   result.address.county ||
+      //   result.address.municipality ||
+      //   result.address.village
+      // `${sub ? sub + ', ' : ''}${result.address.state}, ${result.address.country}`
+      return {
+        name: `${result.address.state || result.address.province}, ${
+          result.address.country
+        }`,
+        coordiantes: ll,
+      }
+    } catch (err) {
+      return {
+        name: `Unknown`,
+        coordiantes: ll,
+      }
+    }
   }, [geohashValue])
+
+  const disabled = useMemo(
+    () => uploading || busy || posting || locating || llState === 'pending',
+    [uploading, busy, posting, locating, llState],
+  )
 
   return (
     <form
@@ -316,74 +379,106 @@ export const CreateEventForm = ({
                   variant="outlined"
                   fullWidth
                   inputProps={
-                    geohashValue ? { style: { display: 'none' } } : undefined
+                    geohashValue || locating || llState === 'pending'
+                      ? { style: { display: 'none' } }
+                      : undefined
                   }
                   InputProps={{
                     readOnly: true,
-                    startAdornment: geohashValue ? (
-                      <ListItem dense disableGutters>
-                        <ListItemIcon>
-                          <Place />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={`${ll?.lat}, ${ll?.lon}`}
-                          secondary={`Geohash: ${geohashValue}`}
-                        />
-                      </ListItem>
-                    ) : (
-                      <Stack direction="row" spacing={0.5}>
-                        <Chip
-                          label="GPS"
-                          icon={<MyLocation />}
-                          onClick={async () => {
-                            setLocating(true)
-                            await new Promise((resolve, reject) => {
-                              navigator.geolocation.getCurrentPosition(
-                                (position) => {
-                                  console.log('geolocation:success')
-                                  const bounds = LngLatBounds.fromLngLat(
-                                    new LngLat(
-                                      position.coords.longitude,
-                                      position.coords.latitude,
-                                    ),
+                    startAdornment:
+                      locating || llState === 'pending' ? (
+                        <ListItem dense disableGutters>
+                          <ListItemAvatar>
+                            <Skeleton variant="circular">
+                              <Avatar />
+                            </Skeleton>
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={<Skeleton width="80%" />}
+                            secondary={<Skeleton width={160} />}
+                          />
+                        </ListItem>
+                      ) : geohashValue && location ? (
+                        <ListItem dense disableGutters>
+                          <ListItemAvatar>
+                            <Avatar>
+                              <Place className="text-[white]" />
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={location?.name}
+                            secondary={`${location?.coordiantes.lat}, ${location?.coordiantes.lon}`}
+                          />
+                        </ListItem>
+                      ) : (
+                        <Stack direction="row" spacing={0.5}>
+                          <Chip
+                            disabled={disabled}
+                            label="GPS"
+                            icon={<MyLocation />}
+                            onClick={async () => {
+                              setLocating(true)
+                              const geo = await new Promise(
+                                (resolve, reject) => {
+                                  navigator.geolocation.getCurrentPosition(
+                                    async (position) => {
+                                      const geo = Geohash.encode(
+                                        position.coords.latitude,
+                                        position.coords.longitude,
+                                        9,
+                                      )
+                                      resolve(geo)
+                                    },
+                                    (err) => {
+                                      console.log('geolocation:error', err)
+                                    },
                                   )
-                                  map?.fitBounds(bounds, { maxZoom: 14 })
-                                  const geo = Geohash.encode(
-                                    position.coords.latitude,
-                                    position.coords.longitude,
-                                    9,
-                                  )
-                                  setValue('geohash', geo)
-                                  resolve(geo)
-                                },
-                                (err) => {
-                                  console.log('geolocation:error', err)
                                 },
                               )
-                            })
-                            setLocating(false)
-                          }}
-                        />
-                        <Chip
-                          label="Image"
-                          icon={<ImageSearch />}
-                          onClick={() => {}}
-                        />
-                        <Chip
-                          label="Mark on map"
-                          icon={<AddLocationAlt />}
-                          onClick={() => {}}
-                        />
-                      </Stack>
-                    ),
-                    endAdornment: geohashValue ? (
-                      <IconButton
-                        size="small"
-                        onClick={handleClickClear('geohash')}
-                      >
-                        <Close />
-                      </IconButton>
-                    ) : undefined,
+                              setValue('geohash', geo)
+                              setLocating(false)
+                            }}
+                          />
+                          <Chip
+                            disabled={disabled}
+                            label="Mark on map"
+                            icon={<AddLocationAlt />}
+                            onClick={() => {
+                              handleShowMap(true)
+                            }}
+                          />
+                          <Chip
+                            variant="outlined"
+                            disabled={true || disabled}
+                            label="Image"
+                            icon={<ImageSearch />}
+                            onClick={() => {}}
+                          />
+                        </Stack>
+                      ),
+                    endAdornment:
+                      geohashValue && !locating && llState === 'resolved' ? (
+                        <>
+                          <IconButton
+                            size="small"
+                            color={appendMapLink ? 'secondary' : undefined}
+                            sx={!appendMapLink ? { opacity: 0.7 } : undefined}
+                            onClick={() => {
+                              setAppendMapLink((prev) => !prev)
+                            }}
+                          >
+                            {appendMapLink ? <Link /> : <LinkOff />}
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={handleClickClear('geohash')}
+                          >
+                            <Close />
+                          </IconButton>
+                        </>
+                      ) : locating || llState === 'pending' ? (
+                        <CircularProgress size={24} color="inherit" />
+                      ) : undefined,
                   }}
                   disabled={disabled}
                 />
