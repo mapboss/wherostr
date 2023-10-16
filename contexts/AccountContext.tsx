@@ -84,14 +84,18 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [ndk, updateRelaySet])
 
   const initUser = useCallback(async () => {
-    const session = JSON.parse(localStorage.getItem('session') || '{}')
-    if (session?.pubkey) {
-      if (!hasNip7Extension()) return
+    try {
       setSigning(true)
-      await signIn()
-      setSigning(false)
-    } else {
+      const session = JSON.parse(localStorage.getItem('session') || '{}')
+      if (session?.pubkey) {
+        if (session.type === 'nip7' && hasNip7Extension()) {
+          await signIn()
+          return
+        }
+      }
       updateRelaySet()
+    } catch (err) {
+    } finally {
       setSigning(false)
     }
   }, [hasNip7Extension, updateRelaySet, signIn])

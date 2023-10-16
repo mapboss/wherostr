@@ -1,8 +1,8 @@
 import { EventActionType } from '@/contexts/AppContext'
 import { useAction } from '@/hooks/useApp'
 import { useMap } from '@/hooks/useMap'
-import { useNDK } from '@/hooks/useNostr'
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
+import { useNDK, useRelaySet } from '@/hooks/useNostr'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import {
@@ -12,7 +12,13 @@ import {
 } from './PostingOptions'
 import Geohash from 'latlon-geohash'
 import { shortenUrl } from '@/utils/shortenUrl'
-import { NostrPrefix, createNostrLink, transformText } from '@snort/system'
+import {
+  EventBuilder,
+  EventExt,
+  EventKind,
+  NostrPrefix,
+  createNostrLink,
+} from '@snort/system'
 import {
   AddLocationAlt,
   Close,
@@ -37,7 +43,6 @@ import {
   InputAdornment,
   ListItem,
   ListItemAvatar,
-  ListItemIcon,
   ListItemText,
   Skeleton,
   Stack,
@@ -52,6 +57,7 @@ import { LoadingButton } from '@mui/lab'
 import { reverse } from '@/services/osm'
 import usePromise from 'react-use-promise'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useUser } from '@/hooks/useAccount'
 
 export const CreateEventForm = ({
   type,
@@ -62,6 +68,8 @@ export const CreateEventForm = ({
 }) => {
   const ndk = useNDK()
   const map = useMap()
+  const user = useUser()
+  const relaySet = useRelaySet()
   const theme = useTheme()
   const router = useRouter()
   const pathname = usePathname()
@@ -78,7 +86,7 @@ export const CreateEventForm = ({
     if (type !== EventActionType.Quote) return ''
     if (!relatedEvents[0]?.id) return ''
     const link = createNostrLink(
-      NostrPrefix.Note,
+      NostrPrefix.Event,
       relatedEvents?.[0].id,
       relatedEvents?.[0]?.relay ? [relatedEvents[0].relay.url] : undefined,
       relatedEvents?.[0].kind,
@@ -156,56 +164,63 @@ export const CreateEventForm = ({
       try {
         setPosting(true)
         const { content, geohash } = data
-        const newEvent = new NDKEvent(ndk)
-        newEvent.content = content
-        newEvent.tags = []
+        const newEvent = new EventBuilder()
+        let noteContent = content
+        newEvent.pubKey(user!.hexpubkey)
+        // const newEvent = new NDKEvent(ndk)
+        // newEvent.content = content
+        // newEvent.tags = []
         switch (type) {
           case EventActionType.Create:
-            newEvent.kind = NDKKind.Text
+            newEvent.kind(EventKind.TextNote)
             break
           case EventActionType.Repost:
-            newEvent.content = JSON.stringify(relatedEvents[0].rawEvent())
-            newEvent.kind = NDKKind.Repost
+            noteContent = JSON.stringify(relatedEvents[0].rawEvent())
+            newEvent.kind(EventKind.Repost)
             break
           case EventActionType.Quote:
-            newEvent.kind = NDKKind.Text
+            newEvent.kind(EventKind.TextNote)
             break
           case EventActionType.Comment:
-            newEvent.kind = NDKKind.Text
+            newEvent.kind(EventKind.TextNote)
             break
         }
-        // if (type === EventActionType.Quote && relatedEvents.length > 0) {
-        //   newEvent.content = `${newEvent.content}\n${relatedEvents
-        //     .map(
-        //       ({ id, relay }) =>
-        //         `nostr:${createNostrLink(
-        //           NostrPrefix.Event,
-        //           id,
-        //           relay ? [relay.url] : [],
-        //         ).encode()}`,
-        //     )
-        //     .join('\n')}`
-        // }
-        if (type !== EventActionType.Quote) {
-          newEvent.tags = newEvent.tags.concat(
-            relatedEvents.map(({ id, relay }) => [
-              'e',
-              id,
-              ...(relay ? [relay.url] : []),
-            ]),
-            Array.from(
-              new Set(
-                transformText(content, [])
-                  .filter(({ type }) => type === 'hashtag')
-                  .map(({ content }) => content.toLowerCase()),
-              ),
-            ).map((item) => ['t', item]),
-          )
-        }
+
+        relatedEvents.forEach(({ id, relay, author }) => {
+          newEvent.tag([
+            'e',
+            id,
+            relay ? relay.url : '',
+            type === EventActionType.Quote
+              ? 'mention'
+              : type === EventActionType.Comment
+              ? 'reply'
+              : '',
+          ])
+          newEvent.tag([
+            'p',
+            author.hexpubkey,
+            '',
+            type === EventActionType.Quote
+              ? 'mention'
+              : type === EventActionType.Comment
+              ? 'reply'
+              : '',
+          ])
+        })
+
+        // Array.from(
+        //   new Set(
+        //     transformText(content, [])
+        //       .filter(({ type }) => type === 'hashtag')
+        //       .map(({ content }) => content.toLowerCase()),
+        //   ),
+        // ).forEach((item) => newEvent.tag(['t', item]))
+
         if (positingOptions?.location && geohash) {
           const length = geohash.length
-          for (let i = length - 1; i >= 0; i--) {
-            newEvent.tags.push(['g', geohash.substring(0, i)])
+          for (let i = length - 1; i >= 1; i--) {
+            newEvent.tag(['g', geohash.substring(0, i)])
           }
 
           /**
@@ -222,21 +237,27 @@ export const CreateEventForm = ({
                 `https://www.google.com/maps/place/${ll.lat},${ll.lon}`,
                 ndk,
               )
-              newEvent.content += `\n---`
-              newEvent.content += `\nWherostr Map | https://wherostr.social/m/?q=${geohash}`
-              newEvent.content += `\nDuck Duck Go Maps | ${duckduck.url}`
-              newEvent.content += `\nGoogle Maps | ${google.url}`
+              noteContent += `\n---`
+              noteContent += `\nWherostr Map | https://wherostr.social/m/?q=${geohash}`
+              noteContent += `\nDuck Duck Go Maps | ${duckduck.url}`
+              noteContent += `\nGoogle Maps | ${google.url}`
 
               await Promise.all([
-                duckduck.event.publish(),
-                google.event.publish(),
+                duckduck.event.publish(relaySet),
+                google.event.publish(relaySet),
               ])
             }
           }
         }
-        // console.log('newEvent', newEvent)
+        const nostrEvent = newEvent
+          .content(noteContent)
+          .processContent()
+          .build()
+        // console.log('nostrEvent', nostrEvent)
+        const ev = new NDKEvent(ndk, EventExt.minePow(nostrEvent, 12))
+        // console.log('powEvent', ev)
 
-        await newEvent.publish()
+        await ev.publish(relaySet)
         setEventAction(undefined)
       } catch (err) {
       } finally {
@@ -245,6 +266,8 @@ export const CreateEventForm = ({
     },
     [
       ndk,
+      user,
+      relaySet,
       positingOptions?.location,
       relatedEvents,
       setEventAction,

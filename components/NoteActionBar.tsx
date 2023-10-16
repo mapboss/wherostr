@@ -136,9 +136,9 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         liked: liked + (reaction === '+' ? 1 : 0),
         disliked: disliked + (reaction === '-' ? 1 : 0),
       })
-      await newEvent.publish()
+      await newEvent.publish(relaySet)
     },
-    [event, ndk, liked, disliked],
+    [event, ndk, liked, disliked, relaySet],
   )
   const handleClickAction = useCallback(
     (type: EventActionType, options?: any) => () => {

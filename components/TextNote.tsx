@@ -1,6 +1,6 @@
 'use client'
 import 'react-photo-view/dist/react-photo-view.css'
-import { useCallback, useContext, useMemo, useState } from 'react'
+import { ReactNode, useCallback, useContext, useMemo, useState } from 'react'
 import {
   NostrLink,
   NostrPrefix,
@@ -81,9 +81,11 @@ export const UserMentionLink = ({ id }: { id: string }) => {
 export const QuotedEvent = ({
   id,
   relatedNoteVariant,
+  icon,
 }: {
   id: string
   relatedNoteVariant: RelatedNoteVariant
+  icon?: ReactNode
 }) => {
   const { setEventAction } = useContext(AppContext)
   const [event, error, state] = useEventCache(id)
@@ -131,7 +133,7 @@ export const QuotedEvent = ({
         <Box className="absolute top-0 left-0 w-full h-full min-h-[320px] bg-gradient-to-t from-[#000000] to-50%" />
       )}
       <Box className="absolute right-0 bottom-0 border-t-2 border-l-2 border-secondary-dark p-2 rounded-tl-2xl text-contrast-secondary">
-        <FormatQuote />
+        {icon ? icon : <FormatQuote />}
       </Box>
     </Box>
   )

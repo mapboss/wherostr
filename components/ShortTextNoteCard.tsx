@@ -26,7 +26,6 @@ import { extractLngLat } from '@/utils/extractLngLat'
 import { MapContext } from '@/contexts/MapContext'
 import { LngLatBounds } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useUserProfile } from '@/hooks/useUserProfile'
 import MenuButton from './MenuButton'
 
 const ShortTextNoteCard = ({
@@ -70,7 +69,10 @@ const ShortTextNoteCard = ({
   }, [ndk, fromNote, getEvent, setEventAction])
 
   const lnglat = useMemo(() => extractLngLat(event), [event])
-  const repostId = useMemo(() => event.tagValue('e'), [event])
+  const repostId = useMemo(
+    () => (event.kind === NDKKind.Repost ? event.tagValue('e') : undefined),
+    [event],
+  )
 
   return (
     <Card className="!rounded-none">
@@ -89,11 +91,16 @@ const ShortTextNoteCard = ({
                 onClick={handleClickRootNote}
               >
                 {event.kind === 6 ? (
-                  <Repeat className="mr-1" fontSize="small" />
+                  <>
+                    <Repeat className="mr-1" fontSize="small" />
+                    shared note
+                  </>
                 ) : (
-                  <ArrowRightAlt className="mr-1" fontSize="small" />
+                  <>
+                    <ArrowRightAlt className="mr-1" fontSize="small" />
+                    replied note
+                  </>
                 )}
-                from a note
               </Typography>
             )}
           </Box>
@@ -128,12 +135,13 @@ const ShortTextNoteCard = ({
             )}
           </CardContent>
         </Box>
-      ) : event.kind === NDKKind.Repost && repostId ? (
+      ) : repostId ? (
         <Box className="flex">
           <CardContent className="flex-1 !pt-3 !pb-0 overflow-hidden">
             <QuotedEvent
               id={repostId}
               relatedNoteVariant={relatedNoteVariant}
+              icon={<Repeat />}
             />
           </CardContent>
         </Box>
