@@ -339,7 +339,7 @@ const MainPane = () => {
           </Hidden>
         )}
       </Toolbar>
-      <Box className="w-full h-0.5 shrink-0 background-gradient" />
+      <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
       <Tabs
         variant="fullWidth"
         value={showComments ? 1 : 0}

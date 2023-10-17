@@ -29,7 +29,7 @@ const ProfileActionModal = () => {
   const ref = useRef<HTMLDivElement>(null)
 
   return (
-    <Box className="relative max-h-full flex rounded-2xl overflow-hidden p-0.5 background-gradient">
+    <Box className="relative max-h-full flex rounded-2xl overflow-hidden p-0.5 bg-gradient-primary">
       <IconButton
         className="!absolute top-4 right-4 z-10 !bg-[#0000001f]"
         size="small"

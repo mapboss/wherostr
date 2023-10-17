@@ -10,6 +10,7 @@ import { LiveStreamTime } from './LiveStreamTime'
 import ResponsiveButton from './ResponsiveButton'
 import { AccountContext } from '@/contexts/AccountContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
+import StatusBadge from './StatusBadge'
 
 export interface LiveActivityItem {
   id: string
@@ -139,12 +140,8 @@ const LiveActivity = ({
             >
               {liveItem.summary}
             </Typography>
-            <Box className="flex flex-wrap gap-1 mt-2">
-              <Chip
-                sx={{ fontWeight: 'bold' }}
-                label={liveItem.status?.toUpperCase()}
-                color={liveItem.status === 'live' ? 'primary' : 'secondary'}
-              />
+            <Box className="flex flex-wrap gap-2 mt-2 items-center">
+              <StatusBadge status={liveItem.status} />
               {liveItem.status === 'live' && (
                 <>
                   {typeof liveItem.viewers !== 'undefined' && (

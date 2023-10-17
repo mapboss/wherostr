@@ -24,6 +24,7 @@ import Link from 'next/link'
 import { WEEK, unixNow } from '@/utils/time'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { useStreamRelaySet } from '@/hooks/useNostr'
+import StatusBadge from '@/components/StatusBadge'
 
 export default function Page() {
   const since = useMemo(() => unixNow() - WEEK, [])
@@ -130,15 +131,7 @@ const CardEvent: FC<{
           flexDirection="column"
           alignItems="flex-end"
         >
-          <Chip
-            size="small"
-            color={isLive ? 'primary' : 'default'}
-            label={isLive ? 'LIVE' : 'ENDED'}
-            sx={{
-              fontWeight: 'bold',
-              bgcolor: !isLive ? 'background.paper' : undefined,
-            }}
-          />
+          <StatusBadge status={isLive ? 'live' : 'ended'} />
           {isLive && typeof viewers !== 'undefined' ? (
             <>
               <Box my={0.5} />
@@ -163,7 +156,10 @@ const CardEvent: FC<{
                 user?.profile?.username ||
                 user?.npub?.substring(0, 12)}
             </Typography>
-            <ReactTimeago date={new Date((isLive ? starts : ends) * 1000)} />
+            <Typography variant="caption">
+              {!isLive && 'Streamed '}
+              <ReactTimeago date={new Date((isLive ? starts : ends) * 1000)} />
+            </Typography>
           </Box>
         }
         titleTypographyProps={{

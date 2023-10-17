@@ -31,7 +31,7 @@ export const ProfileCard = ({
     <Box>
       <Box
         className={`aspect-[5/2] bg-cover bg-center${
-          user?.profile?.banner ? '' : ' opacity-70 background-gradient'
+          user?.profile?.banner ? '' : ' opacity-70 bg-gradient-primary'
         }`}
         style={
           user?.profile?.image
@@ -111,7 +111,7 @@ export const ProfileCardFull = ({
     <Box>
       <Box
         className={`aspect-[5/2] bg-cover bg-center${
-          user?.profile?.banner ? '' : ' opacity-70 background-gradient'
+          user?.profile?.banner ? '' : ' opacity-70 bg-gradient-primary'
         }`}
         style={
           user?.profile?.image

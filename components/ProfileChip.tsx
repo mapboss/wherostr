@@ -5,21 +5,26 @@ import {
   ProfileActionType,
 } from '@/contexts/AppContext'
 import { Avatar, AvatarProps, Box, Typography } from '@mui/material'
-import { useCallback, useContext, useMemo } from 'react'
+import { ReactNode, useCallback, useContext, useMemo } from 'react'
 import ProfileValidBadge from './ProfileValidBadge'
 import { useUserProfile } from '@/hooks/useUserProfile'
+import classNames from 'classnames'
 
 const ProfileChip = ({
+  className,
   hexpubkey,
   eventActionType,
   showName = true,
   showNip5 = true,
+  nameAdornment,
   onClick,
 }: {
+  className?: string
   hexpubkey?: string | string[]
   eventActionType?: EventActionType
   showName?: boolean
   showNip5?: boolean
+  nameAdornment?: ReactNode
   onClick?: (hexpubkey: string) => void | boolean
 }) => {
   const userLeft = useUserProfile(
@@ -48,7 +53,10 @@ const ProfileChip = ({
 
   return (
     <Box
-      className="relative min-w-[40px] flex cursor-pointer hover:underline items-center"
+      className={classNames(
+        className,
+        'relative min-w-[40px] flex cursor-pointer hover:underline items-center',
+      )}
       onClick={userLeft ? handleClickProfile : undefined}
     >
       <Box className="relative">
@@ -62,13 +70,16 @@ const ProfileChip = ({
         />
       </Box>
       {showName && (
-        <Box className="flex flex-col pl-2 max-w-xs overflow-hidden">
-          <Typography
-            className="overflow-hidden whitespace-nowrap text-ellipsis"
-            variant="subtitle2"
-          >
-            {displayName}
-          </Typography>
+        <Box className="flex flex-col pl-2 overflow-hidden">
+          <Box className="flex">
+            <Typography
+              className="overflow-hidden whitespace-nowrap text-ellipsis"
+              variant="subtitle2"
+            >
+              {displayName}
+            </Typography>
+            {nameAdornment}
+          </Box>
           {showNip5 && (
             <Typography
               className="overflow-hidden whitespace-nowrap text-ellipsis"

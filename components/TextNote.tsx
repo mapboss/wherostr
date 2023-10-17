@@ -11,6 +11,7 @@ import {
 import {
   Box,
   Button,
+  ButtonBase,
   CircularProgress,
   IconButton,
   Link,
@@ -21,11 +22,9 @@ import { Fragment } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import {
-  ChevronRight,
+  Visibility,
   FormatQuote,
   InfoOutlined,
-  PlayCircle,
-  Sensors,
   ZoomIn,
   ZoomOut,
 } from '@mui/icons-material'
@@ -43,6 +42,8 @@ import ReactPlayer from 'react-player/lazy'
 import ProfileChip from './ProfileChip'
 import { useEvent } from '@/hooks/useEvent'
 import { useStreamRelaySet } from '@/hooks/useNostr'
+import StatusBadge from './StatusBadge'
+import ReactTimeago from 'react-timeago'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
@@ -154,44 +155,66 @@ export const NostrAddressBox = ({
   const [event, error, state] = useEvent(naddr, optRelaySet)
   const pubkey = useMemo(() => event?.tagValue('p') || event?.pubkey, [event])
   const title = useMemo(() => event?.tagValue('title'), [event])
-  const status = useMemo(() => event?.tagValue('status'), [event])
+  const image = useMemo(() => event?.tagValue('image'), [event])
+  const isLive = useMemo(() => event?.tagValue('status') === 'live', [event])
+  const starts = useMemo(
+    () => Number(event?.tagValue('starts') || event?.created_at),
+    [event],
+  )
+  const ends = useMemo(
+    () => Number(event?.tagValue('ends') || event?.created_at),
+    [event],
+  )
 
   if (nostrLink.kind === 30311) {
     return (
-      <Box className="flex items-center justify-center bg-gradient-to-r to-primary from-secondary w-full p-8 rounded-2xl overflow-hidden">
+      <Box className="bg-gradient-primary w-full p-3 sm:p-4 rounded-2xl drop-shadow">
         {state === 'resolved' ? (
-          <Box className="flex flex-1 items-center overflow-hidden">
-            <Box className="flex flex-1 overflow-hidden">
-              <ProfileChip
-                showName={false}
-                showNip5={false}
-                hexpubkey={pubkey}
-              />
-              <Box className="ml-2 flex-1 overflow-hidden">
-                <Typography variant="h6" fontWeight="bold" noWrap>
+          <Box className="flex flex-col gap-4">
+            <Box className="flex gap-4 items-start flex-col sm:flex-row">
+              {!!image && (
+                <Box className="sm:max-w-[40%] rounded-2xl overflow-hidden drop-shadow">
+                  <ButtonBase
+                    className="aspect-video hover:scale-110 transition-all"
+                    centerRipple
+                    LinkComponent={NextLink}
+                    href={`/a?naddr=${nostrLink.encode()}`}
+                    target="_blank"
+                  >
+                    <img src={image} alt="image" />
+                  </ButtonBase>
+                </Box>
+              )}
+              <Box>
+                <Typography variant="h6" fontWeight="bold">
                   {title}
                 </Typography>
-                {status === 'live' ? (
-                  <Typography noWrap>
-                    <Sensors /> Live
-                  </Typography>
-                ) : (
-                  <Typography>Ended</Typography>
-                )}
+                <Typography variant="caption">
+                  {isLive && (
+                    <StatusBadge className="!mr-2 inline-block" status="live" />
+                  )}
+                  {!isLive && 'Streamed '}
+                  <ReactTimeago
+                    date={new Date((isLive ? starts : ends) * 1000)}
+                  />
+                </Typography>
               </Box>
             </Box>
-            <Box mx={1} />
-            <Button
-              LinkComponent={NextLink}
-              target="_blank"
-              href={`/a/?naddr=${naddr}`}
-              color="inherit"
-              variant="contained"
-              sx={{ fontWeight: 'bold' }}
-              endIcon={status === 'live' ? <ChevronRight /> : <PlayCircle />}
-            >
-              {status === 'live' ? 'Join Stream' : 'Watch'}
-            </Button>
+            <Box className="flex items-end gap-2">
+              <ProfileChip className="flex-1" hexpubkey={pubkey} />
+              <Button
+                className="shrink-0"
+                LinkComponent={NextLink}
+                target="_blank"
+                href={`/a/?naddr=${naddr}`}
+                color="primary"
+                variant="contained"
+                sx={{ fontWeight: 'bold' }}
+                endIcon={<Visibility />}
+              >
+                Watch
+              </Button>
+            </Box>
           </Box>
         ) : (
           <CircularProgress color="inherit" />
