@@ -8,7 +8,7 @@ async function minePow(e, target) {
     }
     do {
         //roll ctr and compute id
-        const now = Math.floor(new Date().getTime() / 1000);
+        const now = Math.floor(Date.now() / 1000);
         // reset ctr if timestamp changed, this is not really needed but makes the ctr value smaller
         if (now !== e.created_at) {
             ctr = 0;
