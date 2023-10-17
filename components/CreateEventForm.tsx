@@ -20,7 +20,6 @@ import {
   createNostrLink,
 } from '@snort/system'
 import {
-  AddLocationAlt,
   Close,
   Comment,
   Draw,
@@ -28,6 +27,7 @@ import {
   ImageSearch,
   Link,
   LinkOff,
+  Map,
   MyLocation,
   Place,
   Repeat,
@@ -47,6 +47,7 @@ import {
   Skeleton,
   Stack,
   TextField,
+  Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
@@ -496,20 +497,22 @@ export const CreateEventForm = ({
                               setLocating(false)
                             }}
                           />
+                          <Tooltip title="Coming soon">
+                            <Chip
+                              variant="outlined"
+                              disabled={disabled}
+                              label="GeoTagging"
+                              icon={<ImageSearch />}
+                              onClick={() => {}}
+                            />
+                          </Tooltip>
                           <Chip
                             disabled={disabled}
-                            label="Mark on map"
-                            icon={<AddLocationAlt />}
+                            label="Choose from Map"
+                            icon={<Map />}
                             onClick={() => {
                               handleShowMap(true)
                             }}
-                          />
-                          <Chip
-                            variant="outlined"
-                            disabled={true || disabled}
-                            label="Image"
-                            icon={<ImageSearch />}
-                            onClick={() => {}}
                           />
                         </Stack>
                       ),
