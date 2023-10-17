@@ -14,7 +14,6 @@ import Geohash from 'latlon-geohash'
 import { shortenUrl } from '@/utils/shortenUrl'
 import {
   EventBuilder,
-  EventExt,
   EventKind,
   NostrPrefix,
   PowWorker,
@@ -60,8 +59,6 @@ import usePromise from 'react-use-promise'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useAccount'
 
-const powWorker = new PowWorker('./pow.js')
-
 export const CreateEventForm = ({
   type,
   relatedEvents = [],
@@ -85,6 +82,7 @@ export const CreateEventForm = ({
   const [uploading, setUploading] = useState(false)
   const [posting, setPosting] = useState(false)
   const [positingOptions, setPostingOptions] = useState<PostingOptionsValues>()
+  const powWorker = useMemo(() => new PowWorker('./pow.js'), [])
   const nostrLink = useMemo(() => {
     if (type !== EventActionType.Quote) return ''
     if (!relatedEvents[0]?.id) return ''
@@ -279,6 +277,7 @@ export const CreateEventForm = ({
       setEventAction,
       type,
       appendMapLink,
+      powWorker,
     ],
   )
   const renderActionTypeIcon = useCallback(() => {
