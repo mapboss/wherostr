@@ -24,7 +24,7 @@ import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import { Draw } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import UserBar from './UserBar'
 import classNames from 'classnames'
 import { DAY, unixNow } from '@/utils/time'
@@ -35,6 +35,8 @@ const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
 
 const MainPane = () => {
+  const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const { map } = useContext(MapContext)
   const { user, signing } = useAccount()
@@ -161,6 +163,11 @@ const MainPane = () => {
       const feat = ev?.features?.[0]?.properties as NostrEvent
       const event = events.find((ev) => ev.id === feat.id)
       if (!event) return
+      if (q) {
+        router.replace(`${pathname}?q=${q}`)
+      } else {
+        router.replace(pathname)
+      }
       setEventAction({
         type: EventActionType.View,
         event,
@@ -169,7 +176,7 @@ const MainPane = () => {
         },
       })
     },
-    [events, setEventAction],
+    [events, pathname, q, router, setEventAction],
   )
 
   useEffect(() => {

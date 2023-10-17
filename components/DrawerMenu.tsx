@@ -19,7 +19,7 @@ import {
 import ProfileChip from './ProfileChip'
 import { useAccount } from '@/hooks/useAccount'
 import Link from 'next/link'
-import { ProfileCard } from './ProfileActionModal'
+import { ProfileCard } from './ProfileCard'
 import { useAction } from '@/hooks/useApp'
 import { ProfileActionType } from '@/contexts/AppContext'
 

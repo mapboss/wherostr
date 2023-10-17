@@ -17,6 +17,7 @@ import {
   EventExt,
   EventKind,
   NostrPrefix,
+  PowWorker,
   createNostrLink,
 } from '@snort/system'
 import {
@@ -58,6 +59,8 @@ import { reverse } from '@/services/osm'
 import usePromise from 'react-use-promise'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useAccount'
+
+const powWorker = new PowWorker('./pow.js')
 
 export const CreateEventForm = ({
   type,
@@ -249,13 +252,16 @@ export const CreateEventForm = ({
             }
           }
         }
+
         const nostrEvent = newEvent
           .content(noteContent)
           .processContent()
           .build()
-        // console.log('nostrEvent', nostrEvent)
-        const ev = new NDKEvent(ndk, EventExt.minePow(nostrEvent, 12))
-        // console.log('powEvent', ev)
+
+        const powEvent = await powWorker.minePow(nostrEvent, 15)
+        // console.log('powEvent', powEvent)
+        const ev = new NDKEvent(ndk, powEvent)
+        // console.log('ev', ev)
 
         await ev.publish(relaySet)
         setEventAction(undefined)
