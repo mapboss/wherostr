@@ -54,8 +54,8 @@ export default function Page() {
       >
         <MapView
           className={classNames('flex-1', {
-            // 'invisible -z-10': !mdUp && !hasMap,
-            'invisible -z-10': !hasMap,
+            'invisible -z-10': !mdUp && !hasMap,
+            'md:visible': true,
           })}
         />
         <MainPane />
