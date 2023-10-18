@@ -1,8 +1,11 @@
 'use client'
+import UserBar from '@/components/UserBar'
 import { AccountContext } from '@/contexts/AccountContext'
 import { NostrContext } from '@/contexts/NostrContext'
-import { useStreamRelaySet } from '@/hooks/useNostr'
+import { useUser } from '@/hooks/useAccount'
+import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
 import { useSubscribe } from '@/hooks/useSubscribe'
+import { WEEK, unixNow } from '@/utils/time'
 import {
   Box,
   Button,
@@ -24,27 +27,22 @@ import {
 
 let timeoutHandler: NodeJS.Timeout
 export default function Page() {
-  const { ndk } = useContext(NostrContext)
-  const { user } = useContext(AccountContext)
+  const ndk = useNDK()
+  const user = useUser()
+  const since = useMemo(() => unixNow() - WEEK, [])
   const [ev, setEv] = useState<NDKEvent>()
   const filter = useMemo<NDKFilter | undefined>(() => {
-    if (!user?.hexpubkey) return
     return {
       kinds: [30311 as NDKKind],
-      authors: [user.hexpubkey],
+      authors: user?.hexpubkey ? [user.hexpubkey] : [],
+      since,
     }
-  }, [user])
+  }, [since, user])
   const relaySet = useStreamRelaySet()
   const [items] = useSubscribe(filter, true, relaySet)
 
   useEffect(() => {
-    const event = items[0]
-    const streamId = event?.tagValue('d')
-    setEv((prev) => {
-      const id = prev?.tagValue('d')
-      if (id === streamId) return prev
-      return event
-    })
+    setEv(items[0])
   }, [items])
 
   const fetchStatsUrl = useMemo(() => {
@@ -117,23 +115,23 @@ export default function Page() {
     }
   }, [ev, updateLiveStats])
 
-  const handleUpdateRecordingUrl = useCallback<FormEventHandler>(
-    async (evt: FormEvent<HTMLFormElement>) => {
+  const handleUpdate = useCallback<(name: string) => FormEventHandler>(
+    (name: string) => async (evt: FormEvent<HTMLFormElement>) => {
       evt.preventDefault()
       if (!ev) return
       const form = new FormData(evt.currentTarget)
-      const recording = form.get('recording')?.toString()
-      if (!recording) return
+      const value = form.get(name)?.toString()
+      if (!value) return
       const ndkEvent = createEvent()
       if (!ndkEvent) return
       if (ndkEvent.tagValue('status') === 'ended') {
-        ev.removeTag('streaming')
-        ndkEvent.removeTag('streaming')
+        ev.removeTag(name)
+        ndkEvent.removeTag(name)
       }
-      ev.removeTag('recording')
-      ev.tags.push(['recording', recording])
-      ndkEvent.removeTag('recording')
-      ndkEvent.tags.push(['recording', recording])
+      ev.removeTag(name)
+      ev.tags.push([name, value])
+      ndkEvent.removeTag(name)
+      ndkEvent.tags.push([name, value])
       await ndkEvent.publish()
     },
     [ev, createEvent],
@@ -142,56 +140,85 @@ export default function Page() {
   const isLive = useMemo(() => ev?.tagValue('status') === 'live', [ev])
   const tags = useMemo(() => ev?.getMatchingTags('t') || [], [ev])
   return (
-    <Box className="flex-1 flex flex-col p-4">
-      {ev ? (
-        <>
-          <Typography variant="h6" fontWeight="bold">
-            {ev?.tagValue('title')}
-          </Typography>
-
-          <Typography>{ev?.tagValue('summary')}</Typography>
-          <Box className="flex mt-2 gap-2">
-            <Chip
-              color={isLive ? 'primary' : 'secondary'}
-              label={isLive ? 'LIVE' : 'ENDED'}
-            />
-            {isLive && (
+    <>
+      <Box alignSelf="flex-end">
+        <UserBar />
+      </Box>
+      <Box className="flex-1 flex flex-col p-4">
+        {ev ? (
+          <>
+            <Typography variant="h6" fontWeight="bold">
+              {ev?.tagValue('title')}
+            </Typography>
+            <Typography>{ev?.tagValue('summary')}</Typography>
+            <Box className="flex mt-2 gap-2">
               <Chip
-                variant="outlined"
-                label={(ev?.tagValue('current_participants') || 0) + ' viewers'}
+                color={isLive ? 'primary' : 'secondary'}
+                label={isLive ? 'LIVE' : 'ENDED'}
               />
-            )}
-            {tags.map(([_, tag], i) => {
-              return <Chip key={i} label={tag} />
-            })}
-          </Box>
-          {!isLive ? (
-            <Box component="form" onSubmit={handleUpdateRecordingUrl}>
-              <Divider className="!my-4" />
-              <TextField
-                fullWidth
-                margin="dense"
-                size="small"
-                name="recording"
-                autoComplete="off"
-                label="Playback URL"
-                placeholder="https://..."
-                defaultValue={ev?.tagValue('recording')}
-                InputProps={{
-                  sx: { pr: 0 },
-                  endAdornment: (
-                    <Button type="submit" variant="contained">
-                      Update
-                    </Button>
-                  ),
-                }}
-              />
+              {isLive && (
+                <Chip
+                  variant="outlined"
+                  label={
+                    (ev?.tagValue('current_participants') || 0) + ' viewers'
+                  }
+                />
+              )}
+              {tags.map(([_, tag], i) => {
+                return <Chip key={i} label={tag} />
+              })}
             </Box>
-          ) : undefined}
-        </>
-      ) : (
-        <Typography>No Live Event.</Typography>
-      )}
-    </Box>
+            {isLive ? (
+              <Box component="form" onSubmit={handleUpdate('streaming')}>
+                <Divider className="!my-4" />
+                <TextField
+                  fullWidth
+                  margin="dense"
+                  size="small"
+                  name="streaming"
+                  autoComplete="off"
+                  label="Streaming URL"
+                  placeholder="https://..."
+                  defaultValue={ev?.tagValue('streaming')}
+                  InputProps={{
+                    sx: { pr: 0 },
+                    endAdornment: (
+                      <Button type="submit" variant="contained">
+                        Update
+                      </Button>
+                    ),
+                  }}
+                />
+              </Box>
+            ) : undefined}
+            {!isLive ? (
+              <Box component="form" onSubmit={handleUpdate('recording')}>
+                <Divider className="!my-4" />
+                <TextField
+                  fullWidth
+                  margin="dense"
+                  size="small"
+                  name="recording"
+                  autoComplete="off"
+                  label="Recording URL"
+                  placeholder="https://..."
+                  defaultValue={ev?.tagValue('recording')}
+                  InputProps={{
+                    sx: { pr: 0 },
+                    endAdornment: (
+                      <Button type="submit" variant="contained">
+                        Update
+                      </Button>
+                    ),
+                  }}
+                />
+              </Box>
+            ) : undefined}
+          </>
+        ) : (
+          <Typography>No Live Event.</Typography>
+        )}
+      </Box>
+    </>
   )
 }

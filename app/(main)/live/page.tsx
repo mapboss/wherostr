@@ -10,13 +10,7 @@ import {
   Divider,
   Typography,
 } from '@mui/material'
-import {
-  NDKEvent,
-  NDKFilter,
-  NDKKind,
-  NDKRelay,
-  NDKRelaySet,
-} from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 import { FC, useMemo, useRef } from 'react'
 import ReactTimeago from 'react-timeago'
 import { nip19 } from 'nostr-tools'
