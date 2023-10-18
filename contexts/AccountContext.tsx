@@ -57,7 +57,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     if (hasNip7Extension()) {
       ndk.signer = new NDKNip07Signer()
       const signerUser = await ndk.signer?.user()
-      console.log('signIn:signerUser', defaultRelays)
+      console.log('signIn:signerUser')
       if (signerUser) {
         const user = await getUser(signerUser.hexpubkey)
         if (user) {

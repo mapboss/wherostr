@@ -129,7 +129,7 @@ export const CreateEventForm = ({
     if (!map) return
     const handleClickMap = ({ lngLat }: maplibregl.MapMouseEvent) => {
       if (!enableLocation.current) return
-      setValue('geohash', Geohash.encode(lngLat.lat, lngLat.lng, 9))
+      setValue('geohash', Geohash.encode(lngLat.lat, lngLat.lng, 10))
       handleShowMap(false)
     }
     map.on('click', handleClickMap)
@@ -488,7 +488,7 @@ export const CreateEventForm = ({
                                       const geo = Geohash.encode(
                                         position.coords.latitude,
                                         position.coords.longitude,
-                                        9,
+                                        10,
                                       )
                                       resolve(geo)
                                     },

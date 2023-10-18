@@ -19,7 +19,7 @@ import { search } from '@/services/osm'
 import { useUser } from '@/hooks/useAccount'
 
 export interface FilterProps extends BaseTextFieldProps {
-  feedType?: 'following' | 'global'
+  feedType?: 'follows' | 'global'
   precision?: number
   className?: string
   onSearch?: (payload?: SearchPayload) => void
@@ -87,7 +87,11 @@ const Filter: FC<FilterProps> = ({
   )
 
   useEffect(() => {
-    if (querySearch) {
+    if (
+      querySearch &&
+      querySearch !== 'follows' &&
+      querySearch !== 'global'
+    ) {
       fetchSearch(querySearch)
     } else {
       onSearch?.({ q: '', places: [] })
@@ -154,7 +158,7 @@ const Filter: FC<FilterProps> = ({
                     }}
                   />
                 ))
-              ) : feedType === 'following' ? (
+              ) : feedType === 'follows' ? (
                 <Chip
                   label="Following"
                   deleteIcon={<ArrowDropDown />}

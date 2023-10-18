@@ -1,13 +1,14 @@
 'use client'
-import { AccountContext } from '@/contexts/AccountContext'
 import { Login, Logout } from '@mui/icons-material'
-import { Box, Button, IconButton } from '@mui/material'
-import { useCallback, useContext, useMemo } from 'react'
+import { Box, IconButton } from '@mui/material'
+import { useCallback, useMemo } from 'react'
 import ProfileChip from '@/components/ProfileChip'
 import classNames from 'classnames'
+import { useAccount } from '@/hooks/useAccount'
+import { LoadingButton } from '@mui/lab'
 
 const UserBar = ({ className }: { className?: string }) => {
-  const { user, signIn, signOut } = useContext(AccountContext)
+  const { user, signing, signIn, signOut } = useAccount()
   const signedIn = useMemo(() => {
     return !!user
   }, [user])
@@ -25,22 +26,24 @@ const UserBar = ({ className }: { className?: string }) => {
         className,
       )}
     >
-      {user?.hexpubkey ? (
+      {user?.pubkey ? (
         <Box className="flex items-center gap-2">
-          <ProfileChip hexpubkey={user?.hexpubkey} />
+          <ProfileChip hexpubkey={user?.pubkey} />
           <IconButton size="small" onClick={handleClickSignOut}>
             <Logout />
           </IconButton>
         </Box>
       ) : (
-        <Button
+        <LoadingButton
+          loading={signing}
           className="bg-gradient-primary"
           variant="contained"
           onClick={handleClickSignIn}
           startIcon={<Login />}
+          loadingPosition="start"
         >
           Login
-        </Button>
+        </LoadingButton>
       )}
     </Box>
   )

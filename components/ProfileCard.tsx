@@ -151,7 +151,7 @@ export const ProfileCardFull = ({
             </Typography>
           </Box>
         </Box>
-        {showAbout !== false && (
+        {showAbout !== false && user?.profile?.about ? (
           <Box className="py-3 text-contrast-secondary">
             <TextNote
               event={{
@@ -160,7 +160,7 @@ export const ProfileCardFull = ({
               textVariant="subtitle2"
             />
           </Box>
-        )}
+        ) : undefined}
       </Box>
     </Box>
   )

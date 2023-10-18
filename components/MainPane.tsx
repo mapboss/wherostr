@@ -65,7 +65,7 @@ const MainPane = () => {
   const feedType = useMemo(() => {
     if (user) {
       if (!q || q === 'follows') {
-        return 'following'
+        return 'follows'
       }
     }
     return 'global'
@@ -108,7 +108,7 @@ const MainPane = () => {
         : undefined
 
     const authors =
-      user && (!payload.q || payload.q === 'follows') && follows.length > 0
+      user && (!payload.q || payload.q === 'follows')
         ? follows.map((d) => d.hexpubkey)
         : undefined
 
