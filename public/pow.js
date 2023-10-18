@@ -65,9 +65,9 @@ async function sha256(message) {
 onmessage = async (e) => {
     try {
         const { id, event, target } = e.data || {}
-        console.log('minePow:1', { event, target })
+        // console.log('minePow:1', { event, target })
         const powEvent = await minePow(event, target)
-        console.log("minePow:powEvent", powEvent);
+        // console.log("minePow:powEvent", powEvent);
         postMessage({ id, event: powEvent });
     } catch (err) {
         console.error(err)

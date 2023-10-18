@@ -14,6 +14,7 @@ import Geohash from 'latlon-geohash'
 import { shortenUrl } from '@/utils/shortenUrl'
 import {
   EventBuilder,
+  EventExt,
   EventKind,
   NostrPrefix,
   PowWorker,
@@ -59,6 +60,9 @@ import { reverse } from '@/services/osm'
 import usePromise from 'react-use-promise'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useAccount'
+
+const powWorker =
+  typeof window?.Worker !== 'undefined' ? new PowWorker('./pow.js') : undefined
 
 export const CreateEventForm = ({
   type,
@@ -245,8 +249,8 @@ export const CreateEventForm = ({
               noteContent += `\nGoogle Maps | ${google.url}`
 
               await Promise.all([
-                duckduck.event.publish(relaySet),
-                google.event.publish(relaySet),
+                duckduck.event.publish(),
+                google.event.publish(),
               ])
             }
           }
@@ -265,20 +269,21 @@ export const CreateEventForm = ({
         await ev.publish(relaySet)
         setEventAction(undefined)
       } catch (err) {
+        console.log(err)
       } finally {
         setPosting(false)
       }
     },
     [
-      ndk,
       user,
-      relaySet,
-      positingOptions?.location,
-      relatedEvents,
-      setEventAction,
       type,
-      appendMapLink,
+      relatedEvents,
+      positingOptions?.location,
       powWorker,
+      ndk,
+      relaySet,
+      setEventAction,
+      appendMapLink,
     ],
   )
   const renderActionTypeIcon = useCallback(() => {

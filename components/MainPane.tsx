@@ -7,10 +7,16 @@ import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import {
+  Avatar,
   Box,
   Divider,
   Hidden,
   IconButton,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemSecondaryAction,
+  ListItemText,
   Paper,
   Tab,
   Tabs,
@@ -21,7 +27,7 @@ import {
 } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
-import { Draw } from '@mui/icons-material'
+import { Draw, Place, TravelExplore } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -53,7 +59,9 @@ const MainPane = () => {
   const showMap = searchParams.get('map') === '1'
   const q = searchParams.get('q')
   const [showComments, setShowComments] = useState(false)
-  // const [tabIndex, setTabIndex] = useState(0)
+  const [tabValue, setTabValue] = useState<
+    'places' | 'notes' | 'conversations'
+  >('notes')
   const feedType = useMemo(() => {
     if (user) {
       if (!q || q === 'follows') {
@@ -342,22 +350,69 @@ const MainPane = () => {
       <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
       <Tabs
         variant="fullWidth"
-        value={showComments ? 1 : 0}
-        onChange={(_, value) =>
-          value === 0 ? setShowComments(false) : setShowComments(true)
-        }
+        value={tabValue}
+        onChange={(_, value) => {
+          setShowComments(value === 'conversations')
+          setTabValue(value)
+        }}
       >
-        <Tab label="Notes" value={0} />
-        <Tab label="Conversations" value={1} />
+        {!!payload.places?.length ? (
+          <Tab label="Places" value="places" />
+        ) : undefined}
+        <Tab label="Notes" value="notes" />
+        <Tab label="Conversations" value="conversations" />
       </Tabs>
       <Divider />
-      <EventList
-        events={events}
-        onFetchMore={fetchMore}
-        newItems={newItems}
-        onShowNewItems={showNewItems}
-        showComments={showComments}
-      />
+      {tabValue !== 'places' ? (
+        <EventList
+          events={events}
+          onFetchMore={fetchMore}
+          newItems={newItems}
+          onShowNewItems={showNewItems}
+          showComments={showComments}
+        />
+      ) : (
+        <Box className="overflow-y-auto">
+          <List disablePadding>
+            {payload.places?.map((item) => {
+              return (
+                <ListItem key={item.place_id}>
+                  <ListItemAvatar>
+                    <Avatar>
+                      <Place />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={item.name}
+                    secondary={item.display_name}
+                  />
+                  <ListItemSecondaryAction>
+                    <IconButton
+                      onClick={() => {
+                        const [y1, y2, x1, x2] = item.boundingbox.map(
+                          (b: string) => Number(b),
+                        )
+                        const bounds: [number, number, number, number] = [
+                          x1,
+                          y1,
+                          x2,
+                          y2,
+                        ]
+                        map?.fitBounds(bounds, {
+                          maxZoom: 18,
+                          duration: 1000,
+                        })
+                      }}
+                    >
+                      <TravelExplore />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              )
+            })}
+          </List>
+        </Box>
+      )}
       {eventAction ? (
         <Box
           className={classNames(
