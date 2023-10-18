@@ -103,12 +103,12 @@ const MainPane = () => {
   const tagsFilter = useMemo(() => {
     if (signing) return
     const tags =
-      payload.q && payload.q !== 'follows' && payload.q !== 'global'
-        ? new Set(payload.q.split(/\s|,/).map((d) => d.trim().toLowerCase()))
+      q && q !== 'follows' && q !== 'global'
+        ? new Set(q.split(/\s|,/).map((d) => d.trim().toLowerCase()))
         : undefined
 
     const authors =
-      user && (!payload.q || payload.q === 'follows')
+      user && (!q || q === 'follows')
         ? follows.map((d) => d.hexpubkey)
         : undefined
 
@@ -119,7 +119,7 @@ const MainPane = () => {
       since: unixNow() - DAY,
       limit: 30,
     }
-  }, [signing, payload.q, user, follows])
+  }, [signing, q, user, follows])
 
   const [subGeoFilter] = useSubscribe(geohashFilter)
   const [subTagFilter, fetchMore, newItems, showNewItems] =

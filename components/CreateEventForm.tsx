@@ -87,7 +87,6 @@ export const CreateEventForm = ({
   const [uploading, setUploading] = useState(false)
   const [posting, setPosting] = useState(false)
   const [positingOptions, setPostingOptions] = useState<PostingOptionsValues>()
-  const powWorker = useMemo(() => new PowWorker('./pow.js'), [])
   const nostrLink = useMemo(() => {
     if (type !== EventActionType.Quote) return ''
     if (!relatedEvents[0]?.id) return ''
@@ -261,7 +260,7 @@ export const CreateEventForm = ({
           .processContent()
           .build()
 
-        const powEvent = await powWorker.minePow(nostrEvent, 15)
+        const powEvent = await powWorker?.minePow(nostrEvent, 15)
         // console.log('powEvent', powEvent)
         const ev = new NDKEvent(ndk, powEvent)
         // console.log('ev', ev)
@@ -279,7 +278,6 @@ export const CreateEventForm = ({
       type,
       relatedEvents,
       positingOptions?.location,
-      powWorker,
       ndk,
       relaySet,
       setEventAction,
