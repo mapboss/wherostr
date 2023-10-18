@@ -26,9 +26,9 @@ const UserBar = ({ className }: { className?: string }) => {
         className,
       )}
     >
-      {user?.pubkey ? (
+      {user?.hexpubkey ? (
         <Box className="flex items-center gap-2">
-          <ProfileChip hexpubkey={user?.pubkey} />
+          <ProfileChip hexpubkey={user?.hexpubkey} />
           <IconButton size="small" onClick={handleClickSignOut}>
             <Logout />
           </IconButton>

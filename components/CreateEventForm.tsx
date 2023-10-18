@@ -62,7 +62,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useAccount'
 
 const powWorker =
-  typeof window?.Worker !== 'undefined' ? new PowWorker('./pow.js') : undefined
+  typeof window !== 'undefined' ? new PowWorker('./pow.js') : undefined
 
 export const CreateEventForm = ({
   type,
