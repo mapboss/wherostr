@@ -178,13 +178,17 @@ const ShortTextNotePane = ({
           ).length > 0
         if (quotes && linkFound) {
           _quotes.push(item)
-        } else if (comments && !linkFound) {
+        } else if (
+          comments &&
+          !linkFound &&
+          item.getMatchingTags('e').at(-1)?.[1] === event.id
+        ) {
           _comments.push(item)
         }
       }
     })
     return [...repostEvents, ..._quotes, ..._comments].map((item) => (
-      <ShortTextNoteCard key={item.id} event={item} />
+      <ShortTextNoteCard key={item.id} event={item} depth={1} />
     ))
   }, [comments, event.id, quotes, relatedEvents])
 

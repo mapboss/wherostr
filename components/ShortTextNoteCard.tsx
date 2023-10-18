@@ -32,10 +32,12 @@ const ShortTextNoteCard = ({
   event,
   action = true,
   relatedNoteVariant = 'fraction',
+  depth = 0,
 }: {
   event: NDKEvent
   action?: boolean
   relatedNoteVariant?: 'full' | 'fraction' | 'link'
+  depth?: number
 }) => {
   const pathname = usePathname()
   const query = useSearchParams()
@@ -47,11 +49,11 @@ const ShortTextNoteCard = ({
     [event],
   )
   const fromNote = useMemo(() => {
-    if (event) {
+    if (event && depth === 0) {
       const thread = EventExt.extractThread(event as any)
       return thread?.root || thread?.replyTo
     }
-  }, [event])
+  }, [event, depth])
   const { setEventAction } = useContext(AppContext)
   const handleClickRootNote = useCallback(async () => {
     if (ndk && fromNote?.value) {
@@ -83,7 +85,7 @@ const ShortTextNoteCard = ({
             <Typography variant="caption">
               <TimeFromNow date={createdDate} />
             </Typography>
-            {fromNote && (
+            {depth === 0 && fromNote && (
               <Typography
                 className="cursor-pointer"
                 variant="caption"
@@ -93,12 +95,12 @@ const ShortTextNoteCard = ({
                 {event.kind === 6 ? (
                   <>
                     <Repeat className="mr-1" fontSize="small" />
-                    shared note
+                    reposted note
                   </>
                 ) : (
                   <>
                     <ArrowRightAlt className="mr-1" fontSize="small" />
-                    replied note
+                    commented note
                   </>
                 )}
               </Typography>
