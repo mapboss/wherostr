@@ -34,7 +34,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import UserBar from './UserBar'
 import classNames from 'classnames'
 import { DAY, unixNow } from '@/utils/time'
-import { useAccount, useFollowing, useUser } from '@/hooks/useAccount'
+import { useAccount, useFollowing } from '@/hooks/useAccount'
 import DrawerMenu from './DrawerMenu'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>

@@ -23,10 +23,10 @@ import { ProfileCard } from './ProfileCard'
 import { useAction } from '@/hooks/useApp'
 import { ProfileActionType } from '@/contexts/AppContext'
 
-export interface MenuButtonProps extends IconButtonProps {
+export interface MenuButtonProps {
   hexpubkey: string
 }
-const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, ...props }) => {
+const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey }) => {
   const { setProfileAction } = useAction()
   const { signOut } = useAccount()
   const [open, setOpen] = useState(false)
@@ -79,21 +79,38 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, ...props }) => {
         />
         {/* <ProfileChip hexpubkey={hexpubkey} onClick={closeDrawer} size="large" /> */}
         <List>
-          <ListItemButton LinkComponent={Link} href="/">
+          <ListItemButton
+            LinkComponent={Link}
+            href="/"
+            onClick={async () => {
+              closeDrawer()
+            }}
+          >
             <ListItemIcon>
               <NotesOutlined />
             </ListItemIcon>
             <ListItemText primary="Notes" />
           </ListItemButton>
 
-          <ListItemButton>
+          <ListItemButton
+            disabled
+            onClick={async () => {
+              closeDrawer()
+            }}
+          >
             <ListItemIcon>
               <ArticleOutlined />
             </ListItemIcon>
-            <ListItemText primary="Articles" />
+            <ListItemText primary="Articles (Coming soon)" />
           </ListItemButton>
 
-          <ListItemButton LinkComponent={Link} href="/live">
+          <ListItemButton
+            LinkComponent={Link}
+            href="/live"
+            onClick={async () => {
+              closeDrawer()
+            }}
+          >
             <ListItemIcon>
               <SensorsOutlined />
             </ListItemIcon>
