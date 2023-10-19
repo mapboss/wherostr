@@ -347,7 +347,7 @@ export const CreateEventForm = ({
     }),
     [handleUploadFile],
   )
-  const { getRootProps } = useDropzone(dropzoneOptions)
+  const { getRootProps, getInputProps } = useDropzone(dropzoneOptions)
 
   const handlePostingOptionsChange = useCallback<
     NonNullable<PostingOptionsProps['onChange']>
@@ -396,6 +396,7 @@ export const CreateEventForm = ({
         },
       })}
     >
+      <input {...getInputProps()} />
       <Box className="mt-3 grid gap-3 grid-cols-1">
         {type !== EventActionType.Repost && (
           <>

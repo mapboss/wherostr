@@ -42,7 +42,7 @@ export const PostingOptions: FC<PostingOptionsProps> = ({
     [onChange],
   )
 
-  const { getRootProps } = useDropzone({
+  const { getRootProps, getInputProps } = useDropzone({
     ...slotProps?.dropzone,
     accept: accept,
     noDrag: true,
@@ -57,6 +57,7 @@ export const PostingOptions: FC<PostingOptionsProps> = ({
           disabled,
         })}
       >
+        <input {...getInputProps()} />
         <AddPhotoAlternate className="opacity-70" />
       </IconButton>
       <IconButton

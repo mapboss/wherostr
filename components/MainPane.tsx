@@ -10,6 +10,7 @@ import {
   Avatar,
   Box,
   Divider,
+  Fab,
   Hidden,
   IconButton,
   List,
@@ -429,6 +430,17 @@ const MainPane = () => {
         <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-4 md:p-8 backdrop-blur z-50">
           <ProfileActionModal />
         </Box>
+      )}
+      {user?.hexpubkey && (
+        <Hidden mdUp>
+          <Fab
+            className="!absolute !bg-gradient-primary !z-40 bottom-4 right-4"
+            size="medium"
+            onClick={handleClickPost}
+          >
+            <Draw className="text-[white]" />
+          </Fab>
+        </Hidden>
       )}
     </Paper>
   )
