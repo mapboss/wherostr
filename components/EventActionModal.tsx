@@ -187,9 +187,9 @@ const ShortTextNotePane = ({
         }
       }
     })
-    return [...repostEvents, ..._quotes, ..._comments].map((item) => (
-      <ShortTextNoteCard key={item.id} event={item} depth={1} />
-    ))
+    return [...repostEvents, ..._quotes, ..._comments]
+      .sort((a, b) => a.created_at! - b.created_at!)
+      .map((item) => <ShortTextNoteCard key={item.id} event={item} depth={1} />)
   }, [comments, event.id, quotes, relatedEvents])
 
   return (

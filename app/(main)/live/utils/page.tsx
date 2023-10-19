@@ -1,7 +1,5 @@
 'use client'
 import UserBar from '@/components/UserBar'
-import { AccountContext } from '@/contexts/AccountContext'
-import { NostrContext } from '@/contexts/NostrContext'
 import { useUser } from '@/hooks/useAccount'
 import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
 import { useSubscribe } from '@/hooks/useSubscribe'
@@ -19,7 +17,6 @@ import {
   FormEvent,
   FormEventHandler,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,

@@ -40,7 +40,7 @@ const ProfileActionModal = () => {
       <Paper className="relative w-full overflow-y-auto !rounded-2xl" ref={ref}>
         <ProfileCardFull hexpubkey={profileAction?.hexpubkey} />
         <Divider />
-        <EventList events={events} onFetchMore={fetchMore} parentRef={ref} />
+        <EventList events={events} onFetchMore={fetchMore} showComments={true} parentRef={ref} />
       </Paper>
     </Box>
   )

@@ -42,17 +42,15 @@ export const useSubscribe = (
 
   useEffect(() => {
     if (!ndk) return
-    if (!filter) return
-    if (!relaySet) return
-    // if (!filter || !relaySet) {
-    //   setNewItems([])
-    //   setItems([])
-    //   return setSub((prev) => {
-    //     prev?.removeAllListeners()
-    //     prev?.stop()
-    //     return undefined
-    //   })
-    // }
+    if (!filter || !relaySet) {
+      setNewItems([])
+      setItems([])
+      return setSub((prev) => {
+        prev?.removeAllListeners()
+        prev?.stop()
+        return undefined
+      })
+    }
     console.log('sub:init', relaySet)
     setNewItems([])
     setItems([])

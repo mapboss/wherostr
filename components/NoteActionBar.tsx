@@ -80,7 +80,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         ).length > 0
       ) {
         quotes.push(item)
-      } else if (item.getMatchingTags('e').at(-1)?.[1] === event.id) {
+      } else if (item.getMatchingTags('e').some((d) => d?.[1] === event.id)) {
         comments.push(item)
       }
     })
