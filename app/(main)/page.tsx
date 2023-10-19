@@ -2,15 +2,19 @@
 import MainPane from '@/components/MainPane'
 import { MapView } from '@/components/MapView'
 import { MapContextProvider } from '@/contexts/MapContext'
-import { Box, useMediaQuery, useTheme } from '@mui/material'
+import { Box, Fab, Hidden, useMediaQuery, useTheme } from '@mui/material'
 import classNames from 'classnames'
 import { RedirectType } from 'next/dist/client/components/redirect'
 import { redirect, useRouter, useSearchParams } from 'next/navigation'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
 import Geohash from 'latlon-geohash'
+import { Draw } from '@mui/icons-material'
+import { useAction } from '@/hooks/useApp'
+import { EventActionType } from '@/contexts/AppContext'
 
 export default function Page() {
+  const { setEventAction } = useAction()
   const theme = useTheme()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -25,6 +29,12 @@ export default function Page() {
       return nip19.decode(naddr as string)
     } catch (err) {}
   }, [naddr])
+
+  const handleClickPost = useCallback(() => {
+    setEventAction({
+      type: EventActionType.Create,
+    })
+  }, [setEventAction])
 
   if (!naddrDesc && naddr) {
     try {
@@ -59,6 +69,15 @@ export default function Page() {
           })}
         />
         <MainPane />
+        <Hidden mdUp>
+          <Fab
+            className="!absolute !bg-gradient-primary !z-40 bottom-4 right-4"
+            size="medium"
+            onClick={handleClickPost}
+          >
+            <Draw className="text-[white]" />
+          </Fab>
+        </Hidden>
       </Box>
     </MapContextProvider>
   )
