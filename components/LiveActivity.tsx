@@ -3,7 +3,7 @@ import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk'
 import { Box, Chip, Hidden, Paper, Toolbar, Typography } from '@mui/material'
 import { LiveVideoPlayer } from './LiveVideoPlayer'
 import { LiveChat } from './LiveChat'
-import { useContext, useMemo } from 'react'
+import { useCallback, useContext, useMemo } from 'react'
 import ProfileChip from './ProfileChip'
 import { Bolt, Share, SubscriptionsSharp } from '@mui/icons-material'
 import { LiveStreamTime } from './LiveStreamTime'
@@ -11,6 +11,7 @@ import ResponsiveButton from './ResponsiveButton'
 import { AccountContext } from '@/contexts/AccountContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import StatusBadge from './StatusBadge'
+import { AppContext, EventActionType } from '@/contexts/AppContext'
 
 export interface LiveActivityItem {
   id: string
@@ -35,6 +36,7 @@ const LiveActivity = ({
   naddr: string
   event?: NDKEvent
 }) => {
+  const { setEventAction } = useContext(AppContext)
   const { user, follows } = useContext(AccountContext)
   const liveItem = useMemo<LiveActivityItem>(() => {
     const id = event?.tagValue('d') || ''
@@ -68,7 +70,16 @@ const LiveActivity = ({
 
   const autoplay = useMemo(() => liveItem.status === 'live', [liveItem.status])
   const author = useUserProfile(liveItem.pubkey)
-
+  const handleClickAction = useCallback(
+    (type: EventActionType, options?: any) => () => {
+      setEventAction({
+        type,
+        event,
+        options,
+      })
+    },
+    [event, setEventAction],
+  )
   return (
     <Box className="grid gap-2 lg:gap-6 flex-1 overflow-hidden lg:mt-16 grid-cols-1 lg:grid-cols-[auto_440px]">
       <Box className="flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 gap-2">
@@ -103,6 +114,7 @@ const LiveActivity = ({
                 variant="outlined"
                 size="small"
                 startIcon={<Share />}
+                onClick={handleClickAction(EventActionType.Quote)}
               >
                 Share
               </ResponsiveButton>
@@ -126,6 +138,7 @@ const LiveActivity = ({
                 variant="contained"
                 size="small"
                 startIcon={<Bolt />}
+                onClick={handleClickAction(EventActionType.Zap)}
               >
                 Zap
               </ResponsiveButton>

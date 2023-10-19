@@ -14,7 +14,6 @@ import {
 import { useCallback, useContext, useMemo } from 'react'
 import {
   ArrowRightAlt,
-  MoreVert,
   Repeat,
   TravelExploreOutlined,
 } from '@mui/icons-material'
@@ -107,8 +106,7 @@ const ShortTextNoteCard = ({
             )}
           </Box>
         )}
-        <MenuButton />
-        {action && lnglat ? (
+        {action && !!lnglat && (
           <IconButton
             size="small"
             onClick={() => {
@@ -124,7 +122,8 @@ const ShortTextNoteCard = ({
           >
             <TravelExploreOutlined className="text-contrast-secondary" />
           </IconButton>
-        ) : null}
+        )}
+        <MenuButton />
       </Box>
       {event.kind === NDKKind.Text ? (
         <Box className="flex">

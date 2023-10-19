@@ -62,7 +62,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useAccount'
 
 const powWorker =
-  typeof window !== 'undefined' ? new PowWorker('./pow.js') : undefined
+  typeof window !== 'undefined' ? new PowWorker('/pow.js') : undefined
 
 export const CreateEventForm = ({
   type,
@@ -90,13 +90,27 @@ export const CreateEventForm = ({
   const nostrLink = useMemo(() => {
     if (type !== EventActionType.Quote) return ''
     if (!relatedEvents[0]?.id) return ''
-    const link = createNostrLink(
-      NostrPrefix.Event,
-      relatedEvents?.[0].id,
-      relatedEvents?.[0]?.relay ? [relatedEvents[0].relay.url] : undefined,
-      relatedEvents?.[0].kind,
-      relatedEvents?.[0].pubkey,
-    ).encode()
+    let link
+    if (relatedEvents?.[0].kind === 30311) {
+      const dTag = relatedEvents?.[0].tagValue('d')
+      if (dTag) {
+        link = createNostrLink(
+          NostrPrefix.Address,
+          dTag,
+          relatedEvents?.[0]?.relay ? [relatedEvents[0].relay.url] : undefined,
+          relatedEvents?.[0].kind,
+          relatedEvents?.[0].pubkey,
+        ).encode()
+      }
+    } else {
+      link = createNostrLink(
+        NostrPrefix.Event,
+        relatedEvents?.[0].id,
+        relatedEvents?.[0]?.relay ? [relatedEvents[0].relay.url] : undefined,
+        relatedEvents?.[0].kind,
+        relatedEvents?.[0].pubkey,
+      ).encode()
+    }
     return link ? `nostr:${link}` : ''
   }, [type, relatedEvents])
 
@@ -570,7 +584,7 @@ export const CreateEventForm = ({
         {previewEvent?.content && (
           <>
             <Typography color="text.secondary" className="pl-2">
-              Preview:
+              Preview
             </Typography>
             <Box className="rounded-2xl border border-[rgba(255,255,255,0.2)] p-2 pointer-events-none">
               <TextNote event={previewEvent} relatedNoteVariant="full" />
