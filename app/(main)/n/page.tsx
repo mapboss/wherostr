@@ -1,4 +1,5 @@
 'use client'
+import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import { NostrContext } from '@/contexts/NostrContext'
 import { Box, Typography } from '@mui/material'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
@@ -26,18 +27,23 @@ export default function Page() {
     const ev = await ndk.fetchEvent(naddr.toString(), {
       cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
     })
-    return ev?.toNostrEvent()
+    return ev
   }, [ndk, naddrDesc, naddr])
 
   if (naddrDesc?.type !== 'note') {
     redirect(`/${naddr}`, RedirectType.replace)
   }
 
+  if (!event) return
+
   return (
     <Box m={4}>
-      <Typography component="pre" variant="caption">
-        {JSON.stringify(event || {}, null, 4)}
-      </Typography>
+      <ShortTextNoteCard
+        event={event}
+        action={true}
+        depth={10}
+        relatedNoteVariant="full"
+      />
     </Box>
   )
 }

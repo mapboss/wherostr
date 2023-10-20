@@ -170,10 +170,10 @@ const Filter: FC<FilterProps> = ({
                   label="Global"
                   deleteIcon={<ArrowDropDown />}
                   onClick={
-                    user ? () => router.replace(`${pathname}`) : undefined
+                    user ? () => router.replace(`${pathname}?q=follows`) : undefined
                   }
                   onDelete={
-                    user ? () => router.replace(`${pathname}`) : undefined
+                    user ? () => router.replace(`${pathname}?q=follows`) : undefined
                   }
                 />
               )}

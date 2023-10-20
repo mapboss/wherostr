@@ -172,11 +172,7 @@ const MainPane = () => {
       const feat = ev?.features?.[0]?.properties as NostrEvent
       const event = events.find((ev) => ev.id === feat.id)
       if (!event) return
-      if (q) {
-        router.replace(`${pathname}?q=${q}`)
-      } else {
-        router.replace(pathname)
-      }
+      router.replace(`${pathname}?q=${q || ''}`)
       setEventAction({
         type: EventActionType.View,
         event,
