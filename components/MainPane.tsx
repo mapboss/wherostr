@@ -25,6 +25,7 @@ import {
   Tooltip,
   useMediaQuery,
   useTheme,
+  Zoom,
 } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
@@ -427,17 +428,15 @@ const MainPane = () => {
           <ProfileActionModal />
         </Box>
       )}
-      {user?.hexpubkey && (
-        <Hidden mdUp>
-          <Fab
-            className="!absolute !bg-gradient-primary !z-40 bottom-4 right-4"
-            size="medium"
-            onClick={handleClickPost}
-          >
-            <Draw className="text-[white]" />
-          </Fab>
-        </Hidden>
-      )}
+      <Zoom in={showMap && user?.hexpubkey}>
+        <Fab
+          className="!fixed !bg-gradient-primary !z-40 bottom-4 right-4"
+          size="medium"
+          onClick={handleClickPost}
+        >
+          <Draw className="text-[white]" />
+        </Fab>
+      </Zoom>
     </Paper>
   )
 }
