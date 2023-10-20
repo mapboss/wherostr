@@ -47,7 +47,7 @@ export default function Page() {
         : naddrDesc.data.pubkey
     const user = ndk.getUser({ hexpubkey: pubkey })
     await user.fetchProfile({
-      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
     })
     return user
   }, [ndk, naddrDesc, naddr])

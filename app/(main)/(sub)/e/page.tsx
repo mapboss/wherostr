@@ -22,7 +22,7 @@ export default function Page() {
     if (!naddr || !naddrDesc || !ndk) return
     if (naddrDesc.type !== 'nevent') return
     const ev = await ndk.fetchEvent(naddr.toString(), {
-      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
       closeOnEose: true,
     })
     return ev?.toNostrEvent()

@@ -37,7 +37,7 @@ export const defaultRelays = (process.env.NEXT_PUBLIC_RELAY_URLS || '')
 const dexieAdapter = new NDKCacheAdapterDexie({ dbName: 'wherostr-cache' })
 const ndk = new NDK({
   cacheAdapter: dexieAdapter as any,
-  explicitRelayUrls: defaultRelays,
+  // explicitRelayUrls: defaultRelays,
 })
 
 export const NostrContext = createContext<Nostr>({
@@ -108,7 +108,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
       }
       try {
         const profile = await user.fetchProfile({
-          cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+          cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
         })
         if (profile) {
           if (
@@ -137,7 +137,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
     async (id: string) => {
       return ndk.fetchEvent(
         id,
-        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+        { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
         relaySet,
       )
     },

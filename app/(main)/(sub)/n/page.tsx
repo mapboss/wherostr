@@ -25,7 +25,7 @@ export default function Page() {
     if (!naddr || !naddrDesc || !ndk) return
     if (naddrDesc.type !== 'note') return
     const ev = await ndk.fetchEvent(naddr.toString(), {
-      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
     })
     return ev
   }, [ndk, naddrDesc, naddr])

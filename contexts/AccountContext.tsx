@@ -48,7 +48,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const updateFollows = useCallback(async (user: NDKUser) => {
     const follows = await user.follows({
-      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
     })
     setFollows(Array.from(follows))
   }, [])

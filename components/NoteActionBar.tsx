@@ -15,17 +15,18 @@ import {
   NDKSubscriptionCacheUsage,
   zapInvoiceFromEvent,
 } from '@nostr-dev-kit/ndk'
-import { NostrContext } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
 import numeral from 'numeral'
 import { tryParseNostrLink, transformText } from '@snort/system'
-import { AccountContext } from '@/contexts/AccountContext'
+import { useNDK, useRelaySet } from '@/hooks/useNostr'
+import { useUser } from '@/hooks/useAccount'
 
 const amountFormat = '0,0.[0]a'
 
 const NoteActionBar = ({ event }: { event: NDKEvent }) => {
-  const { ndk, relaySet } = useContext(NostrContext)
-  const { user } = useContext(AccountContext)
+  const ndk = useNDK()
+  const relaySet = useRelaySet()
+  const user = useUser()
   const { setEventAction } = useContext(AppContext)
   const [reacted, setReacted] = useState<'+' | '-' | undefined>()
   const [{ liked, disliked }, setReaction] = useState({
@@ -40,7 +41,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         kinds: [NDKKind.Repost, NDKKind.Text, NDKKind.Zap, NDKKind.Reaction],
         '#e': [event.id],
       },
-      { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+      { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
       relaySet,
     )
 
@@ -136,6 +137,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         liked: liked + (reaction === '+' ? 1 : 0),
         disliked: disliked + (reaction === '-' ? 1 : 0),
       })
+      // console.log('relaySet', relaySet)
       await newEvent.publish(relaySet)
     },
     [event, ndk, liked, disliked, relaySet],

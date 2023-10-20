@@ -25,7 +25,7 @@ export const useEvent = (
     () =>
       ndk.fetchEvent(
         idOrFilter,
-        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+        { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
         relaySet,
       ),
     [idOrFilter, relaySet],
@@ -47,7 +47,7 @@ export const useEvents = (
     async () =>
       (await ndk.fetchEvents(
         filter,
-        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+        { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
         relaySet,
       )) || new Set<NDKEvent>(),
     [filter, relaySet],

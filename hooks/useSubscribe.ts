@@ -60,7 +60,7 @@ export const useSubscribe = (
         filter,
         {
           closeOnEose: false,
-          cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+          cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
           subId: nanoid(8),
         },
         relaySet,
@@ -136,7 +136,7 @@ export const useSubscribe = (
     const { since, ...original } = filter
     const events = await ndk.fetchEvents(
       { ...original, until: oldestEvent.created_at, limit: 30 },
-      { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+      { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
       relaySet,
     )
     const items = sortItems(events)
