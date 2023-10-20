@@ -1,7 +1,7 @@
 'use client'
-import ShortTextNoteCard from '@/components/ShortTextNoteCard'
+import { ShortTextNotePane } from '@/components/EventActionModal'
 import { NostrContext } from '@/contexts/NostrContext'
-import { Box, Typography } from '@mui/material'
+import { Box, Paper } from '@mui/material'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { RedirectType } from 'next/dist/client/components/redirect'
 import { redirect, useParams, useSearchParams } from 'next/navigation'
@@ -38,12 +38,9 @@ export default function Page() {
 
   return (
     <Box m={4}>
-      <ShortTextNoteCard
-        event={event}
-        action={true}
-        depth={10}
-        relatedNoteVariant="full"
-      />
+      <Paper className="relative w-full !rounded-2xl max-w-2xl mx-auto overflow-hidden">
+        <ShortTextNotePane event={event} comments />
+      </Paper>
     </Box>
   )
 }

@@ -134,16 +134,16 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
   )
 }
 
-const ShortTextNotePane = ({
+export const ShortTextNotePane = ({
   event,
   reposts = false,
   quotes = false,
   comments = false,
 }: {
   event: NDKEvent
-  reposts: boolean
-  quotes: boolean
-  comments: boolean
+  reposts?: boolean
+  quotes?: boolean
+  comments?: boolean
 }) => {
   const filter = useMemo(() => {
     const kinds: NDKKind[] = []
