@@ -74,11 +74,29 @@ const ShortTextNoteCard = ({
     () => (event.kind === NDKKind.Repost ? event.tagValue('e') : undefined),
     [event],
   )
+  const hexpubkey = useMemo(() => {
+    if (event.kind === 30311) {
+      let hostPubkey
+      const pTags = event.getMatchingTags('p')
+      if (pTags.length) {
+        hostPubkey = pTags[0][1]
+        for (const item of pTags) {
+          if (item[3]?.toLowerCase() === 'host') {
+            hostPubkey = item[1]
+            break
+          }
+        }
+      }
+      return hostPubkey || event.pubkey
+    } else {
+      return event.pubkey
+    }
+  }, [event])
 
   return (
     <Card className="!rounded-none">
       <Box className="px-4 pt-3 flex items-center gap-2 text-contrast-secondary">
-        <ProfileChip hexpubkey={event.pubkey} />
+        <ProfileChip hexpubkey={hexpubkey} />
         {createdDate && (
           <Box className="grow flex flex-col items-end shrink-0">
             <Typography variant="caption">
