@@ -129,9 +129,7 @@ export const CreateEventForm = ({
 
   const handleShowMap = (show: boolean) => {
     let querystring = []
-    if (q) {
-      querystring.push('q=' + q)
-    }
+    querystring.push('q=' + q || '')
     if (show) {
       querystring.push('map=1')
     }
