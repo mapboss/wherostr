@@ -51,9 +51,9 @@ export const NostrContext = createContext<Nostr>({
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [relaySet, setRelaySet] = useState<NDKRelaySet>()
 
-  // useEffect(() => {
-  //   ndk.connect()
-  // }, [])
+  useEffect(() => {
+    ndk.connect()
+  }, [])
 
   const updateRelaySet = useCallback(async (user?: NDKUser) => {
     ndk.explicitRelayUrls?.map((d) => new NDKRelay(d).disconnect())
