@@ -515,7 +515,7 @@ export const CreateEventForm = ({
                               setLocating(false)
                             }}
                           />
-                          <Tooltip title="Coming soon">
+                          {/* <Tooltip title="Coming soon">
                             <Chip
                               variant="outlined"
                               disabled={disabled}
@@ -523,7 +523,7 @@ export const CreateEventForm = ({
                               icon={<ImageSearch />}
                               onClick={() => {}}
                             />
-                          </Tooltip>
+                          </Tooltip> */}
                           <Chip
                             disabled={disabled}
                             label="Choose from Map"

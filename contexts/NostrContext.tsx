@@ -37,7 +37,7 @@ export const defaultRelays = (process.env.NEXT_PUBLIC_RELAY_URLS || '')
 const dexieAdapter = new NDKCacheAdapterDexie({ dbName: 'wherostr-cache' })
 const ndk = new NDK({
   cacheAdapter: dexieAdapter as any,
-  // explicitRelayUrls: defaultRelays,
+  explicitRelayUrls: defaultRelays,
 })
 
 export const NostrContext = createContext<Nostr>({

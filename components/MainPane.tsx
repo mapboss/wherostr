@@ -428,7 +428,7 @@ const MainPane = () => {
           <ProfileActionModal />
         </Box>
       )}
-      <Zoom in={showMap && user?.hexpubkey}>
+      <Zoom in={!showMap && mdDown && !!user?.hexpubkey}>
         <Fab
           className="!fixed !bg-gradient-primary !z-40 bottom-4 right-4"
           size="medium"

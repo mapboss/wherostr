@@ -30,7 +30,7 @@ const ProfileChip = ({
   const userLeft = useUserProfile(
     typeof hexpubkey === 'string' ? hexpubkey : hexpubkey?.[0],
   )
-  const userRight = useUserProfile(hexpubkey?.[1])
+  // const userRight = useUserProfile(hexpubkey?.[1])
   const { setProfileAction } = useContext(AppContext)
   const displayName = useMemo(
     () =>
@@ -41,15 +41,15 @@ const ProfileChip = ({
     [userLeft],
   )
   const handleClickProfile = useCallback(() => {
-    if (!userLeft?.hexpubkey) return
-    if (onClick && onClick(userLeft?.hexpubkey) === false) {
+    if (!userLeft?.pubkey) return
+    if (onClick && onClick(userLeft?.pubkey) === false) {
       return
     }
     setProfileAction({
       type: ProfileActionType.View,
-      hexpubkey: userLeft?.hexpubkey,
+      hexpubkey: userLeft?.pubkey,
     })
-  }, [userLeft, onClick, setProfileAction])
+  }, [userLeft?.pubkey, onClick, setProfileAction])
 
   return (
     <Box

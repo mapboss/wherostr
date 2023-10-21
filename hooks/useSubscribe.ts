@@ -61,7 +61,6 @@ export const useSubscribe = (
         {
           closeOnEose: false,
           cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
-          subId: nanoid(8),
         },
         relaySet,
         false,
