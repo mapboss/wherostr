@@ -41,15 +41,15 @@ const ProfileChip = ({
     [userLeft],
   )
   const handleClickProfile = useCallback(() => {
-    if (!userLeft?.pubkey) return
-    if (onClick && onClick(userLeft?.pubkey) === false) {
+    if (!userLeft?.hexpubkey) return
+    if (onClick && onClick(userLeft?.hexpubkey) === false) {
       return
     }
     setProfileAction({
       type: ProfileActionType.View,
-      hexpubkey: userLeft?.pubkey,
+      hexpubkey: userLeft?.hexpubkey,
     })
-  }, [userLeft?.pubkey, onClick, setProfileAction])
+  }, [userLeft?.hexpubkey, onClick, setProfileAction])
 
   return (
     <Box
