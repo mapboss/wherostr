@@ -51,15 +51,16 @@ export const NostrContext = createContext<Nostr>({
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [relaySet, setRelaySet] = useState<NDKRelaySet>()
 
-  useEffect(() => {
-    ndk.connect()
-  }, [])
+  // useEffect(() => {
+  //   ndk.connect()
+  // }, [])
 
   const updateRelaySet = useCallback(async (user?: NDKUser) => {
     ndk.explicitRelayUrls?.map((d) => new NDKRelay(d).disconnect())
     if (user) {
       const relayList = await user.relayList()
       if (relayList?.readRelayUrls.length) {
+        ndk.explicitRelayUrls = relayList.readRelayUrls
         const relays = await Promise.all(
           relayList.readRelayUrls.map(async (d) => {
             const relay = new NDKRelay(d)
@@ -67,6 +68,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
             return relay
           }),
         )
+        await ndk.connect()
         setRelaySet((prev) => {
           // prev?.relays.forEach((relay) => relay.disconnect())
           return new NDKRelaySet(new Set(relays), ndk)
@@ -74,13 +76,15 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
         return
       }
     }
+    ndk.explicitRelayUrls = defaultRelays
     const relays = await Promise.all(
       defaultRelays.map(async (d) => {
         const relay = new NDKRelay(d)
-        await relay.connect()
+        // await relay.connect()
         return relay
       }),
     )
+    await ndk.connect()
     setRelaySet((prev) => {
       // prev?.relays.forEach((relay) => relay.disconnect())
       return new NDKRelaySet(new Set(relays), ndk)

@@ -22,13 +22,11 @@ export const useUserProfile = (hexpubkey?: string) => {
 
   const fetchProfile = useCallback(async (user: NDKUser) => {
     try {
-      console.log('user', user.npub)
       const profile = await user.fetchProfile({
         cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
       })
       return profile
     } catch (err) {
-      console.log('err', err)
       return new Promise<NDKUserProfile | null>((resolve) => {
         setTimeout(() => {
           fetchProfile(user).then((d) => resolve(d))
@@ -58,13 +56,12 @@ export const useUserProfile = (hexpubkey?: string) => {
     }
     setUser(user)
     fetchProfile(user).then(async (profile) => {
-      console.log('profile', { npub: user.npub, profile })
       if (!profile) return
 
       setUser((prev) => {
         const d = {
           ...user,
-          pubkey: user.hexpubkey,
+          hexpubkey: user.hexpubkey,
           profile: profile,
         } as NDKUser
         return d
