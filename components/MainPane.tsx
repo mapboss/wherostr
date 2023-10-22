@@ -59,7 +59,7 @@ const MainPane = () => {
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const showMap = searchParams.get('map') === '1'
-  const q = searchParams.get('q')
+  const q = useMemo(() => searchParams.get('q') || '', [searchParams])
   const [showComments, setShowComments] = useState(false)
   const [tabValue, setTabValue] = useState<
     'places' | 'notes' | 'conversations'

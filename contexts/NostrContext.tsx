@@ -141,7 +141,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
     async (id: string) => {
       return ndk.fetchEvent(
         id,
-        { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
+        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
         relaySet,
       )
     },

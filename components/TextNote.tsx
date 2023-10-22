@@ -44,6 +44,7 @@ import { useEvent } from '@/hooks/useEvent'
 import { useStreamRelaySet } from '@/hooks/useNostr'
 import StatusBadge from './StatusBadge'
 import ReactTimeago from 'react-timeago'
+import { nip19 } from 'nostr-tools'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
@@ -66,7 +67,7 @@ export const UserMentionLink = ({ id }: { id: string }) => {
     })
   }, [setProfileAction, user?.hexpubkey])
 
-  return (
+  return displayName ? (
     <Link
       className="cursor-pointer"
       component="a"
@@ -76,6 +77,8 @@ export const UserMentionLink = ({ id }: { id: string }) => {
     >
       @{displayName}
     </Link>
+  ) : (
+    id
   )
 }
 
@@ -290,14 +293,16 @@ const renderChunk = (
       const { protocol } = new URL(content)
       if (protocol === 'nostr:' || protocol === 'web+nostr:') {
         const nostrLink = tryParseNostrLink(content)
+        // const nostrLink2 = nip19.decode(content)
+        // console.log('nostrLink2', nostrLink2)
         const naddr = nostrLink?.encode() || ''
-        if (!naddr) {
-          return (
-            <Typography component="span" color="error">
-              [invalid {nostrLink?.type}]
-            </Typography>
-          )
-        }
+        // if (!naddr) {
+        //   return (
+        //     <Typography component="span" color="error">
+        //       [invalid {nostrLink?.type}]
+        //     </Typography>
+        //   )
+        // }
         switch (nostrLink?.type) {
           case NostrPrefix.PublicKey:
           case NostrPrefix.Profile: {
