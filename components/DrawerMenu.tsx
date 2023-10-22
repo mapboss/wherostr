@@ -9,7 +9,6 @@ import {
 import {
   Box,
   Drawer,
-  IconButtonProps,
   List,
   ListItemButton,
   ListItemIcon,

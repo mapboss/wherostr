@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { useCallback, useContext, useMemo } from 'react'
+import { useCallback, useContext, useMemo, useState } from 'react'
 import {
   Close,
   Comment,
@@ -28,21 +28,28 @@ import numeral from 'numeral'
 import { requestProvider } from 'webln'
 import { useEvents } from '@/hooks/useEvent'
 import { CreateEventForm } from './CreateEventForm'
+import { LoadingButton } from '@mui/lab'
 
 const amountFormat = '0,0.[0]a'
 
 const ZapEventForm = ({ event }: { event: NDKEvent }) => {
   const { setEventAction } = useContext(AppContext)
   const { register, handleSubmit, setValue, watch } = useForm()
+  const [loading, setLoading] = useState(false)
   const _amountValue = watch('amount')
   const _handleSubmit = useCallback(
     async (data: any) => {
-      const { amount, comment } = data
-      const pr = await event.zap(amount * 1000, comment || undefined)
-      if (pr) {
-        await (await requestProvider()).sendPayment(pr)
-        alert('Zapped')
-        setEventAction(undefined)
+      try {
+        setLoading(true)
+        const { amount, comment } = data
+        const pr = await event.zap(amount * 1000, comment || undefined)
+        if (pr) {
+          await (await requestProvider()).sendPayment(pr)
+          alert('Zapped')
+          setEventAction(undefined)
+        }
+      } finally {
+        setLoading(false)
       }
     },
     [event, setEventAction],
@@ -79,6 +86,7 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
           </Box>
         </Box>
         <TextField
+          disabled={loading}
           placeholder="Comment"
           variant="outlined"
           fullWidth
@@ -87,6 +95,7 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
         <Box className="flex gap-2 flex-wrap justify-center">
           {amountOptions.map((amount, index) => (
             <Button
+              disabled={loading}
               key={index}
               color="secondary"
               variant="outlined"
@@ -98,6 +107,7 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
           ))}
         </Box>
         <TextField
+          disabled={loading}
           placeholder="Amount"
           variant="outlined"
           type="number"
@@ -121,13 +131,15 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
           })}
         />
         <Box className="flex justify-end">
-          <Button
+          <LoadingButton
+            loading={loading}
             variant="contained"
             type="submit"
+            loadingPosition="start"
             startIcon={<ElectricBolt />}
           >
             {`Zap ${amountValue} sats`}
-          </Button>
+          </LoadingButton>
         </Box>
       </Box>
     </form>
@@ -189,7 +201,9 @@ export const ShortTextNotePane = ({
     })
     return [...repostEvents, ..._quotes, ..._comments]
       .sort((a, b) => a.created_at! - b.created_at!)
-      .map((item) => <ShortTextNoteCard key={item.id} event={item} depth={1} />)
+      .map((item) => {
+        return <ShortTextNoteCard key={item.id} event={item} depth={1} />
+      })
   }, [comments, event.id, quotes, relatedEvents])
 
   return (
