@@ -324,7 +324,7 @@ const MainPane = () => {
         },
       )}
     >
-      <Toolbar className="gap-2 items-center !px-4 !min-h-[64px]">
+      <Toolbar className="gap-3 items-center !px-3 !min-h-[64px]">
         {user?.hexpubkey ? (
           <DrawerMenu hexpubkey={user.hexpubkey} />
         ) : (
@@ -414,7 +414,7 @@ const MainPane = () => {
       {eventAction ? (
         <Box
           className={classNames(
-            'fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-4 md:p-8 backdrop-blur z-50',
+            'fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-3 md:p-6 backdrop-blur z-50',
             {
               hidden: showMap && mdDown,
             },
@@ -424,13 +424,13 @@ const MainPane = () => {
         </Box>
       ) : null}
       {profileAction && (
-        <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-4 md:p-8 backdrop-blur z-50">
+        <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-3 md:p-6 backdrop-blur z-50">
           <ProfileActionModal />
         </Box>
       )}
       <Zoom in={!showMap && mdDown && !!user?.hexpubkey}>
         <Fab
-          className="!fixed !bg-gradient-primary !z-40 bottom-4 right-4"
+          className="!fixed !bg-gradient-primary !z-40 bottom-6 right-6"
           size="medium"
           onClick={handleClickPost}
         >

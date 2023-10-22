@@ -70,7 +70,7 @@ const ProfileChip = ({
         />
       </Box>
       {showName && (
-        <Box className="flex flex-col pl-2 overflow-hidden">
+        <Box className="flex flex-col pl-3 overflow-hidden">
           <Box className="flex">
             <Typography
               className="overflow-hidden whitespace-nowrap text-ellipsis"

@@ -32,11 +32,15 @@ const ShortTextNoteCard = ({
   action = true,
   relatedNoteVariant = 'fraction',
   depth = 0,
+  indent = true,
+  indentLine,
 }: {
   event: NDKEvent
   action?: boolean
   relatedNoteVariant?: 'full' | 'fraction' | 'link'
   depth?: number
+  indent?: boolean
+  indentLine?: boolean
 }) => {
   const pathname = usePathname()
   const query = useSearchParams()
@@ -95,7 +99,7 @@ const ShortTextNoteCard = ({
 
   return (
     <Card className="!rounded-none">
-      <Box className="px-4 pt-3 flex items-center gap-2 text-contrast-secondary">
+      <Box className="px-3 pt-3 flex items-center gap-2 text-contrast-secondary">
         <ProfileChip hexpubkey={hexpubkey} />
         {createdDate && (
           <Box className="grow flex flex-col items-end shrink-0">
@@ -143,29 +147,34 @@ const ShortTextNoteCard = ({
         )}
         <MenuButton />
       </Box>
-      {event.kind === NDKKind.Text ? (
-        <Box className="flex">
-          <CardContent className="flex-1 !pt-3 !pb-0 overflow-hidden">
+      <Box className="flex">
+        <div className={`flex justify-center ${indent ? 'w-16' : 'w-3'}`}>
+          {indentLine && (
+            <div className="h-full w-[2px] bg-[rgba(255,255,255,0.12)]" />
+          )}
+        </div>
+        {event.kind === NDKKind.Text ? (
+          <CardContent className="flex-1 !pl-0 !pr-3 !py-3 overflow-hidden">
             <TextNote event={event} relatedNoteVariant={relatedNoteVariant} />
             {action && (
-              <Box className="mt-2">
+              <Box className="mt-3">
                 <NoteActionBar event={event} />
               </Box>
             )}
           </CardContent>
-        </Box>
-      ) : repostId ? (
-        <Box className="flex">
-          <CardContent className="flex-1 !pt-3 !pb-0 overflow-hidden">
-            <QuotedEvent
-              id={repostId}
-              relatedNoteVariant={relatedNoteVariant}
-              icon={<Repeat />}
-            />
-          </CardContent>
-        </Box>
-      ) : null}
-      <Divider className="!mt-3" />
+        ) : (
+          repostId && (
+            <CardContent className="flex-1 !pl-0 !pr-3 !pt-0 !pb-3 overflow-hidden">
+              <QuotedEvent
+                id={repostId}
+                relatedNoteVariant={relatedNoteVariant}
+                icon={<Repeat />}
+              />
+            </CardContent>
+          )
+        )}
+      </Box>
+      <Divider />
     </Card>
   )
 }

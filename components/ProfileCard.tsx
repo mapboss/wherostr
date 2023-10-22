@@ -41,7 +41,7 @@ export const ProfileCard = ({
             : undefined
         }
       />
-      <Box className="px-4">
+      <Box className="px-3">
         <Box
           onClick={() => onClick?.(user)}
           className={classNames('flex', {
@@ -121,7 +121,7 @@ export const ProfileCardFull = ({
             : undefined
         }
       />
-      <Box className="px-4">
+      <Box className="px-3">
         <Box
           onClick={() => onClick?.(user)}
           className={classNames('flex flex-col sm:flex-row', {

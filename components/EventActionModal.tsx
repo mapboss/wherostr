@@ -202,22 +202,22 @@ export const ShortTextNotePane = ({
     return [...repostEvents, ..._quotes, ..._comments]
       .sort((a, b) => a.created_at! - b.created_at!)
       .map((item) => {
-        return <ShortTextNoteCard key={item.id} event={item} depth={1} />
+        return (
+          <ShortTextNoteCard key={item.id} event={item} depth={1} indentLine />
+        )
       })
   }, [comments, event.id, quotes, relatedEvents])
 
   return (
     <Box>
-      <ShortTextNoteCard event={event} />
-      <Box className="ml-4 border-l border-[rgba(255,255,255,0.12)]">
-        {relatedEventElements ? (
-          relatedEventElements
-        ) : (
-          <Box p={1} textAlign="center">
-            <CircularProgress color="inherit" />
-          </Box>
-        )}
-      </Box>
+      <ShortTextNoteCard event={event} indent={false} />
+      {relatedEventElements ? (
+        relatedEventElements
+      ) : (
+        <Box p={1} textAlign="center">
+          <CircularProgress color="inherit" />
+        </Box>
+      )}
     </Box>
   )
 }
@@ -302,16 +302,18 @@ const EventActionModal = () => {
     eventAction && (
       <Box className="relative max-h-full flex rounded-2xl overflow-hidden p-0.5 bg-gradient-primary">
         <IconButton
-          className="!absolute top-4 right-4 z-10 !bg-[#0000001f]"
+          className="!absolute top-3 right-3 z-10 !bg-[#0000001f]"
           size="small"
           onClick={handleClickCloseModal}
         >
           <Close />
         </IconButton>
         <Paper className="w-full overflow-y-auto pt-3 !rounded-2xl">
-          <Box className="flex justify-between items-center px-4">
+          <Box className="flex justify-between items-center px-3">
             {eventAction.type === EventActionType.View ? (
-              <Typography variant="body1">{title}</Typography>
+              <div className="py-1">
+                <Typography variant="body1">{title}</Typography>
+              </div>
             ) : (
               <ProfileChip hexpubkey={user?.hexpubkey} />
             )}
@@ -319,7 +321,7 @@ const EventActionModal = () => {
           <Box
             className={
               eventAction.type !== EventActionType.View
-                ? 'pb-3 px-4'
+                ? 'pb-3 px-3'
                 : undefined
             }
           >

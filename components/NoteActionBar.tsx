@@ -153,8 +153,8 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     [event, setEventAction],
   )
   return (
-    <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-4">
-      <Box className="flex flex-row items-center">
+    <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-3">
+      <Box className="flex flex-col gap-2 items-center">
         <Tooltip title="Like">
           <IconButton
             className={reacted === '+' ? '!text-success' : undefined}
@@ -165,9 +165,13 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
             <ThumbUp />
           </IconButton>
         </Tooltip>
-        <Typography className="w-8 text-center" variant="caption">
-          {liked}
-        </Typography>
+        <Link
+          className="!text-contrast-secondary cursor-pointer w-full text-center"
+          underline="hover"
+          component="span"
+        >
+          <Typography variant="caption">{liked}</Typography>
+        </Link>
         {/* <Tooltip title="Dislike">
           <IconButton
             className={reacted === '-' ? '!text-error' : undefined}
@@ -179,7 +183,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           </IconButton>
         </Tooltip> */}
       </Box>
-      <Box className="flex flex-row gap-2 items-center">
+      <Box className="flex flex-col gap-2 items-center">
         <Tooltip title="Repost">
           <IconButton
             size="small"
@@ -189,7 +193,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           </IconButton>
         </Tooltip>
         <Link
-          className="!text-contrast-secondary cursor-pointer"
+          className="!text-contrast-secondary cursor-pointer w-full text-center"
           underline="hover"
           component="span"
           onClick={handleClickAction(EventActionType.View, { reposts: true })}
@@ -197,7 +201,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           <Typography variant="caption">{repostAmount}</Typography>
         </Link>
       </Box>
-      <Box className="flex flex-row gap-2 items-center">
+      <Box className="flex flex-col gap-2 items-center">
         <Tooltip title="Quote">
           <IconButton
             size="small"
@@ -207,7 +211,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           </IconButton>
         </Tooltip>
         <Link
-          className="!text-contrast-secondary cursor-pointer"
+          className="!text-contrast-secondary cursor-pointer w-full text-center"
           underline="hover"
           component="span"
           onClick={handleClickAction(EventActionType.View, { quotes: true })}
@@ -215,7 +219,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           <Typography variant="caption">{quoteAmount}</Typography>
         </Link>
       </Box>
-      <Box className="flex flex-row gap-2 items-center">
+      <Box className="flex flex-col gap-2 items-center">
         <Tooltip title="Comment">
           <IconButton
             size="small"
@@ -225,7 +229,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           </IconButton>
         </Tooltip>
         <Link
-          className="!text-contrast-secondary cursor-pointer"
+          className="!text-contrast-secondary cursor-pointer w-full text-center"
           underline="hover"
           component="span"
           onClick={handleClickAction(EventActionType.View, { comments: true })}
@@ -233,7 +237,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           <Typography variant="caption">{commentAmount}</Typography>
         </Link>
       </Box>
-      <Box className="flex flex-row gap-2 items-center">
+      <Box className="flex flex-col gap-2 items-center">
         <Tooltip title="Zap">
           <IconButton
             color="primary"
@@ -243,7 +247,13 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
             <ElectricBolt />
           </IconButton>
         </Tooltip>
-        <Typography variant="caption">{zapAmount}</Typography>
+        <Link
+          className="!text-contrast-secondary cursor-pointer w-full text-center"
+          underline="hover"
+          component="span"
+        >
+          <Typography variant="caption">{zapAmount}</Typography>
+        </Link>
       </Box>
     </Box>
   )

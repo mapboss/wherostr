@@ -117,7 +117,7 @@ export const QuotedEvent = ({
     </Typography>
   ) : (
     <Box
-      className={`relative my-2 border-2 border-secondary-dark rounded-2xl overflow-hidden cursor-pointer${
+      className={`relative mt-3 border-2 border-secondary-dark rounded-2xl overflow-hidden cursor-pointer${
         relatedNoteVariant === 'fraction' ? ' max-h-80' : ''
       }`}
       onClick={handleClickNote}
@@ -171,10 +171,10 @@ export const NostrAddressBox = ({
 
   if (nostrLink.kind === 30311) {
     return (
-      <Box className="bg-gradient-primary w-full p-3 sm:p-4 rounded-2xl drop-shadow">
+      <Box className="bg-gradient-primary w-full p-3 rounded-2xl drop-shadow">
         {state === 'resolved' ? (
-          <Box className="flex flex-col gap-4">
-            <Box className="flex gap-4 items-start flex-col sm:flex-row">
+          <Box className="flex flex-col gap-3">
+            <Box className="flex gap-3 items-start flex-col sm:flex-row">
               {!!image && (
                 <Box className="sm:max-w-[40%] rounded-2xl overflow-hidden drop-shadow">
                   <ButtonBase
@@ -410,7 +410,7 @@ const TextNote = ({
       ) : (
         <Paper
           elevation={4}
-          className="w-full flex items-center justify-center px-2 py-4"
+          className="w-full flex items-center justify-center p-3"
           onClick={() => setShow(true)}
         >
           <Box mr={1} mt={1} display="flex" alignSelf="flex-start">
