@@ -21,6 +21,7 @@ export default function MenuButton() {
   return (
     <>
       <IconButton
+        size="small"
         aria-label="more"
         id="long-button"
         aria-controls={open ? 'long-menu' : undefined}
