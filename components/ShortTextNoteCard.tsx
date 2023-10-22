@@ -147,7 +147,7 @@ const ShortTextNoteCard = ({
         )}
         <MenuButton />
       </Box>
-      <Box className="flex">
+      <Box className="flex min-h-[12px]">
         <div className={`flex justify-center ${indent ? 'w-16' : 'w-3'}`}>
           {indentLine && (
             <div className="h-full w-[2px] bg-[rgba(255,255,255,0.12)]" />

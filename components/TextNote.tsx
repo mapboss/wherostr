@@ -136,7 +136,7 @@ export const QuotedEvent = ({
       {relatedNoteVariant === 'fraction' && (
         <Box className="absolute top-0 left-0 w-full h-full min-h-[320px] bg-gradient-to-t from-[#000000] to-50%" />
       )}
-      <Box className="absolute right-0 bottom-0 border-t-2 border-l-2 border-secondary-dark p-2 rounded-tl-2xl text-contrast-secondary">
+      <Box className="absolute right-0 bottom-0 border-t-2 border-l-2 border-secondary-dark p-2 rounded-tl-2xl text-contrast-secondary bg-secondary-dark">
         {icon ? icon : <FormatQuote />}
       </Box>
     </Box>
