@@ -22,15 +22,20 @@ export const useUserProfile = (hexpubkey?: string) => {
 
   const fetchProfile = useCallback(async (user: NDKUser) => {
     try {
-      const profile = await user.fetchProfile({
-        cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-      })
+      const profile = await Promise.race<NDKUserProfile | null>([
+        user.fetchProfile({
+          cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+        }),
+        new Promise<null>((_, reject) => {
+          setTimeout(() => reject('Timeout'), 5000)
+        }),
+      ])
       return profile
     } catch (err) {
       return new Promise<NDKUserProfile | null>((resolve) => {
         setTimeout(() => {
           fetchProfile(user).then((d) => resolve(d))
-        }, 5000)
+        }, 3000)
       })
     }
   }, [])
