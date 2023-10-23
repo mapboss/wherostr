@@ -3,15 +3,15 @@ import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk'
 import { Box, Chip, Hidden, Paper, Toolbar, Typography } from '@mui/material'
 import { LiveVideoPlayer } from './LiveVideoPlayer'
 import { LiveChat } from './LiveChat'
-import { useCallback, useContext, useMemo } from 'react'
+import { useCallback, useContext, useMemo, useState } from 'react'
 import ProfileChip from './ProfileChip'
 import { Bolt, Share, SubscriptionsSharp } from '@mui/icons-material'
 import { LiveStreamTime } from './LiveStreamTime'
 import ResponsiveButton from './ResponsiveButton'
-import { AccountContext } from '@/contexts/AccountContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import StatusBadge from './StatusBadge'
 import { AppContext, EventActionType } from '@/contexts/AppContext'
+import { useFollowing } from '@/hooks/useAccount'
 
 export interface LiveActivityItem {
   id: string
@@ -37,7 +37,8 @@ const LiveActivity = ({
   event?: NDKEvent
 }) => {
   const { setEventAction } = useContext(AppContext)
-  const { user, follows } = useContext(AccountContext)
+  const [follows, follow] = useFollowing()
+  const [loading, setLoading] = useState(false)
   const liveItem = useMemo<LiveActivityItem>(() => {
     const id = event?.tagValue('d') || ''
     const pubkey = event?.tagValue('p') || event?.pubkey || ''
@@ -121,13 +122,20 @@ const LiveActivity = ({
               {liveItem.pubkey &&
                 !follows.find((d) => d.hexpubkey === liveItem.pubkey) && (
                   <ResponsiveButton
+                    loading={loading}
+                    loadingPosition="start"
                     color="inherit"
                     variant="outlined"
                     size="small"
                     startIcon={<SubscriptionsSharp />}
                     onClick={async () => {
                       if (!author) return
-                      await user?.follow(author)
+                      try {
+                        setLoading(true)
+                        await follow(author)
+                      } finally {
+                        setLoading(false)
+                      }
                     }}
                   >
                     Follow

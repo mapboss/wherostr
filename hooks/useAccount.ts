@@ -1,7 +1,7 @@
 'use client'
 import { AccountContext, AccountProps } from '@/contexts/AccountContext'
 import { NDKUser } from '@nostr-dev-kit/ndk'
-import { Dispatch, SetStateAction, useContext, useMemo } from 'react'
+import { useContext, useMemo } from 'react'
 
 export const useUser = () => {
   const { user } = useContext(AccountContext)
