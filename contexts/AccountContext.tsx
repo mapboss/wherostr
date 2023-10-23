@@ -1,7 +1,9 @@
 'use client'
 import {
+  Dispatch,
   FC,
   PropsWithChildren,
+  SetStateAction,
   createContext,
   useCallback,
   useContext,
@@ -11,26 +13,33 @@ import {
   useState,
 } from 'react'
 import {
+  NDKEvent,
   NDKNip07Signer,
   NDKSubscriptionCacheUsage,
   NDKUser,
 } from '@nostr-dev-kit/ndk'
-import { NostrContext, defaultRelays } from '@/contexts/NostrContext'
+import { NostrContext } from '@/contexts/NostrContext'
 
-interface Account {
+export interface AccountProps {
   user?: NDKUser
   signing: boolean
   follows: NDKUser[]
   signIn: () => Promise<NDKUser | void>
   signOut: () => Promise<void>
+  setFollows: Dispatch<SetStateAction<NDKUser[]>>
+  follow: (newFollow: NDKUser) => Promise<void>
+  unfollow: (unfollowUser: NDKUser) => Promise<void>
 }
 
-export const AccountContext = createContext<Account>({
+export const AccountContext = createContext<AccountProps>({
   user: undefined,
   follows: [],
   signing: true,
   signIn: async () => {},
   signOut: async () => {},
+  setFollows: () => {},
+  follow: async () => {},
+  unfollow: async () => {},
 })
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -48,10 +57,39 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const updateFollows = useCallback(async (user: NDKUser) => {
     const follows = await user.follows({
-      cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
     })
     setFollows(Array.from(follows))
   }, [])
+
+  const follow = useCallback(
+    async (newFollow: NDKUser) => {
+      if (!user) return
+      const followsSet = new Set(follows)
+      const followUser = ndk.getUser({ hexpubkey: newFollow.hexpubkey })
+      const isOK = await user.follow(followUser, followsSet)
+      if (!isOK) return
+      setFollows(Array.from(followsSet))
+    },
+    [user, follows, ndk],
+  )
+
+  const unfollow = useCallback(
+    async (unfollowUser: NDKUser) => {
+      if (!follows.length) return
+      const event = new NDKEvent(ndk)
+      event.kind = 3
+      const followsSet = new Set(follows)
+      const exists = follows.find((d) => d.hexpubkey === unfollowUser.hexpubkey)
+      exists && followsSet.delete(exists)
+      followsSet.forEach((d) => {
+        event.tag(d)
+      })
+      await event.publish()
+      setFollows(Array.from(followsSet))
+    },
+    [follows, ndk],
+  )
 
   const signIn = useCallback(async () => {
     if (hasNip7Extension()) {
@@ -61,7 +99,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       if (signerUser) {
         const user = await getUser(signerUser.hexpubkey)
         if (user) {
-          updateFollows(user)
+          await updateFollows(user)
           console.log('signIn:fetchFollows')
           localStorage.setItem(
             'session',
@@ -106,15 +144,18 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     initUser()
   }, [user, relaySet, initUser])
 
-  const value = useMemo((): Account => {
+  const value = useMemo((): AccountProps => {
     return {
       user,
       follows,
       signing,
       signIn,
       signOut,
+      setFollows,
+      follow,
+      unfollow,
     }
-  }, [user, follows, signing, signIn, signOut])
+  }, [user, follows, signing, signIn, signOut, follow, unfollow])
 
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>

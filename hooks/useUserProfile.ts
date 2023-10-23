@@ -66,6 +66,7 @@ export const useUserProfile = (hexpubkey?: string) => {
       setUser((prev) => {
         const d = {
           ...user,
+          npub: user.npub,
           hexpubkey: user.hexpubkey,
           profile: profile,
         } as NDKUser
@@ -81,6 +82,7 @@ export const useUserProfile = (hexpubkey?: string) => {
       setUser((prev) => {
         const d = {
           ...user,
+          npub: user.npub,
           hexpubkey: user.hexpubkey,
           profile: {
             ...profile,

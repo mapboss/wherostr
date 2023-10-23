@@ -1,6 +1,7 @@
 'use client'
-import { AccountContext } from '@/contexts/AccountContext'
-import { useContext, useMemo } from 'react'
+import { AccountContext, AccountProps } from '@/contexts/AccountContext'
+import { NDKUser } from '@nostr-dev-kit/ndk'
+import { Dispatch, SetStateAction, useContext, useMemo } from 'react'
 
 export const useUser = () => {
   const { user } = useContext(AccountContext)
@@ -14,6 +15,9 @@ export const useAccount = () => {
 }
 
 export const useFollowing = () => {
-  const { follows } = useContext(AccountContext)
-  return useMemo(() => follows, [follows])
+  const { follows, follow, unfollow } = useContext(AccountContext)
+  return useMemo<[NDKUser[], AccountProps['follow'], AccountProps['unfollow']]>(
+    () => [follows, follow, unfollow],
+    [follows, follow, unfollow],
+  )
 }

@@ -48,8 +48,7 @@ const MainPane = () => {
   const searchParams = useSearchParams()
   const { map } = useContext(MapContext)
   const { user, signing } = useAccount()
-  // const user = useUser()
-  const follows = useFollowing()
+  const [follows] = useFollowing()
   const { profileAction, events, eventAction, setEvents, setEventAction } =
     useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
