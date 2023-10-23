@@ -64,7 +64,7 @@ export default function Page() {
   const ref = useRef<HTMLDivElement | null>(null)
 
   return (
-    <Box p={2} ref={ref} overflow={'auto'} flex={1}>
+    <Box p={2} ref={ref} overflow={'visible'} flex={1}>
       <Typography variant="h4">Live</Typography>
       <Divider />
       <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8 m-8">
@@ -111,6 +111,7 @@ const CardEvent: FC<{
       <CardMedia
         component={Link}
         href={`/a?naddr=${nostrLink}`}
+        prefetch={false}
         sx={{
           backgroundImage: `url(${image})`,
           aspectRatio: '16/9',

@@ -1,8 +1,6 @@
 'use client'
-import EventActionModal from '@/components/EventActionModal'
 import LiveActivity from '@/components/LiveActivity'
 import ResponsiveButton from '@/components/ResponsiveButton'
-import { AppContext } from '@/contexts/AppContext'
 import { useStreamRelaySet } from '@/hooks/useNostr'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { ChevronLeft } from '@mui/icons-material'
@@ -16,15 +14,13 @@ import {
   useSearchParams,
 } from 'next/navigation'
 import { nip19 } from 'nostr-tools'
-import { useContext, useMemo } from 'react'
+import { useMemo } from 'react'
 
 export default function Page() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const params = useParams()
   const naddr = searchParams.get('naddr') || params['naddr']
-
-  const { eventAction } = useContext(AppContext)
   const naddrDesc = useMemo(() => {
     try {
       return nip19.decode(naddr as string)
@@ -66,13 +62,6 @@ export default function Page() {
         <Box className="px-0 lg:px-4" flex={1} display="flex" overflow="hidden">
           <LiveActivity naddr={naddr.toString()} event={event} />
         </Box>
-        {!!eventAction && (
-          <Box className="fixed left-0 top-0 w-full h-full p-2 backdrop-blur z-50 flex items-center justify-center">
-            <Box className="w-full md:w-[640px]">
-              <EventActionModal />
-            </Box>
-          </Box>
-        )}
       </>
     )
   }

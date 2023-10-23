@@ -15,7 +15,7 @@ import {
   ListItemText,
   Toolbar,
 } from '@mui/material'
-import ProfileChip from './ProfileChip'
+import ProfileChip, { ProfileChipProps } from './ProfileChip'
 import { useAccount } from '@/hooks/useAccount'
 import Link from 'next/link'
 import { ProfileCard } from './ProfileCard'
@@ -24,8 +24,11 @@ import { ProfileActionType } from '@/contexts/AppContext'
 
 export interface MenuButtonProps {
   hexpubkey: string
+  slotProps?: {
+    profileChip?: ProfileChipProps
+  }
 }
-const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey }) => {
+const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
   const { setProfileAction } = useAction()
   const { signOut } = useAccount()
   const [open, setOpen] = useState(false)
@@ -42,8 +45,9 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey }) => {
   return (
     <Fragment>
       <ProfileChip
+        {...slotProps?.profileChip}
         hexpubkey={hexpubkey}
-        showName={false}
+        showName={slotProps?.profileChip?.showName ?? false}
         onClick={toggleDrawer}
       />
       <Drawer

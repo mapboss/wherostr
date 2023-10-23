@@ -10,6 +10,16 @@ import ProfileValidBadge from './ProfileValidBadge'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import classNames from 'classnames'
 
+export interface ProfileChipProps {
+  className?: string
+  hexpubkey?: string | string[]
+  eventActionType?: EventActionType
+  showName?: boolean
+  showNip5?: boolean
+  nameAdornment?: ReactNode
+  onClick?: (hexpubkey: string) => void | boolean
+}
+
 const ProfileChip = ({
   className,
   hexpubkey,
@@ -18,15 +28,7 @@ const ProfileChip = ({
   showNip5 = true,
   nameAdornment,
   onClick,
-}: {
-  className?: string
-  hexpubkey?: string | string[]
-  eventActionType?: EventActionType
-  showName?: boolean
-  showNip5?: boolean
-  nameAdornment?: ReactNode
-  onClick?: (hexpubkey: string) => void | boolean
-}) => {
+}: ProfileChipProps) => {
   const userLeft = useUserProfile(
     typeof hexpubkey === 'string' ? hexpubkey : hexpubkey?.[0],
   )

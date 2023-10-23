@@ -46,10 +46,12 @@ export default function Page() {
     const streamingUrl = ev?.tagValue('streaming')
     if (!streamingUrl) return
     const url = new URL(streamingUrl)
-    const streamKey = streamingUrl?.match(
-      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/,
-    )?.[0]
-    return `${url.protocol}//${url.host}/api/v3/widget/process/restreamer-ui:ingest:${streamKey}`
+    if (streamingUrl.endsWith('.m3u8')) {
+      const streamKey = streamingUrl?.match(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/,
+      )?.[0]
+      return `${url.protocol}//${url.host}/api/v3/widget/process/restreamer-ui:ingest:${streamKey}`
+    }
   }, [ev])
 
   const fetchStats = useCallback(async () => {
@@ -138,9 +140,6 @@ export default function Page() {
   const tags = useMemo(() => ev?.getMatchingTags('t') || [], [ev])
   return (
     <>
-      <Box alignSelf="flex-end">
-        <UserBar />
-      </Box>
       <Box className="flex-1 flex flex-col p-4">
         {ev ? (
           <>
