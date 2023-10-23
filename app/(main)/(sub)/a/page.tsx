@@ -1,9 +1,7 @@
 'use client'
 import LiveActivity from '@/components/LiveActivity'
-import ResponsiveButton from '@/components/ResponsiveButton'
 import { useStreamRelaySet } from '@/hooks/useNostr'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { ChevronLeft } from '@mui/icons-material'
 import { Box, LinearProgress, Typography } from '@mui/material'
 import { NDKFilter } from '@nostr-dev-kit/ndk'
 import { RedirectType } from 'next/dist/client/components/redirect'
@@ -17,7 +15,6 @@ import { nip19 } from 'nostr-tools'
 import { useMemo } from 'react'
 
 export default function Page() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const params = useParams()
   const naddr = searchParams.get('naddr') || params['naddr']
@@ -49,20 +46,9 @@ export default function Page() {
 
   if (event?.kind === 30311) {
     return (
-      <>
-        <ResponsiveButton
-          color="inherit"
-          size="large"
-          startIcon={<ChevronLeft />}
-          className="!absolute top-0 left-0 z-10"
-          onClick={() => router.push('/live')}
-        >
-          Back
-        </ResponsiveButton>
-        <Box className="px-0 lg:px-4" flex={1} display="flex" overflow="hidden">
-          <LiveActivity naddr={naddr.toString()} event={event} />
-        </Box>
-      </>
+      <Box className="px-0 lg:px-4" flex={1} display="flex" overflow="hidden">
+        <LiveActivity naddr={naddr.toString()} event={event} />
+      </Box>
     )
   }
 

@@ -26,15 +26,15 @@ export default function RootLayout({
       </Toolbar>
       {children}
       {!!eventAction && (
-        <Box className="fixed left-0 top-0 w-full h-full p-2 backdrop-blur z-50 flex items-center justify-center">
-          <Box className="w-full md:max-w-2xl max-h-full overflow-hidden">
+        <Box className="fixed inset-0 backdrop-blur z-50 flex items-center justify-center overflow-hidden p-2">
+          <Box className="h-full w-full md:max-w-2xl max-h-full overflow-hidden">
             <EventActionModal />
           </Box>
         </Box>
       )}
       {!!profileAction && (
-        <Box className="fixed left-0 top-0 w-full h-full p-2 backdrop-blur z-50 flex items-center justify-center">
-          <Box className="w-full md:max-w-2xl max-h-full overflow-hidden">
+        <Box className="fixed inset-0 backdrop-blur z-50 flex items-center justify-center overflow-hidden p-2">
+          <Box className="h-full w-full md:max-w-2xl max-h-full overflow-hidden">
             <ProfileActionModal />
           </Box>
         </Box>
