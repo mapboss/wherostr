@@ -5,8 +5,8 @@ export enum ErrorCode {
 
 // debug from zap.stream
 export const streamRelayUrls = [
-  'wss://relay.snort.social',
   'wss://nostr.wine',
   'wss://nos.lol',
   'wss://relay.damus.io',
+  'wss://relay.snort.social',
 ]

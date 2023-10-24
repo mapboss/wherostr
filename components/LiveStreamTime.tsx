@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { unixNow } from '@snort/shared'
-import { LiveActivityItem } from './LiveActivity'
 
 export function LiveStreamTime({ starts }: { starts?: number }) {
   const [time, setTime] = useState('')

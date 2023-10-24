@@ -21,6 +21,8 @@ import {
   useState,
 } from 'react'
 
+const twitchRegex = /(?:https:\/\/)?clips\.twitch\.tv\/(\S+)/i
+
 let timeoutHandler: NodeJS.Timeout
 export default function Page() {
   const ndk = useNDK()
@@ -45,7 +47,9 @@ export default function Page() {
     const streamingUrl = ev?.tagValue('streaming')
     if (!streamingUrl) return
     const url = new URL(streamingUrl)
-    if (streamingUrl.endsWith('.m3u8')) {
+    if (twitchRegex.test(streamingUrl)) {
+      return streamingUrl
+    } else if (streamingUrl.endsWith('.m3u8')) {
       const streamKey = streamingUrl?.match(
         /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/,
       )?.[0]

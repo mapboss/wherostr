@@ -5,4 +5,4 @@ export const WEEK = DAY * 7
 export const MONTH = DAY * 30
 export const YEAR = MONTH * 12
 
-export const unixNow = () => Math.round(Date.now() / MILLISECONDS / DAY) * DAY
+export const unixNow = () => Math.round(Date.now() / MILLISECONDS)

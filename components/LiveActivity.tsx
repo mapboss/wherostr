@@ -1,6 +1,14 @@
 'use client'
-import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk'
-import { Box, Chip, Hidden, Paper, Toolbar, Typography } from '@mui/material'
+import { NDKEvent, NDKKind, NDKTag } from '@nostr-dev-kit/ndk'
+import {
+  Box,
+  Button,
+  Chip,
+  Hidden,
+  Paper,
+  Toolbar,
+  Typography,
+} from '@mui/material'
 import { LiveVideoPlayer } from './LiveVideoPlayer'
 import { LiveChat } from './LiveChat'
 import { useCallback, useContext, useMemo, useState } from 'react'
@@ -10,8 +18,12 @@ import { LiveStreamTime } from './LiveStreamTime'
 import ResponsiveButton from './ResponsiveButton'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import StatusBadge from './StatusBadge'
-import { AppContext, EventActionType } from '@/contexts/AppContext'
-import { useFollowing } from '@/hooks/useAccount'
+import { EventActionType } from '@/contexts/AppContext'
+import { useFollowing, useUser } from '@/hooks/useAccount'
+import { StreamButton } from './StreamButton'
+import { useAction } from '@/hooks/useApp'
+import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
+import { DeleteButton } from './DeleteEventButton'
 
 export interface LiveActivityItem {
   id: string
@@ -36,38 +48,11 @@ const LiveActivity = ({
   naddr: string
   event?: NDKEvent
 }) => {
-  const { setEventAction } = useContext(AppContext)
+  const user = useUser()
+  const { setEventAction } = useAction()
   const [follows, follow] = useFollowing()
   const [loading, setLoading] = useState(false)
-  const liveItem = useMemo<LiveActivityItem>(() => {
-    const id = event?.tagValue('d') || ''
-    const pubkey = event?.tagValue('p') || event?.pubkey || ''
-    const title = event?.tagValue('title') || ''
-    const summary = event?.tagValue('summary')
-    const image = event?.tagValue('image')
-    const starts = Number(event?.tagValue('starts'))
-    const ends = Number(event?.tagValue('ends'))
-    const status = event?.tagValue('status') === 'live' ? 'live' : 'ended'
-    const viewers = event?.tagValue('current_participants')
-    const streaming = event?.tagValue('streaming')
-    const recording = event?.tagValue('recording')
-    const tags = event?.getMatchingTags('t') || []
-    return {
-      id,
-      author: event?.pubkey || '',
-      pubkey,
-      title,
-      summary,
-      image,
-      starts,
-      ends,
-      status,
-      viewers,
-      streaming,
-      recording,
-      tags,
-    }
-  }, [event])
+  const liveItem = useLiveActivityItem(event)
 
   const autoplay = useMemo(() => liveItem.status === 'live', [liveItem.status])
   const author = useUserProfile(liveItem.pubkey)
@@ -81,6 +66,7 @@ const LiveActivity = ({
     },
     [event, setEventAction],
   )
+
   return (
     <Box className="grid gap-2 lg:gap-6 flex-1 overflow-hidden grid-cols-1 lg:grid-cols-[auto_440px]">
       <Box className="flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 gap-2">
@@ -184,6 +170,17 @@ const LiveActivity = ({
               })}
             </Box>
           </Hidden>
+          {user?.hexpubkey === liveItem.author && (
+            <Box my={1} gap={1} display="flex">
+              <StreamButton
+                label="Edit"
+                mode="edit"
+                data={event}
+                size="small"
+              />
+              <DeleteButton event={event} />
+            </Box>
+          )}
         </Box>
       </Box>
       <Paper className="overflow-hidden relative flex flex-col lg:mb-4">
@@ -212,3 +209,36 @@ const LiveActivity = ({
 }
 
 export default LiveActivity
+
+export const useLiveActivityItem = (event?: NDKEvent) => {
+  const liveItem = useMemo<LiveActivityItem>(() => {
+    const id = event?.tagValue('d') || ''
+    const pubkey = event?.tagValue('p') || event?.pubkey || ''
+    const title = event?.tagValue('title') || ''
+    const summary = event?.tagValue('summary')
+    const image = event?.tagValue('image')
+    const starts = Number(event?.tagValue('starts'))
+    const ends = Number(event?.tagValue('ends'))
+    const status = event?.tagValue('status') === 'live' ? 'live' : 'ended'
+    const viewers = event?.tagValue('current_participants')
+    const streaming = event?.tagValue('streaming')
+    const recording = event?.tagValue('recording')
+    const tags = event?.getMatchingTags('t') || []
+    return {
+      id,
+      author: event?.pubkey || '',
+      pubkey,
+      title,
+      summary,
+      image,
+      starts,
+      ends,
+      status,
+      viewers,
+      streaming,
+      recording,
+      tags,
+    }
+  }, [event])
+  return liveItem
+}
