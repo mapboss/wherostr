@@ -110,7 +110,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
             'session',
             JSON.stringify({ pubkey: user.hexpubkey, type: 'nip7' }),
           )
-          updateRelaySet(user)
+          await updateRelaySet(user)
           console.log('signIn:updateRelaySet')
           setUser(user)
           return user
@@ -136,7 +136,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
           return
         }
       }
-      updateRelaySet()
+      await updateRelaySet()
     } catch (err) {
     } finally {
       setSigning(false)

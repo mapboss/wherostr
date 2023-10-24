@@ -26,7 +26,7 @@ interface Nostr {
     relayUrls?: string[],
   ) => Promise<NDKUser | undefined>
   getEvent: (id: string) => Promise<NDKEvent | null>
-  updateRelaySet: (user?: NDKUser) => void
+  updateRelaySet: (user?: NDKUser) => Promise<void>
 }
 
 export const verifyCache: Record<string, boolean> = {}
@@ -45,7 +45,7 @@ export const NostrContext = createContext<Nostr>({
   relaySet: undefined,
   getUser: () => new Promise((resolve) => resolve(undefined)),
   getEvent: () => new Promise((resolve) => resolve(null)),
-  updateRelaySet: () => {},
+  updateRelaySet: async () => {},
 })
 
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {

@@ -1,5 +1,5 @@
 'use client'
-import { ShortTextNotePane } from '@/components/EventActionModal'
+import { NostrNoteComponent } from '@/components/NostsNoteComponent'
 import { NostrContext } from '@/contexts/NostrContext'
 import { Box, Paper } from '@mui/material'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
@@ -37,9 +37,9 @@ export default function Page() {
   if (!event) return
 
   return (
-    <Box m={4}>
+    <Box mx={4}>
       <Paper className="relative w-full !rounded-2xl max-w-2xl mx-auto overflow-hidden">
-        <ShortTextNotePane event={event} comments />
+        <NostrNoteComponent data={naddrDesc.data} />
       </Paper>
     </Box>
   )

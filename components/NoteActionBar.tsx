@@ -20,6 +20,7 @@ import numeral from 'numeral'
 import { tryParseNostrLink, transformText } from '@snort/system'
 import { useNDK, useRelaySet } from '@/hooks/useNostr'
 import { useMuting, useUser } from '@/hooks/useAccount'
+import { useUserProfile } from '@/hooks/useUserProfile'
 
 const amountFormat = '0,0.[0]a'
 
@@ -97,7 +98,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
       comments,
       zaps: zapEvents.map((item) => zapInvoiceFromEvent(item) || { amount: 0 }),
     }
-  }, [relaySet, ndk, event, user?.hexpubkey])
+  }, [relaySet, ndk, event, muteList, user?.hexpubkey])
 
   const [data] = usePromise(fetchRelatedEvent, [fetchRelatedEvent])
 
@@ -156,6 +157,9 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     },
     [event, setEventAction],
   )
+
+  const author = useUserProfile(event.pubkey)
+
   return (
     <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-3">
       <Box className="flex flex-col gap-2 items-center">
@@ -244,6 +248,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
       <Box className="flex flex-col gap-2 items-center">
         <Tooltip title="Zap">
           <IconButton
+            disabled={!author?.profile?.lud16 && !author?.profile?.lud06}
             color="primary"
             size="small"
             onClick={handleClickAction(EventActionType.Zap)}

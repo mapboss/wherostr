@@ -290,7 +290,11 @@ const renderChunk = (
           </Box>
         )
       }
-      const { protocol } = new URL(content)
+      let protocol = ''
+      try {
+        const url = new URL(content)
+        protocol = url.protocol
+      } catch (err) {}
       if (protocol === 'nostr:' || protocol === 'web+nostr:') {
         const nostrLink = tryParseNostrLink(content)
         // const nostrLink2 = nip19.decode(content)

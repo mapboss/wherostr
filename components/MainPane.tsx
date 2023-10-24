@@ -28,7 +28,7 @@ import {
   Zoom,
 } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
-import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import { Draw, Place, TravelExplore } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
@@ -36,7 +36,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import UserBar from './UserBar'
 import classNames from 'classnames'
 import { DAY, unixNow } from '@/utils/time'
-import { useAccount, useFollowing, useMuting } from '@/hooks/useAccount'
+import { useAccount, useFollowing } from '@/hooks/useAccount'
 import DrawerMenu from './DrawerMenu'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
@@ -87,6 +87,7 @@ const MainPane = () => {
   const bounds = useMemo(() => new LngLatBounds(payload.bbox), [payload.bbox])
 
   const geohashFilter = useMemo(() => {
+    if (signing) return
     if (!payload.bbox) return
     const bbox = payload.bbox
     let geohashFilter: Set<string>
@@ -99,28 +100,31 @@ const MainPane = () => {
       kinds: [NDKKind.Text, NDKKind.Repost],
       '#g': Array.from(geohashFilter),
     }
-  }, [payload.bbox])
+  }, [signing, payload.bbox])
 
-  const tagsFilter = useMemo(() => {
-    if (signing) return
+  const authorsOrTags = useMemo(() => {
     const tags =
       q && q !== 'follows' && q !== 'global'
         ? new Set(q.split(/\s|,/).map((d) => d.trim().toLowerCase()))
         : undefined
 
-    const authors =
-      user && (!q || q === 'follows')
-        ? follows.map((d) => d.hexpubkey)
-        : undefined
+    if (!!tags?.size) {
+      return { '#t': Array.from(tags) }
+    }
+    if (follows && feedType === 'follows') {
+      return { authors: follows.map((d) => d.hexpubkey) }
+    }
+  }, [follows, q, feedType])
 
+  const tagsFilter = useMemo<NDKFilter | undefined>(() => {
+    if (signing) return
     return {
-      ...(tags ? { '#t': Array.from(tags) } : undefined),
-      authors,
+      ...authorsOrTags,
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - DAY,
       limit: 30,
-    }
-  }, [signing, q, user, follows])
+    } as NDKFilter
+  }, [signing, authorsOrTags])
 
   const [subGeoFilter] = useSubscribe(geohashFilter)
   const [subTagFilter, fetchMore, newItems, showNewItems] =

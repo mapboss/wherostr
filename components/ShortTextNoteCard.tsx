@@ -145,7 +145,7 @@ const ShortTextNoteCard = ({
             <TravelExploreOutlined className="text-contrast-secondary" />
           </IconButton>
         )}
-        <MenuButton />
+        <MenuButton event={event} />
       </Box>
       <Box className="flex min-h-[12px]">
         <div className={`flex justify-center ${indent ? 'w-16' : 'w-3'}`}>

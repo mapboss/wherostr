@@ -156,7 +156,7 @@ export const ProfileCardFull = ({
         <Box className="absolute right-2 -bottom-4">
           {!itsYou && (
             <>
-              <Fab
+              {/* <Fab
                 size="small"
                 className="!mr-2"
                 sx={{
@@ -168,7 +168,7 @@ export const ProfileCardFull = ({
                 }}
               >
                 <Bolt />
-              </Fab>
+              </Fab> */}
               {!isFollowing ? (
                 <LoadingButton
                   loading={loading}
@@ -266,15 +266,26 @@ export const ProfileCardFull = ({
               target="_blank"
             >
               <LinkIcon />{' '}
-              <span className="hover:underline">{user.profile.website}</span>
+              <span className="hover:underline">
+                {user.profile.website.replace(/http(s)?:\/\//, '')}
+              </span>
             </Typography>
           )}
-          {user?.profile?.lud16 && (
+          {user?.profile?.lud16 || user?.profile?.lud06 ? (
             <Typography variant="subtitle2">
               <BoltRounded sx={{ color: 'primary.main' }} />{' '}
-              <span>{user.profile.lud16}</span>
+              <span>
+                {user.profile.lud16 ||
+                  (user.profile.lud06
+                    ? user.profile.lud06.substring(0, 12) +
+                      '...' +
+                      user.profile.lud06.substring(
+                        user.profile.lud06.length - 12,
+                      )
+                    : '')}
+              </span>
             </Typography>
-          )}
+          ) : undefined}
         </Box>
         {user?.profile?.about && (
           <Box className="py-3 text-contrast-secondary">

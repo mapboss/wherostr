@@ -1,5 +1,4 @@
 'use client'
-import UserBar from '@/components/UserBar'
 import { useUser } from '@/hooks/useAccount'
 import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
 import { useSubscribe } from '@/hooks/useSubscribe'

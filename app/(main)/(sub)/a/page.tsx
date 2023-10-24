@@ -1,16 +1,7 @@
 'use client'
-import LiveActivity from '@/components/LiveActivity'
-import { useStreamRelaySet } from '@/hooks/useNostr'
-import { useSubscribe } from '@/hooks/useSubscribe'
-import { Box, LinearProgress, Typography } from '@mui/material'
-import { NDKFilter } from '@nostr-dev-kit/ndk'
+import { NostrAddressComponent } from '@/components/NostrAddressComponent'
 import { RedirectType } from 'next/dist/client/components/redirect'
-import {
-  redirect,
-  useParams,
-  useRouter,
-  useSearchParams,
-} from 'next/navigation'
+import { redirect, useParams, useSearchParams } from 'next/navigation'
 import { nip19 } from 'nostr-tools'
 import { useMemo } from 'react'
 
@@ -28,35 +19,5 @@ export default function Page() {
     redirect(`/${naddr}`, RedirectType.replace)
   }
 
-  const filter = useMemo<NDKFilter | undefined>(() => {
-    if (!naddrDesc) return
-    return {
-      kinds: [naddrDesc.data.kind],
-      authors: [naddrDesc.data.pubkey],
-      '#d': [naddrDesc.data.identifier],
-    }
-  }, [naddrDesc])
-  const relaySet = useStreamRelaySet()
-  const [events] = useSubscribe(filter, true, relaySet)
-  const event = useMemo(() => events?.[0], [events])
-
-  if (!event) {
-    return <LinearProgress />
-  }
-
-  if (event?.kind === 30311) {
-    return (
-      <Box className="px-0 lg:px-4" flex={1} display="flex" overflow="hidden">
-        <LiveActivity naddr={naddr.toString()} event={event} />
-      </Box>
-    )
-  }
-
-  return (
-    <Box mx={2} overflow="hidden">
-      <Typography component="pre" variant="caption">
-        {JSON.stringify(event || {}, null, 4)}
-      </Typography>
-    </Box>
-  )
+  return <NostrAddressComponent data={naddrDesc.data} />
 }
