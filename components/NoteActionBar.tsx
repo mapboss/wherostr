@@ -19,7 +19,7 @@ import usePromise from 'react-use-promise'
 import numeral from 'numeral'
 import { tryParseNostrLink, transformText } from '@snort/system'
 import { useNDK, useRelaySet } from '@/hooks/useNostr'
-import { useUser } from '@/hooks/useAccount'
+import { useMuting, useUser } from '@/hooks/useAccount'
 
 const amountFormat = '0,0.[0]a'
 
@@ -27,6 +27,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   const ndk = useNDK()
   const relaySet = useRelaySet()
   const user = useUser()
+  const [muteList] = useMuting()
   const { setEventAction } = useContext(AppContext)
   const [reacted, setReacted] = useState<'+' | '-' | undefined>()
   const [{ liked, disliked }, setReaction] = useState({
@@ -54,12 +55,15 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
 
     events.forEach((evt) => {
       if (evt.kind === NDKKind.Text) {
+        if (muteList.includes(evt.pubkey)) return
         quoteAndCommentEvents.push(evt)
       } else if (evt.kind === NDKKind.Repost) {
+        if (muteList.includes(evt.pubkey)) return
         repostEvents.push(evt)
       } else if (evt.kind === NDKKind.Zap) {
         zapEvents.push(evt)
       } else if (evt.kind === NDKKind.Reaction) {
+        if (muteList.includes(evt.pubkey)) return
         if (evt.pubkey === user?.hexpubkey) {
           setReacted(evt.content === '-' ? '-' : '+')
         }

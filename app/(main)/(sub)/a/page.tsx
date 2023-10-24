@@ -53,7 +53,7 @@ export default function Page() {
   }
 
   return (
-    <Box m={2} overflow="hidden">
+    <Box mx={2} overflow="hidden">
       <Typography component="pre" variant="caption">
         {JSON.stringify(event || {}, null, 4)}
       </Typography>

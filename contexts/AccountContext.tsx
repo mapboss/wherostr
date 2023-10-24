@@ -14,15 +14,19 @@ import {
 } from 'react'
 import {
   NDKEvent,
+  NDKFilter,
+  NDKKind,
   NDKNip07Signer,
   NDKSubscriptionCacheUsage,
   NDKUser,
 } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
+import { useSubscribe } from '@/hooks/useSubscribe'
 
 export interface AccountProps {
   user?: NDKUser
   signing: boolean
+  muteList: string[]
   follows: NDKUser[]
   signIn: () => Promise<NDKUser | void>
   signOut: () => Promise<void>
@@ -33,6 +37,7 @@ export interface AccountProps {
 
 export const AccountContext = createContext<AccountProps>({
   user: undefined,
+  muteList: [],
   follows: [],
   signing: true,
   signIn: async () => {},
@@ -144,9 +149,27 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     initUser()
   }, [user, relaySet, initUser])
 
+  const filter = useMemo<NDKFilter | undefined>(() => {
+    if (!user?.hexpubkey) return
+    return {
+      kinds: [NDKKind.MuteList],
+      authors: [user?.hexpubkey],
+    }
+  }, [user?.hexpubkey])
+  const [muteListEvent] = useSubscribe(filter)
+
+  const muteList = useMemo(
+    () =>
+      muteListEvent[0]?.getMatchingTags('p').map(([tag, pubkey]) => {
+        return pubkey
+      }),
+    [muteListEvent],
+  )
+
   const value = useMemo((): AccountProps => {
     return {
       user,
+      muteList,
       follows,
       signing,
       signIn,
@@ -155,7 +178,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       follow,
       unfollow,
     }
-  }, [user, follows, signing, signIn, signOut, follow, unfollow])
+  }, [user, muteList, follows, signing, signIn, signOut, follow, unfollow])
 
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>

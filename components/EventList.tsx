@@ -1,5 +1,5 @@
 'use client'
-import { NDKEvent } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import {
   FC,
   RefObject,
@@ -25,6 +25,7 @@ import classNames from 'classnames'
 import { isComment } from '@/utils/event'
 import ProfileAvatar from './ProfileAvatar'
 import _ from 'lodash'
+import { useMuting } from '@/hooks/useAccount'
 
 export interface EventListProps {
   className?: string
@@ -47,17 +48,26 @@ const EventList: FC<EventListProps> = ({
 }) => {
   const noteRef = useRef<HTMLElement>(null)
   const scrollRef = useRef<ViewportListRef>(null)
+  const [muteList] = useMuting()
   const [scrollEnd, setScrollEnd] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [hasNext, setHasNext] = useState(true)
 
   const notes = useMemo(() => {
-    return events.filter((d) => showComments || !isComment(d))
-  }, [showComments, events])
+    return events.filter((d) => {
+      if (showComments && d.kind === NDKKind.Repost) return false
+      if (muteList.includes(d.author.hexpubkey)) return false
+      return showComments || !isComment(d)
+    })
+  }, [showComments, events, muteList])
 
   const newNotes = useMemo(() => {
-    return newItems.filter((d) => showComments || !isComment(d))
-  }, [showComments, newItems])
+    return newItems.filter((d) => {
+      if (showComments && d.kind === NDKKind.Repost) return false
+      if (muteList.includes(d.author.hexpubkey)) return false
+      return showComments || !isComment(d)
+    })
+  }, [showComments, newItems, muteList])
 
   const totalEvent = useMemo(() => notes.length || 0, [notes.length])
 

@@ -33,7 +33,7 @@ export default function Page() {
   }
 
   return (
-    <Box m={4}>
+    <Box mx={4}>
       <Typography component="pre" variant="caption">
         {JSON.stringify(event || {}, null, 4)}
       </Typography>

@@ -272,7 +272,7 @@ export const CreateEventForm = ({
           .processContent()
           .build()
 
-        const powEvent = await powWorker?.minePow(nostrEvent, 15)
+        const powEvent = await powWorker?.minePow(nostrEvent, 11)
         // console.log('powEvent', powEvent)
         const ev = new NDKEvent(ndk, powEvent)
         // console.log('ev', ev)

@@ -29,6 +29,7 @@ import { requestProvider } from 'webln'
 import { useEvents } from '@/hooks/useEvent'
 import { CreateEventForm } from './CreateEventForm'
 import { LoadingButton } from '@mui/lab'
+import { useMuting } from '@/hooks/useAccount'
 
 const amountFormat = '0,0.[0]a'
 
@@ -157,6 +158,7 @@ export const ShortTextNotePane = ({
   quotes?: boolean
   comments?: boolean
 }) => {
+  const [muteList] = useMuting()
   const filter = useMemo(() => {
     const kinds: NDKKind[] = []
     if (comments || quotes) {
@@ -176,6 +178,7 @@ export const ShortTextNotePane = ({
     const _quotes: NDKEvent[] = []
     const _comments: NDKEvent[] = []
     relatedEvents.forEach((item) => {
+      if (muteList.includes(item.pubkey)) return
       const { content, tags, kind } = item
       if (kind === NDKKind.Repost) {
         repostEvents.push(item)
@@ -206,7 +209,7 @@ export const ShortTextNotePane = ({
           <ShortTextNoteCard key={item.id} event={item} depth={1} indentLine />
         )
       })
-  }, [comments, event.id, quotes, relatedEvents])
+  }, [comments, event.id, quotes, relatedEvents, muteList])
 
   return (
     <Box>

@@ -80,7 +80,7 @@ export default function Page() {
   )
 
   return (
-    <Box m={4}>
+    <Box mx={4}>
       <Paper className="relative w-full !rounded-2xl max-w-2xl mx-auto overflow-hidden">
         <ProfileCardFull hexpubkey={user?.hexpubkey} />
         <Divider />
