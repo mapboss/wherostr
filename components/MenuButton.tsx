@@ -101,9 +101,9 @@ export default function MenuButton({ event }: { event: NDKEvent }) {
         <MoreVertIcon />
       </IconButton>
       <Menu
-        id="long-menu"
         MenuListProps={{
           'aria-labelledby': 'long-button',
+          disablePadding: true,
         }}
         transformOrigin={{
           horizontal: 'left',
@@ -126,24 +126,29 @@ export default function MenuButton({ event }: { event: NDKEvent }) {
         }}
       >
         {options.map((option, i) => {
-          return (
-            <>
-              {i > 0 && <Divider />}
-              {option.items.map((item) => (
-                <ListItemButton
-                  key={item.id}
-                  disabled={item.disabled}
-                  onClick={() => handleMenuClick(item.id)}
-                  {...(item.href
-                    ? { href: item.href(event), target: '_blank' }
-                    : {})}
-                >
-                  {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
-                  <ListItemText primary={item.label} />
-                </ListItemButton>
-              ))}
-            </>
-          )
+          let lastIndex = i
+          return option.items.map((item, j, all) => {
+            let divider = false
+            if (lastIndex === i && j === all.length - 1) {
+              divider = true
+              lastIndex = -1
+            }
+            return (
+              <ListItemButton
+                divider={divider}
+                dense
+                key={item.id}
+                disabled={item.disabled}
+                onClick={() => handleMenuClick(item.id)}
+                {...(item.href
+                  ? { href: item.href(event), target: '_blank' }
+                  : {})}
+              >
+                {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            )
+          })
         })}
       </Menu>
     </>

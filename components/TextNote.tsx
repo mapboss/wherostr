@@ -373,11 +373,16 @@ const TextNote = ({
 }) => {
   const [show, setShow] = useState(false)
   const chunks = useMemo(() => {
-    const _ = transformText(' ' + event.content || '', event.tags || [])
-    if (_?.[0]?.content) {
-      _[0].content = _[0]?.content?.slice?.(1) || ''
+    try {
+      const _ = transformText(' ' + event.content || '', event.tags || [])
+      if (_?.[0]?.content) {
+        _[0].content = _[0]?.content?.slice?.(1) || ''
+      }
+      return _
+    } catch (err) {
+      console.log(err)
     }
-    return _
+    return [{ content: event.content, type: 'text' }] as ParsedFragment[]
   }, [event])
 
   const nsfw = useMemo(() => event.tagValue?.('content-warning'), [event])
