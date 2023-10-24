@@ -1,11 +1,11 @@
 'use client'
 import { createTheme } from '@mui/material/styles'
-import { Noto_Sans_Thai } from 'next/font/google'
+import { Sarabun } from 'next/font/google'
 import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import NextAppDirEmotionCacheProvider from './EmotionCache'
 
-const font = Noto_Sans_Thai({
+const font = Sarabun({
   weight: ['300', '400', '500', '700'],
   subsets: ['thai', 'latin'],
   display: 'swap',
@@ -41,6 +41,9 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: font.style.fontFamily,
+    allVariants: {
+      // lineHeight: '1.5rem',
+    },
   },
 })
 

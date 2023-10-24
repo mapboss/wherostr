@@ -1,17 +1,8 @@
 import { useUserProfile } from '@/hooks/useUserProfile'
-import {
-  Avatar,
-  Box,
-  Fab,
-  FabProps,
-  Icon,
-  IconButton,
-  Typography,
-  styled,
-} from '@mui/material'
+import { Avatar, Box, Fab, IconButton, Link, Typography } from '@mui/material'
 import { NDKUser } from '@nostr-dev-kit/ndk'
 import classNames from 'classnames'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import ProfileValidBadge from './ProfileValidBadge'
 import TextNote from './TextNote'
 import { useFollowing, useUser } from '@/hooks/useAccount'
@@ -19,11 +10,13 @@ import { LoadingButton } from '@mui/lab'
 import {
   Bolt,
   BoltRounded,
+  Check,
   CopyAll,
-  Link,
+  Link as LinkIcon,
   RemoveCircleOutline,
   SubscriptionsSharp,
 } from '@mui/icons-material'
+import copy from 'copy-to-clipboard'
 
 export const ProfileCard = ({
   hexpubkey,
@@ -105,6 +98,7 @@ export const ProfileCard = ({
   )
 }
 
+let copyStateTimeout: NodeJS.Timeout
 export const ProfileCardFull = ({
   hexpubkey,
   onClick,
@@ -113,6 +107,7 @@ export const ProfileCardFull = ({
   onClick?: (user?: NDKUser) => void
 }) => {
   const account = useUser()
+  const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
   const user = useUserProfile(hexpubkey)
   const [follows, follow, unfollow] = useFollowing()
@@ -134,12 +129,19 @@ export const ProfileCardFull = ({
   )
   const clickable = useMemo(() => !!onClick, [onClick])
 
+  const handleCopy = useCallback(() => {
+    user?.npub && copy(user.npub)
+    setCopied(true)
+    clearTimeout(copyStateTimeout)
+    copyStateTimeout = setTimeout(() => {
+      setCopied(false)
+    }, 3000)
+  }, [user?.npub])
+
   return (
     <Box>
       <Box
-        className={`relative aspect-[5/2] bg-cover bg-center${
-          user?.profile?.banner ? '' : ' opacity-70 bg-gradient-primary'
-        }`}
+        className={`relative aspect-[5/2] bg-cover bg-center`}
         style={
           user?.profile?.banner
             ? {
@@ -148,6 +150,9 @@ export const ProfileCardFull = ({
             : undefined
         }
       >
+        {!user?.profile?.banner && (
+          <Box className="absolute inset-0 opacity-70 bg-gradient-primary" />
+        )}
         <Box className="absolute right-2 -bottom-4">
           {!itsYou && (
             <>
@@ -239,34 +244,42 @@ export const ProfileCardFull = ({
         </Box>
         <Box className="py-3 text-contrast-secondary">
           {user?.npub && (
-            <Typography variant="subtitle2">
+            <Typography variant="subtitle2" onClick={handleCopy}>
               {user.npub.substring(0, 12) +
                 '...' +
                 user.npub.substring(user.npub.length - 12)}
               <IconButton size="small" color="secondary">
-                <CopyAll />
+                {!copied ? (
+                  <CopyAll />
+                ) : (
+                  <Check sx={{ color: 'success.main' }} />
+                )}
               </IconButton>
             </Typography>
           )}
           {user?.profile?.website && (
-            <Typography variant="subtitle2" className="cursor-pointer">
-              <Link />{' '}
-              <span className="hover:underline">{user?.profile?.website}</span>
+            <Typography
+              variant="subtitle2"
+              className="cursor-pointer"
+              component="a"
+              href={user.profile.website}
+              target="_blank"
+            >
+              <LinkIcon />{' '}
+              <span className="hover:underline">{user.profile.website}</span>
             </Typography>
           )}
           {user?.profile?.lud16 && (
-            <Typography variant="subtitle2" className="cursor-pointer">
+            <Typography variant="subtitle2">
               <BoltRounded sx={{ color: 'primary.main' }} />{' '}
-              <span className="hover:underline">{user?.profile?.lud16}</span>
+              <span>{user.profile.lud16}</span>
             </Typography>
           )}
         </Box>
         {user?.profile?.about && (
           <Box className="py-3 text-contrast-secondary">
             <TextNote
-              event={{
-                content: user?.profile?.about,
-              }}
+              event={{ content: user.profile.about }}
               textVariant="subtitle2"
             />
           </Box>
