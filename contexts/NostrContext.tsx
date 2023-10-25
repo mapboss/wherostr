@@ -35,10 +35,13 @@ export const defaultRelays = (process.env.NEXT_PUBLIC_RELAY_URLS || '')
   .filter((item) => !!item)
 
 const dexieAdapter = new NDKCacheAdapterDexie({ dbName: 'wherostr-cache' })
-const ndk = new NDK({
-  cacheAdapter: dexieAdapter as any,
-  explicitRelayUrls: defaultRelays,
-})
+const ndk =
+  typeof window !== 'undefined'
+    ? new NDK({
+        cacheAdapter: dexieAdapter as any,
+        explicitRelayUrls: defaultRelays,
+      })
+    : new NDK({ cacheAdapter: dexieAdapter as any })
 
 export const NostrContext = createContext<Nostr>({
   ndk,
@@ -61,33 +64,19 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
       const relayList = await user.relayList()
       if (relayList?.bothRelayUrls.length) {
         ndk.explicitRelayUrls = relayList.bothRelayUrls
-        const relays = await Promise.all(
-          relayList.bothRelayUrls.map(async (d) => {
-            const relay = new NDKRelay(d)
-            // await relay.connect()
-            return relay
-          }),
-        )
         await ndk.connect()
         setRelaySet((prev) => {
           // prev?.relays.forEach((relay) => relay.disconnect())
-          return new NDKRelaySet(new Set(relays), ndk)
+          return NDKRelaySet.fromRelayUrls(relayList.bothRelayUrls, ndk)
         })
         return
       }
     }
     ndk.explicitRelayUrls = defaultRelays
-    const relays = await Promise.all(
-      defaultRelays.map(async (d) => {
-        const relay = new NDKRelay(d)
-        // await relay.connect()
-        return relay
-      }),
-    )
     await ndk.connect()
     setRelaySet((prev) => {
       // prev?.relays.forEach((relay) => relay.disconnect())
-      return new NDKRelaySet(new Set(relays), ndk)
+      return NDKRelaySet.fromRelayUrls(defaultRelays, ndk)
     })
   }, [])
 

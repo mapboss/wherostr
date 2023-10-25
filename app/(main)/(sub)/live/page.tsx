@@ -1,7 +1,6 @@
 'use client'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import {
-  Avatar,
   Box,
   Card,
   CardHeader,
@@ -9,9 +8,11 @@ import {
   Chip,
   Divider,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
-import { FC, useMemo, useRef } from 'react'
+import { FC, useCallback, useMemo, useRef } from 'react'
 import ReactTimeago from 'react-timeago'
 import { nip19 } from 'nostr-tools'
 import Link from 'next/link'
@@ -19,8 +20,15 @@ import { WEEK, unixNow } from '@/utils/time'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { useStreamRelaySet } from '@/hooks/useNostr'
 import StatusBadge from '@/components/StatusBadge'
+import { ViewportList } from 'react-viewport-list'
+import ProfileChip from '@/components/ProfileChip'
 
 export default function Page() {
+  const theme = useTheme()
+  const xlUp = useMediaQuery(theme.breakpoints.up('xl'))
+  const lgUp = useMediaQuery(theme.breakpoints.up('lg'))
+  const mdUp = useMediaQuery(theme.breakpoints.up('md'))
+  const smUp = useMediaQuery(theme.breakpoints.up('sm'))
   const since = useMemo(() => unixNow() - WEEK, [])
   const liveFilter = useMemo(() => {
     return {
@@ -58,28 +66,58 @@ export default function Page() {
           Number(b.tagValue('ends') || b.created_at) -
           Number(a.tagValue('ends') || a.created_at),
       )
-    return items.slice(0, 100)
+    return items
   }, [liveEvent])
 
-  const ref = useRef<HTMLDivElement | null>(null)
+  const ref = useRef<HTMLElement>(
+    window.document.getElementsByTagName('main').item(0),
+  )
+
+  const colsNum = useMemo(() => {
+    if (xlUp) {
+      return 5
+    } else if (lgUp) {
+      return 4
+    } else if (mdUp) {
+      return 3
+    } else if (smUp) {
+      return 2
+    } else {
+      return 1
+    }
+  }, [xlUp, lgUp, mdUp, smUp])
+
+  const renderItems = useCallback(
+    (item: NDKEvent, i: number, all: NDKEvent[]) => {
+      if (i % colsNum === 0) {
+        return (
+          <Box
+            key={item.deduplicationKey()}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 m-8"
+          >
+            {all.slice(i, i + colsNum).map((d) => (
+              <CardEvent key={d.deduplicationKey()} ev={d} />
+            ))}
+          </Box>
+        )
+      }
+    },
+    [colsNum],
+  )
 
   return (
-    <Box px={2} ref={ref} overflow={'visible'} flex={1}>
+    <Box px={2} overflow={'visible'} flex={1}>
       <Typography variant="h4">Live</Typography>
       <Divider />
-      <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8 m-8">
-        {liveItems.map((item) => (
-          <CardEvent key={item.deduplicationKey()} ev={item} />
-        ))}
-      </Box>
+      <ViewportList items={liveItems} viewportRef={ref}>
+        {renderItems}
+      </ViewportList>
       <Box my={8} />
       <Typography variant="h4">Ended</Typography>
       <Divider />
-      <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8 m-8">
-        {endedItems.map((item) => (
-          <CardEvent key={item.deduplicationKey()} ev={item} />
-        ))}
-      </Box>
+      <ViewportList items={endedItems} viewportRef={ref}>
+        {renderItems}
+      </ViewportList>
     </Box>
   )
 }
@@ -111,7 +149,6 @@ const CardEvent: FC<{
       <CardMedia
         component={Link}
         href={`/a?naddr=${nostrLink}`}
-        prefetch={false}
         sx={{
           backgroundImage: `url(${image})`,
           aspectRatio: '16/9',
@@ -141,7 +178,7 @@ const CardEvent: FC<{
         </Box>
       </CardMedia>
       <CardHeader
-        avatar={<Avatar src={user?.profile?.image} />}
+        avatar={<ProfileChip hexpubkey={pubkey} showName={false} />}
         title={title}
         subheader={
           <Box component="span" display="flex" flexDirection="column">

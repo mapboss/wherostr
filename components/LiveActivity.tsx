@@ -1,5 +1,5 @@
 'use client'
-import { NDKEvent, NDKKind, NDKTag } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk'
 import {
   Box,
   Button,
@@ -11,7 +11,7 @@ import {
 } from '@mui/material'
 import { LiveVideoPlayer } from './LiveVideoPlayer'
 import { LiveChat } from './LiveChat'
-import { useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import ProfileChip from './ProfileChip'
 import { Bolt, Share, SubscriptionsSharp } from '@mui/icons-material'
 import { LiveStreamTime } from './LiveStreamTime'

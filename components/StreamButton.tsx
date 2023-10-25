@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   ButtonProps,
   Chip,
@@ -51,26 +52,60 @@ export const StreamButton: FC<StreamButtonProps> = ({
     async ({ tags, author, pubkey, viewers, id, ...values }: any) => {
       try {
         setLoading(true)
-        if (id) {
-          values.d = liveItem?.id
-        } else {
-          values.d = nanoid()
-        }
-        if (values.status === 'live') {
-          values.starts = values.starts?.toString() || unixNow().toString()
-          delete values.ends
-        } else if (values.status === 'ended') {
-          values.ends = values.ends?.toString() || unixNow().toString()
-        }
-        if (!values.recording) {
-          values.recording = ''
-        }
-        if (viewers) {
-          values.current_participants = viewers.toString()
-        }
         const event = new NDKEvent(ndk)
         event.kind = 30311
-        event.tags = Object.entries(values)
+
+        if (id) {
+          values.d = id
+          event.tags.push(['d', id])
+        } else {
+          event.tags.push(['d', nanoid()])
+        }
+
+        const starts = isNaN(values.starts)
+          ? unixNow().toString()
+          : values.starts?.toString()
+        event.tags.push(['starts', starts])
+
+        if (values.status === 'ended') {
+          const ends = isNaN(values.ends)
+            ? unixNow().toString()
+            : values.ends?.toString()
+          event.tags.push(['ends', ends])
+        } else {
+          delete values.ends
+        }
+
+        if (values.streaming) {
+          event.tags.push(['streaming', values.streaming])
+        }
+
+        if (values.recording) {
+          event.tags.push(['recording', values.recording])
+        }
+
+        if (viewers) {
+          event.tags.push(['current_participants', viewers.toString()])
+        }
+
+        if (values.status) {
+          event.tags.push(['status', values.status])
+        }
+
+        if (values.title) {
+          event.tags.push(['title', values.title])
+        }
+
+        if (values.summary) {
+          event.tags.push(['summary', values.summary])
+        }
+
+        if (values.image) {
+          event.tags.push(['image', values.image])
+        }
+
+        event.tags.push(['p', pubkey, '', 'host'])
+
         tags.split(',').forEach((t: string) => {
           const d = t.trim()
           event.tags.push(['t', d])
@@ -87,7 +122,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
         setLoading(false)
       }
     },
-    [ndk, liveItem, relaySet, showSnackbar],
+    [ndk, relaySet, showSnackbar],
   )
   const status = watch('status', 'live')
   const tagsText = watch('tags', '')
@@ -170,19 +205,23 @@ export const StreamButton: FC<StreamButtonProps> = ({
               },
             })}
           />
-          <Typography variant="subtitle2">Status</Typography>
-          <Stack direction="row" spacing={1}>
-            <Chip
-              label="Live"
-              variant={status === 'live' ? 'filled' : 'outlined'}
-              onClick={() => setValue('status', 'live')}
-            />
-            <Chip
-              label="Ended"
-              variant={status === 'ended' ? 'filled' : 'outlined'}
-              onClick={() => setValue('status', 'ended')}
-            />
-          </Stack>
+          <Box ml={2} mb={1}>
+            <Typography variant="caption" color="text.secondary" mb={0.5}>
+              Status
+            </Typography>
+            <Stack direction="row" spacing={1}>
+              <Chip
+                label="Live"
+                variant={status === 'live' ? 'filled' : 'outlined'}
+                onClick={() => setValue('status', 'live')}
+              />
+              <Chip
+                label="Ended"
+                variant={status === 'ended' ? 'filled' : 'outlined'}
+                onClick={() => setValue('status', 'ended')}
+              />
+            </Stack>
+          </Box>
           {status === 'ended' && (
             <TextField
               label="Recording URL"
@@ -219,7 +258,6 @@ export const StreamButton: FC<StreamButtonProps> = ({
               setTagText(evt.target.value)
             }}
             onKeyUp={(evt) => {
-              console.log('onKeyUp', tags, tagText)
               if (evt.key === ',') {
                 if (tags.includes(tagText)) {
                   evt.preventDefault()
@@ -281,11 +319,18 @@ export const StreamButton: FC<StreamButtonProps> = ({
           />
         </DialogContent>
         <DialogActions sx={{ mx: 2, mb: 2 }}>
+          <Button
+            variant="outlined"
+            color="inherit"
+            disabled={loading}
+            onClick={() => setOpen(false)}
+          >
+            Cancel
+          </Button>
           <LoadingButton
             loading={loading}
             type="submit"
-            fullWidth
-            variant="contained"
+            variant="outlined"
             color="inherit"
           >
             {mode === 'add' ? 'Start Stream' : 'Save'}
