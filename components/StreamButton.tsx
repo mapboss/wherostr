@@ -257,11 +257,11 @@ export const StreamButton: FC<StreamButtonProps> = ({
               if (evt.target.value.endsWith(',')) return
               setTagText(evt.target.value)
             }}
-            onKeyUp={(evt) => {
+            onKeyDown={(evt) => {
               if (evt.key === ',') {
+                evt.preventDefault()
                 if (tags.includes(tagText)) {
-                  evt.preventDefault()
-                  return false
+                  return
                 }
                 setValue(
                   'tags',
@@ -276,7 +276,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
               }
             }}
             label="Tags"
-            placeholder="Music,DJ,English"
+            placeholder="Thai,Gaming,Siamstr"
             margin="dense"
             fullWidth
             autoComplete="off"

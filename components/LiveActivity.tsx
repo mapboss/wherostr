@@ -22,8 +22,8 @@ import { EventActionType } from '@/contexts/AppContext'
 import { useFollowing, useUser } from '@/hooks/useAccount'
 import { StreamButton } from './StreamButton'
 import { useAction } from '@/hooks/useApp'
-import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
 import { DeleteButton } from './DeleteEventButton'
+import { nanoid } from 'nanoid'
 
 export interface LiveActivityItem {
   id: string
@@ -32,8 +32,8 @@ export interface LiveActivityItem {
   title: string
   summary?: string
   image?: string
-  starts: number
-  ends: number
+  starts?: number
+  ends?: number
   status?: 'live' | 'ended'
   viewers?: string
   streaming?: string
@@ -212,6 +212,14 @@ export default LiveActivity
 
 export const useLiveActivityItem = (event?: NDKEvent) => {
   const liveItem = useMemo<LiveActivityItem>(() => {
+    if (!event)
+      return {
+        id: nanoid(),
+        author: '',
+        pubkey: '',
+        tags: [],
+        title: '',
+      }
     const id = event?.tagValue('d') || ''
     const pubkey = event?.tagValue('p') || event?.pubkey || ''
     const title = event?.tagValue('title') || ''
