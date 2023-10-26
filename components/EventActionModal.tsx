@@ -31,11 +31,13 @@ import { CreateEventForm } from './CreateEventForm'
 import { LoadingButton } from '@mui/lab'
 import { useMuting } from '@/hooks/useAccount'
 import { isComment } from '@/utils/event'
+import { useNDK } from '@/hooks/useNostr'
 
 const amountFormat = '0,0.[0]a'
 
 const ZapEventForm = ({ event }: { event: NDKEvent }) => {
-  const { setEventAction } = useContext(AppContext)
+  const ndk = useNDK()
+  const { setEventAction, showSnackbar } = useContext(AppContext)
   const { register, handleSubmit, setValue, watch } = useForm()
   const [loading, setLoading] = useState(false)
   const _amountValue = watch('amount')
@@ -44,17 +46,30 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
       try {
         setLoading(true)
         const { amount, comment } = data
-        const pr = await event.zap(amount * 1000, comment || undefined)
+        const pr = await event.zap(
+          amount * 1000,
+          comment || undefined,
+          undefined,
+          ndk.getUser({
+            hexpubkey: event.tagValue('p'),
+          }),
+        )
         if (pr) {
           await (await requestProvider()).sendPayment(pr)
-          alert('Zapped')
+          showSnackbar(`Zapped ${amount} sats`, {
+            slotProps: {
+              alert: {
+                severity: 'success',
+              },
+            },
+          })
           setEventAction(undefined)
         }
       } finally {
         setLoading(false)
       }
     },
-    [event, setEventAction],
+    [event, ndk, setEventAction, showSnackbar],
   )
   const amountValue = useMemo(
     () => (_amountValue ? numeral(_amountValue).format(amountFormat) : '?'),
