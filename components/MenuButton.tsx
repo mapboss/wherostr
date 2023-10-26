@@ -11,6 +11,7 @@ import {
 import copy from 'copy-to-clipboard'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
+import Geohash from 'latlon-geohash'
 
 interface MenuItemProps {
   id: string
@@ -18,6 +19,7 @@ interface MenuItemProps {
   icon?: React.ReactNode
   disabled?: boolean
   href?: (event: NDKEvent) => string
+  hide?: (event: NDKEvent) => boolean
 }
 
 interface MenuOptionProps {
@@ -49,6 +51,18 @@ const options: MenuOptionProps[] = [
       {
         id: 'copy_note_id',
         label: 'Copy Note ID',
+      },
+      {
+        id: 'copy_event_json',
+        label: 'Copy Event JSON',
+      },
+      {
+        id: 'copy_coordinates',
+        label: 'Copy Coordinates',
+        hide(event) {
+          const g = event.getMatchingTags('g')
+          return !g.length
+        },
       },
     ],
   },
@@ -83,6 +97,20 @@ export default function MenuButton({ event }: { event: NDKEvent }) {
         return
       case 'copy_note_id':
         copy(nip19.noteEncode(event.id))
+        return
+      case 'copy_event_json':
+        copy(JSON.stringify(event.rawEvent(), null, 4))
+        return
+      case 'copy_coordinates':
+        const g = event.getMatchingTags('g')
+        const [_, geohash] =
+          g
+            .slice()
+            .sort((a, b) => b.length - a.length)
+            .at(0) || []
+        if (!geohash) return
+        const ll = Geohash.decode(geohash)
+        copy(`${ll.lat},${ll.lon}`)
         return
     }
   }
@@ -127,28 +155,30 @@ export default function MenuButton({ event }: { event: NDKEvent }) {
       >
         {options.map((option, i) => {
           let lastIndex = i
-          return option.items.map((item, j, all) => {
-            let divider = false
-            if (lastIndex === i && j === all.length - 1) {
-              divider = true
-              lastIndex = -1
-            }
-            return (
-              <ListItemButton
-                divider={divider}
-                dense
-                key={item.id}
-                disabled={item.disabled}
-                onClick={() => handleMenuClick(item.id)}
-                {...(item.href
-                  ? { href: item.href(event), target: '_blank' }
-                  : {})}
-              >
-                {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            )
-          })
+          return option.items
+            .filter((item) => item.hide?.(event) !== true)
+            .map((item, j, all) => {
+              let divider = false
+              if (lastIndex === i && j === all.length - 1) {
+                divider = true
+                lastIndex = -1
+              }
+              return (
+                <ListItemButton
+                  divider={divider}
+                  dense
+                  key={item.id}
+                  disabled={item.disabled}
+                  onClick={() => handleMenuClick(item.id)}
+                  {...(item.href
+                    ? { href: item.href(event), target: '_blank' }
+                    : {})}
+                >
+                  {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              )
+            })
         })}
       </Menu>
     </>

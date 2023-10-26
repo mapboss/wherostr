@@ -14,7 +14,6 @@ import Geohash from 'latlon-geohash'
 import { shortenUrl } from '@/utils/shortenUrl'
 import {
   EventBuilder,
-  EventExt,
   EventKind,
   NostrPrefix,
   PowWorker,
@@ -25,7 +24,6 @@ import {
   Comment,
   Draw,
   FormatQuote,
-  ImageSearch,
   Link,
   LinkOff,
   Map,
@@ -120,6 +118,8 @@ export const CreateEventForm = ({
   const mdDownRef = useRef<boolean>(mdDown)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const enableLocation = useRef<boolean | undefined>(positingOptions?.location)
+  const powRef = useRef(powWorker)
+  powRef.current = powWorker
   enableLocation.current = positingOptions?.location
   mdDownRef.current = mdDown
 
@@ -272,7 +272,7 @@ export const CreateEventForm = ({
           .processContent()
           .build()
 
-        const powEvent = await powWorker?.minePow(nostrEvent, 11)
+        const powEvent = await powRef.current?.minePow(nostrEvent, 11)
         // console.log('powEvent', powEvent)
         const ev = new NDKEvent(ndk, powEvent)
         // console.log('ev', ev)

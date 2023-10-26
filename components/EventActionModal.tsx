@@ -30,6 +30,7 @@ import { useEvents } from '@/hooks/useEvent'
 import { CreateEventForm } from './CreateEventForm'
 import { LoadingButton } from '@mui/lab'
 import { useMuting } from '@/hooks/useAccount'
+import { isComment } from '@/utils/event'
 
 const amountFormat = '0,0.[0]a'
 
@@ -191,14 +192,22 @@ export const ShortTextNotePane = ({
                 content.startsWith('nostr:note1')) &&
               tryParseNostrLink(content)?.id === event.id,
           ).length > 0
-        if (quotes && linkFound) {
-          _quotes.push(item)
+
+        const iscomment = isComment(item)
+        const e = item.getMatchingTags('e')
+        if (comments && iscomment && !linkFound && e.at(-1)?.[1] === event.id) {
+          _comments.push(item)
         } else if (
           comments &&
+          iscomment &&
           !linkFound &&
-          item.getMatchingTags('e').at(-1)?.[1] === event.id
+          e.at(0)?.[3] === 'reply'
         ) {
           _comments.push(item)
+        } else if (quotes) {
+          if (linkFound) {
+            _quotes.push(item)
+          }
         }
       }
     })
