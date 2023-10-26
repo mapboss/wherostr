@@ -22,6 +22,7 @@ import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
 import { nanoid } from 'nanoid'
 import { useAction } from '@/hooks/useApp'
+import { useUser } from '@/hooks/useAccount'
 
 export interface StreamButtonProps {
   label: string
@@ -39,6 +40,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
 }) => {
   const ndk = useNDK()
   const relaySet = useStreamRelaySet()
+  const user = useUser()
   const { showSnackbar } = useAction()
   const liveItem = useLiveActivityItem(data)
   const values = useMemo(() => {
@@ -104,7 +106,11 @@ export const StreamButton: FC<StreamButtonProps> = ({
           event.tags.push(['image', values.image])
         }
 
-        event.tags.push(['p', pubkey, '', 'host'])
+        if (values.status) {
+          event.tags.push(['status', values.status])
+        }
+
+        event.tags.push(['p', user?.hexpubkey || pubkey || author, '', 'host'])
 
         tags.split(',').forEach((t: string) => {
           const d = t.trim()
@@ -122,7 +128,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
         setLoading(false)
       }
     },
-    [ndk, relaySet, showSnackbar],
+    [ndk, user, relaySet, showSnackbar],
   )
   const status = watch('status', 'live')
   const tagsText = watch('tags', '')
