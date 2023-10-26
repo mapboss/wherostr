@@ -14,6 +14,7 @@ import {
 import { useCallback, useContext, useMemo } from 'react'
 import {
   ArrowRightAlt,
+  ChevronRightOutlined,
   Repeat,
   TravelExploreOutlined,
 } from '@mui/icons-material'
@@ -32,6 +33,7 @@ const ShortTextNoteCard = ({
   action = true,
   relatedNoteVariant = 'fraction',
   depth = 0,
+  hideContent = false,
   indent = true,
   indentLine,
 }: {
@@ -39,6 +41,7 @@ const ShortTextNoteCard = ({
   action?: boolean
   relatedNoteVariant?: 'full' | 'fraction' | 'link'
   depth?: number
+  hideContent?: boolean
   indent?: boolean
   indentLine?: boolean
 }) => {
@@ -96,7 +99,13 @@ const ShortTextNoteCard = ({
       return event.pubkey
     }
   }, [event])
-
+  const handleClickViewNote = useCallback(() => {
+    setEventAction({
+      type: EventActionType.View,
+      event,
+      options: { comments: true },
+    })
+  }, [event, setEventAction])
   return (
     <Card className="!rounded-none">
       <Box className="px-3 pt-3 flex items-center gap-2 text-contrast-secondary">
@@ -128,53 +137,62 @@ const ShortTextNoteCard = ({
             )}
           </Box>
         )}
-        {action && !!lnglat && (
-          <IconButton
-            size="small"
-            onClick={() => {
-              const q = query.get('q') || ''
-              router.replace(`${pathname}?q=${q}&map=1`)
-              setTimeout(() => {
-                map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
-                  animate: false,
-                  maxZoom: 15,
-                })
-              }, 300)
-            }}
-          >
-            <TravelExploreOutlined className="text-contrast-secondary" />
-          </IconButton>
-        )}
-        <MenuButton event={event} />
-      </Box>
-      <Box className="flex min-h-[12px]">
-        <div className={`flex justify-center ${indent ? 'w-16' : 'w-3'}`}>
-          {indentLine && (
-            <div className="h-full w-[2px] bg-[rgba(255,255,255,0.12)]" />
-          )}
-        </div>
-        {event.kind === NDKKind.Text ? (
-          <CardContent className="flex-1 !pl-0 !pr-3 !py-3 overflow-hidden">
-            <TextNote event={event} relatedNoteVariant={relatedNoteVariant} />
-            {action && (
-              <Box className="mt-3">
-                <NoteActionBar event={event} />
-              </Box>
+        {action && (
+          <>
+            {!!lnglat && (
+              <IconButton
+                size="small"
+                onClick={() => {
+                  const q = query.get('q') || ''
+                  router.replace(`${pathname}?q=${q}&map=1`)
+                  setTimeout(() => {
+                    map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
+                      animate: false,
+                      maxZoom: 15,
+                    })
+                  }, 300)
+                }}
+              >
+                <TravelExploreOutlined className="text-contrast-secondary" />
+              </IconButton>
             )}
-          </CardContent>
-        ) : (
-          repostId && (
-            <CardContent className="flex-1 !pl-0 !pr-3 !pt-0 !pb-3 overflow-hidden">
-              <QuotedEvent
-                id={repostId}
-                relatedNoteVariant={relatedNoteVariant}
-                icon={<Repeat />}
-              />
-            </CardContent>
-          )
+            <MenuButton event={event} />
+            <IconButton size="small" onClick={handleClickViewNote}>
+              <ChevronRightOutlined className="text-contrast-secondary" />
+            </IconButton>
+          </>
         )}
       </Box>
-      <Divider />
+      {!hideContent && (
+        <Box className="flex min-h-[12px]">
+          <Box className={`flex justify-center ${indent ? 'w-16' : 'w-3'}`}>
+            {indentLine && (
+              <Box className="h-full w-[2px] bg-[rgba(255,255,255,0.12)]" />
+            )}
+          </Box>
+          {event.kind === NDKKind.Text ? (
+            <CardContent className="flex-1 !pl-0 !pr-3 !pt-3 !pb-0 overflow-hidden">
+              <TextNote event={event} relatedNoteVariant={relatedNoteVariant} />
+              {action && (
+                <Box className="mt-3">
+                  <NoteActionBar event={event} />
+                </Box>
+              )}
+            </CardContent>
+          ) : (
+            repostId && (
+              <CardContent className="flex-1 !pl-0 !pr-3 !py-0 overflow-hidden">
+                <QuotedEvent
+                  id={repostId}
+                  relatedNoteVariant={relatedNoteVariant}
+                  icon={<Repeat />}
+                />
+              </CardContent>
+            )
+          )}
+        </Box>
+      )}
+      <Divider className="!mt-3" />
     </Card>
   )
 }

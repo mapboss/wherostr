@@ -18,7 +18,7 @@ const ProfileActionModal = () => {
   const filter = useMemo(() => {
     if (!profileAction?.hexpubkey) return
     return {
-      kinds: [NDKKind.Text],
+      kinds: [NDKKind.Text, NDKKind.Repost],
       authors: [profileAction?.hexpubkey],
       until: unixNow(),
       limit: 30,

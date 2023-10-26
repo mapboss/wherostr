@@ -76,7 +76,7 @@ export const ProfileCard = ({
               <ProfileValidBadge className="ml-2" user={user} />
             </Box>
             <Typography
-              className="overflow-hidden whitespace-nowrap text-ellipsis"
+              className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-secondary"
               variant="body2"
             >
               {user?.profile?.nip05}
@@ -235,7 +235,7 @@ export const ProfileCardFull = ({
               <ProfileValidBadge className="ml-2" user={user} />
             </Box>
             <Typography
-              className="overflow-hidden whitespace-nowrap text-ellipsis"
+              className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-secondary"
               variant="body2"
             >
               {user?.profile?.nip05}

@@ -126,7 +126,7 @@ export default function MenuButton({ event }: { event: NDKEvent }) {
         aria-haspopup="true"
         onClick={handleClick}
       >
-        <MoreVertIcon />
+        <MoreVertIcon className="text-contrast-secondary" />
       </IconButton>
       <Menu
         MenuListProps={{

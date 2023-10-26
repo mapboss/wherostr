@@ -75,7 +75,7 @@ const ProfileChip = ({
         <Box className="flex flex-col pl-3 overflow-hidden">
           <Box className="flex">
             <Typography
-              className="overflow-hidden whitespace-nowrap text-ellipsis"
+              className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-primary"
               variant="subtitle2"
             >
               {displayName}
@@ -84,7 +84,7 @@ const ProfileChip = ({
           </Box>
           {showNip5 && (
             <Typography
-              className="overflow-hidden whitespace-nowrap text-ellipsis"
+              className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-secondary"
               variant="caption"
             >
               {userLeft?.profile?.nip05}

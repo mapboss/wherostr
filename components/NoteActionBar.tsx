@@ -1,5 +1,5 @@
 'use client'
-import { Box, IconButton, Link, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Tooltip, Typography } from '@mui/material'
 import {
   Comment,
   ElectricBolt,
@@ -117,7 +117,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     )
     setReaction(reaction)
   }, [data])
-
+  const likeAmount = useMemo(() => numeral(liked).format(amountFormat), [liked])
   const { repostAmount, quoteAmount, commentAmount, zapAmount } = useMemo(
     () => ({
       repostAmount: numeral(data?.reposts.length).format(amountFormat),
@@ -161,109 +161,72 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   const author = useUserProfile(event.pubkey)
 
   return (
-    <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-3">
-      <Box className="flex flex-col gap-2 items-center">
-        <Tooltip title="Like">
-          <IconButton
-            className={reacted === '+' ? '!text-success' : undefined}
-            size="small"
-            disabled={!!reacted}
-            onClick={handleClickReact('+')}
-          >
-            <ThumbUp />
-          </IconButton>
-        </Tooltip>
-        <Link
-          className="!text-contrast-secondary cursor-pointer w-full text-center"
-          underline="hover"
-          component="span"
+    <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-1">
+      <Tooltip title="Repost">
+        <Button
+          color="inherit"
+          size="small"
+          onClick={handleClickAction(EventActionType.Repost)}
+          startIcon={<Repeat />}
         >
-          <Typography variant="caption">{liked}</Typography>
-        </Link>
-        {/* <Tooltip title="Dislike">
-          <IconButton
-            className={reacted === '-' ? '!text-error' : undefined}
-            size="small"
-            disabled={!!reacted}
-            onClick={handleClickReact('-')}
-          >
-            <ThumbDown />
-          </IconButton>
-        </Tooltip> */}
-      </Box>
-      <Box className="flex flex-col gap-2 items-center">
-        <Tooltip title="Repost">
-          <IconButton
-            size="small"
-            onClick={handleClickAction(EventActionType.Repost)}
-          >
-            <Repeat />
-          </IconButton>
-        </Tooltip>
-        <Link
-          className="!text-contrast-secondary cursor-pointer w-full text-center"
-          underline="hover"
-          component="span"
-          onClick={handleClickAction(EventActionType.View, { reposts: true })}
+          <Typography className="!w-7 text-left" variant="caption">
+            {repostAmount}
+          </Typography>
+        </Button>
+      </Tooltip>
+      <Tooltip title="Quote">
+        <Button
+          color="inherit"
+          size="small"
+          onClick={handleClickAction(EventActionType.Quote)}
+          startIcon={<FormatQuote />}
         >
-          <Typography variant="caption">{repostAmount}</Typography>
-        </Link>
-      </Box>
-      <Box className="flex flex-col gap-2 items-center">
-        <Tooltip title="Quote">
-          <IconButton
-            size="small"
-            onClick={handleClickAction(EventActionType.Quote)}
-          >
-            <FormatQuote />
-          </IconButton>
-        </Tooltip>
-        <Link
-          className="!text-contrast-secondary cursor-pointer w-full text-center"
-          underline="hover"
-          component="span"
-          onClick={handleClickAction(EventActionType.View, { quotes: true })}
+          <Typography className="!w-7 text-left" variant="caption">
+            {quoteAmount}
+          </Typography>
+        </Button>
+      </Tooltip>
+      <Tooltip title="Comment">
+        <Button
+          color="inherit"
+          size="small"
+          onClick={handleClickAction(EventActionType.Comment)}
+          startIcon={<Comment />}
         >
-          <Typography variant="caption">{quoteAmount}</Typography>
-        </Link>
-      </Box>
-      <Box className="flex flex-col gap-2 items-center">
-        <Tooltip title="Comment">
-          <IconButton
-            size="small"
-            onClick={handleClickAction(EventActionType.Comment)}
-          >
-            <Comment />
-          </IconButton>
-        </Tooltip>
-        <Link
-          className="!text-contrast-secondary cursor-pointer w-full text-center"
-          underline="hover"
-          component="span"
-          onClick={handleClickAction(EventActionType.View, { comments: true })}
+          <Typography className="!w-7 text-left" variant="caption">
+            {commentAmount}
+          </Typography>
+        </Button>
+      </Tooltip>
+      <Tooltip title="Like">
+        <Button
+          color="inherit"
+          size="small"
+          onClick={handleClickReact('+')}
+          startIcon={
+            <ThumbUp
+              className={reacted === '+' ? '!text-secondary' : undefined}
+            />
+          }
         >
-          <Typography variant="caption">{commentAmount}</Typography>
-        </Link>
-      </Box>
-      <Box className="flex flex-col gap-2 items-center">
-        <Tooltip title="Zap">
-          <IconButton
-            disabled={!author?.profile?.lud16 && !author?.profile?.lud06}
-            color="primary"
-            size="small"
-            onClick={handleClickAction(EventActionType.Zap)}
-          >
-            <ElectricBolt />
-          </IconButton>
-        </Tooltip>
-        <Link
-          className="!text-contrast-secondary cursor-pointer w-full text-center"
-          underline="hover"
-          component="span"
+          <Typography className="!w-7 text-left" variant="caption">
+            {likeAmount}
+          </Typography>
+        </Button>
+      </Tooltip>
+      <Tooltip title="Zap">
+        <Button
+          color="inherit"
+          disabled={!author?.profile?.lud16 && !author?.profile?.lud06}
+          size="small"
+          onClick={handleClickAction(EventActionType.Zap)}
+          startIcon={<ElectricBolt color="primary" />}
         >
-          <Typography variant="caption">{zapAmount}</Typography>
-        </Link>
-      </Box>
+          <Typography className="!w-7 text-left" variant="caption">
+            {zapAmount}
+          </Typography>
+        </Button>
+      </Tooltip>
     </Box>
   )
 }

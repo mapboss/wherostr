@@ -4,7 +4,9 @@ import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import {
   Box,
   Button,
+  Chip,
   CircularProgress,
+  Divider,
   IconButton,
   InputAdornment,
   Paper,
@@ -174,6 +176,7 @@ export const ShortTextNotePane = ({
   quotes?: boolean
   comments?: boolean
 }) => {
+  const { eventAction, setEventAction } = useContext(AppContext)
   const [muteList] = useMuting()
   const filter = useMemo(() => {
     const kinds: NDKKind[] = []
@@ -230,14 +233,71 @@ export const ShortTextNotePane = ({
       .sort((a, b) => a.created_at! - b.created_at!)
       .map((item) => {
         return (
-          <ShortTextNoteCard key={item.id} event={item} depth={1} indentLine />
+          <ShortTextNoteCard
+            key={item.id}
+            event={item}
+            depth={1}
+            hideContent={item.kind === NDKKind.Repost}
+            indentLine
+          />
         )
       })
   }, [comments, event.id, quotes, relatedEvents, muteList])
-
+  const handleClickAction = useCallback(
+    (type: EventActionType, options?: any) => () => {
+      setEventAction({
+        type,
+        event,
+        options,
+      })
+    },
+    [event, setEventAction],
+  )
   return (
     <Box>
       <ShortTextNoteCard event={event} indent={false} />
+      {event.kind === NDKKind.Text && (
+        <>
+          <Box className="flex gap-3 p-3 justify-center">
+            <Chip
+              className={
+                eventAction?.options?.reposts ? '!bg-secondary-dark' : undefined
+              }
+              label="Reposts"
+              icon={<Repeat />}
+              variant={eventAction?.options?.reposts ? 'filled' : 'outlined'}
+              onClick={handleClickAction(EventActionType.View, {
+                reposts: true,
+              })}
+            />
+            <Chip
+              className={
+                eventAction?.options?.quotes ? '!bg-secondary-dark' : undefined
+              }
+              label="Quotes"
+              icon={<FormatQuote />}
+              variant={eventAction?.options?.quotes ? 'filled' : 'outlined'}
+              onClick={handleClickAction(EventActionType.View, {
+                quotes: true,
+              })}
+            />
+            <Chip
+              className={
+                eventAction?.options?.comments
+                  ? '!bg-secondary-dark'
+                  : undefined
+              }
+              label="Comments"
+              icon={<Comment />}
+              variant={eventAction?.options?.comments ? 'filled' : 'outlined'}
+              onClick={handleClickAction(EventActionType.View, {
+                comments: true,
+              })}
+            />
+          </Box>
+          <Divider />
+        </>
+      )}
       {relatedEventElements ? (
         relatedEventElements
       ) : (
@@ -284,67 +344,42 @@ const EventActionModal = () => {
     }
   }, [eventAction])
   const title = useMemo(() => {
-    if (eventAction?.type === EventActionType.View) {
-      if (
-        [
-          eventAction.options?.reposts,
-          eventAction.options?.quotes,
-          eventAction.options?.comments,
-        ].filter((item) => !!item).length === 1
-      ) {
-        if (eventAction.options?.reposts) {
-          return (
-            <>
-              <Repeat className="mr-2" />
-              Reposts
-            </>
-          )
-        } else if (eventAction.options?.quotes) {
-          return (
-            <>
-              <FormatQuote className="mr-2" />
-              Quotes
-            </>
-          )
-        } else if (eventAction.options?.comments) {
-          return (
-            <>
-              <Comment className="mr-2" />
-              Comments
-            </>
-          )
-        }
-      } else {
-        return [
-          eventAction.options?.reposts && 'Reposts',
-          eventAction.options?.quotes && 'Quotes',
-          eventAction.options?.comments && 'Comments',
-        ]
-          .filter((item) => !!item)
-          .join(', ')
-      }
+    const { type } = eventAction || {}
+    switch (type) {
+      case EventActionType.Create:
+        return 'Create'
+      case EventActionType.Repost:
+        return 'Repost'
+      case EventActionType.Quote:
+        return 'Quote'
+      case EventActionType.Comment:
+        return 'Comment'
+      case EventActionType.Zap:
+        return 'Zap'
+      case EventActionType.View:
+        return 'Note'
+      default:
+        return undefined
     }
   }, [eventAction])
   return (
     eventAction && (
       <Box className="relative max-h-full flex rounded-2xl overflow-hidden p-0.5 bg-gradient-primary">
-        <IconButton
-          className="!absolute top-3 right-3 z-10 !bg-[#0000001f]"
-          size="small"
-          onClick={handleClickCloseModal}
-        >
-          <Close />
-        </IconButton>
-        <Paper className="w-full overflow-y-auto pt-3 !rounded-2xl">
-          <Box className="flex justify-between items-center px-3">
-            {eventAction.type === EventActionType.View ? (
-              <div className="py-1">
-                <Typography variant="body1">{title}</Typography>
-              </div>
-            ) : (
-              <ProfileChip hexpubkey={user?.hexpubkey} />
-            )}
-          </Box>
+        <Paper className="w-full overflow-y-auto !rounded-2xl">
+          <Paper className="sticky top-0 z-10">
+            <Box className="flex items-center p-3 drop-shadow">
+              <Typography className="flex-1" variant="h6">
+                {title}
+              </Typography>
+              <IconButton size="small" onClick={handleClickCloseModal}>
+                <Close />
+              </IconButton>
+            </Box>
+            <Divider />
+          </Paper>
+          {eventAction.type !== EventActionType.View && (
+            <ProfileChip className="pt-3 px-3" hexpubkey={user?.hexpubkey} />
+          )}
           <Box
             className={
               eventAction.type !== EventActionType.View
