@@ -5,6 +5,7 @@ import {
   ExitToApp,
   NotesOutlined,
   SensorsOutlined,
+  Settings,
 } from '@mui/icons-material'
 import {
   Box,
@@ -30,7 +31,7 @@ export interface MenuButtonProps {
 }
 const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
   const { setProfileAction } = useAction()
-  const { signOut } = useAccount()
+  const { readOnly, signOut } = useAccount()
   const [open, setOpen] = useState(false)
 
   const toggleDrawer = useCallback(() => {
@@ -119,6 +120,21 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
             </ListItemIcon>
             <ListItemText primary="Streams" />
           </ListItemButton>
+
+          {!readOnly && (
+            <ListItemButton
+              LinkComponent={Link}
+              href="/settings"
+              onClick={async () => {
+                closeDrawer()
+              }}
+            >
+              <ListItemIcon>
+                <Settings />
+              </ListItemIcon>
+              <ListItemText primary="Settings" />
+            </ListItemButton>
+          )}
 
           {/* <ListItemButton
             onClick={async () => {

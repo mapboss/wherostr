@@ -179,7 +179,7 @@ const UserBar = ({ className }: { className?: string }) => {
                   href="https://nostrudel.ninja/#/signup"
                   target="_blank"
                 >
-                  Create an account via noStrudel.ninja
+                  Create an account
                 </Button>
               </Box>
             </>
