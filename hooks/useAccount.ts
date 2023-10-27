@@ -9,10 +9,11 @@ export const useUser = () => {
   return useMemo(() => user, [user])
 }
 export const useAccount = () => {
-  const { user, signing, signIn, signOut } = useContext(AccountContext)
+  const { user, signing, readOnly, signIn, signOut } =
+    useContext(AccountContext)
   return useMemo(() => {
-    return { user, signing, signIn, signOut }
-  }, [user, signing, signIn, signOut])
+    return { user, signing, readOnly, signIn, signOut }
+  }, [user, signing, readOnly, signIn, signOut])
 }
 
 export const useFollowing = () => {

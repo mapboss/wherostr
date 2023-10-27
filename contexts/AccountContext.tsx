@@ -17,18 +17,23 @@ import {
   NDKFilter,
   NDKKind,
   NDKNip07Signer,
+  NDKPrivateKeySigner,
   NDKSubscriptionCacheUsage,
   NDKUser,
 } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import { useSubscribe } from '@/hooks/useSubscribe'
+import { useAction } from '@/hooks/useApp'
+import { nip19 } from 'nostr-tools'
 
+export type SignInType = 'nip7' | 'nsec' | 'npub'
 export interface AccountProps {
   user?: NDKUser
+  readOnly: boolean
   signing: boolean
   muteList: string[]
   follows: NDKUser[]
-  signIn: () => Promise<NDKUser | void>
+  signIn: (type: SignInType, key?: string) => Promise<NDKUser | void>
   signOut: () => Promise<void>
   setFollows: Dispatch<SetStateAction<NDKUser[]>>
   follow: (newFollow: NDKUser) => Promise<void>
@@ -37,6 +42,7 @@ export interface AccountProps {
 
 export const AccountContext = createContext<AccountProps>({
   user: undefined,
+  readOnly: true,
   muteList: [],
   follows: [],
   signing: true,
@@ -49,6 +55,8 @@ export const AccountContext = createContext<AccountProps>({
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const { ndk, relaySet, updateRelaySet, getUser } = useContext(NostrContext)
+  const { showSnackbar } = useAction()
+  const [readOnly, setReadOnly] = useState(true)
   const [signing, setSigning] = useState<boolean>(true)
   const [user, setUser] = useState<NDKUser>()
   const [follows, setFollows] = useState<NDKUser[]>([])
@@ -96,28 +104,77 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     [follows, ndk],
   )
 
-  const signIn = useCallback(async () => {
-    if (hasNip7Extension()) {
-      ndk.signer = new NDKNip07Signer()
-      const signerUser = await ndk.signer?.user()
-      console.log('signIn:signerUser')
-      if (signerUser) {
-        const user = await getUser(signerUser.hexpubkey)
+  const signIn = useCallback(
+    async (type: SignInType, key?: string) => {
+      try {
+        let user: NDKUser | undefined
+        setSigning(true)
+        if (type === 'nip7') {
+          if (!hasNip7Extension()) {
+            return showSnackbar('Extension not found')
+          }
+          ndk.signer = new NDKNip07Signer()
+          const signerUser = await ndk.signer?.user()
+          console.log('signIn:signerUser')
+          if (signerUser) {
+            user = await getUser(signerUser.hexpubkey)
+            setReadOnly(false)
+          }
+        } else if (type === 'nsec') {
+          let secret = key
+          if (key?.startsWith('nsec')) {
+            const nsecProfile = nip19.decode(key)
+            if (nsecProfile.type !== 'nsec') throw new Error('Invalid nsec')
+            secret = nsecProfile.data
+          }
+          console.log('secret', secret)
+          ndk.signer = new NDKPrivateKeySigner(secret)
+          console.log('ndk.signer', ndk.signer)
+          const signerUser = await ndk.signer?.user()
+          console.log('signerUser', signerUser)
+          if (signerUser) {
+            user = await getUser(signerUser.hexpubkey)
+            setReadOnly(false)
+          }
+        } else if (type === 'npub') {
+          ndk.signer = undefined
+          user = await getUser(key)
+          setReadOnly(true)
+        }
         if (user) {
           await updateFollows(user)
           console.log('signIn:fetchFollows')
           localStorage.setItem(
             'session',
-            JSON.stringify({ pubkey: user.hexpubkey, type: 'nip7' }),
+            JSON.stringify({
+              pubkey: user.hexpubkey,
+              type,
+              ...(type === 'nsec' ? { nsec: key } : undefined),
+            }),
           )
           await updateRelaySet(user)
           console.log('signIn:updateRelaySet')
           setUser(user)
           return user
         }
+      } catch (err: any) {
+        console.log('err', err)
+        showSnackbar(err.message, {
+          slotProps: { alert: { severity: 'error' } },
+        })
+      } finally {
+        setSigning(false)
       }
-    }
-  }, [hasNip7Extension, ndk, getUser, updateFollows, updateRelaySet])
+    },
+    [
+      ndk,
+      hasNip7Extension,
+      getUser,
+      updateFollows,
+      updateRelaySet,
+      showSnackbar,
+    ],
+  )
 
   const signOut = useCallback(async () => {
     ndk.signer = undefined
@@ -131,17 +188,18 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       setSigning(true)
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       if (session?.pubkey) {
-        if (session.type === 'nip7' && hasNip7Extension()) {
-          await signIn()
-          return
-        }
+        await signIn(
+          session.type,
+          session.type === 'nsec' ? session?.nsec : session?.pubkey,
+        )
+        return
       }
       await updateRelaySet()
     } catch (err) {
     } finally {
       setSigning(false)
     }
-  }, [hasNip7Extension, updateRelaySet, signIn])
+  }, [updateRelaySet, signIn])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -169,6 +227,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const value = useMemo((): AccountProps => {
     return {
       user,
+      readOnly,
       muteList,
       follows,
       signing,
@@ -178,7 +237,17 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       follow,
       unfollow,
     }
-  }, [user, muteList, follows, signing, signIn, signOut, follow, unfollow])
+  }, [
+    user,
+    readOnly,
+    muteList,
+    follows,
+    signing,
+    signIn,
+    signOut,
+    follow,
+    unfollow,
+  ])
 
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>

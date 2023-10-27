@@ -53,7 +53,7 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
           comment || undefined,
           undefined,
           ndk.getUser({
-            hexpubkey: event.tagValue('p'),
+            hexpubkey: event.tagValue('p') || event.pubkey,
           }),
         )
         if (pr) {

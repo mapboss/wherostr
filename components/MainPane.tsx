@@ -47,7 +47,7 @@ const MainPane = () => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { map } = useContext(MapContext)
-  const { user, signing } = useAccount()
+  const { user, signing, readOnly } = useAccount()
   const [follows] = useFollowing()
   const { profileAction, events, eventAction, setEvents, setEventAction } =
     useContext(AppContext)
@@ -334,19 +334,6 @@ const MainPane = () => {
           <UserBar />
         )}
         <Filter feedType={feedType} className="grow" onSearch={onSearch} />
-        {user?.hexpubkey && (
-          <Hidden mdDown>
-            <Tooltip title="Post">
-              <IconButton
-                className="bg-gradient-primary"
-                size="large"
-                onClick={handleClickPost}
-              >
-                <Draw />
-              </IconButton>
-            </Tooltip>
-          </Hidden>
-        )}
       </Toolbar>
       <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
       <Tabs
@@ -431,9 +418,9 @@ const MainPane = () => {
           <ProfileActionModal />
         </Box>
       )}
-      <Zoom in={!showMap && mdDown && !!user?.hexpubkey}>
+      <Zoom in={!readOnly}>
         <Fab
-          className="!fixed !bg-gradient-primary !z-40 bottom-6 right-6"
+          className="!fixed !bg-gradient-primary !z-40 bottom-6 right-6 md:right-auto md:left-[648px]"
           size="medium"
           onClick={handleClickPost}
         >

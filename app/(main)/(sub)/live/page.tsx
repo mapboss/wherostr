@@ -22,6 +22,7 @@ import { useStreamRelaySet } from '@/hooks/useNostr'
 import StatusBadge from '@/components/StatusBadge'
 import { ViewportList } from 'react-viewport-list'
 import ProfileChip from '@/components/ProfileChip'
+import { useMuting } from '@/hooks/useAccount'
 
 export default function Page() {
   const theme = useTheme()
@@ -30,6 +31,7 @@ export default function Page() {
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const smUp = useMediaQuery(theme.breakpoints.up('sm'))
   const since = useMemo(() => unixNow() - WEEK, [])
+  const [muteList] = useMuting()
   const liveFilter = useMemo(() => {
     return {
       kinds: [30311 as NDKKind],
@@ -43,6 +45,7 @@ export default function Page() {
     const items = liveEvent
       .filter(
         (item) =>
+          !muteList.includes(item.tagValue('p') || item.pubkey) &&
           item.tagValue('status') === 'live' &&
           item.tagValue('starts') &&
           item.tagValue('streaming'),
@@ -52,13 +55,15 @@ export default function Page() {
         (a, b) => Number(b.tagValue('starts')) - Number(a.tagValue('starts')),
       )
     return items
-  }, [liveEvent])
+  }, [liveEvent, muteList])
 
   const endedItems = useMemo(() => {
     const items = liveEvent
       .filter(
         (item) =>
-          item.tagValue('status') === 'ended' && item.tagValue('recording'),
+          !muteList.includes(item.tagValue('p') || item.pubkey) &&
+          item.tagValue('status') === 'ended' &&
+          item.tagValue('recording'),
       )
       .slice()
       .sort(
@@ -67,7 +72,7 @@ export default function Page() {
           Number(a.tagValue('ends') || a.created_at),
       )
     return items
-  }, [liveEvent])
+  }, [liveEvent, muteList])
 
   const ref = useRef<HTMLElement>(
     window.document.getElementsByTagName('main').item(0),

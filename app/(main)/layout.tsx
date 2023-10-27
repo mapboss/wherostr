@@ -9,12 +9,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <AccountContextProvider>
-      <AppContextProvider>
+    <AppContextProvider>
+      <AccountContextProvider>
         <main className="relative min-h-full h-full flex flex-col flex-1 overflow-y-auto">
           <NoSsr>{children}</NoSsr>
         </main>
-      </AppContextProvider>
-    </AccountContextProvider>
+      </AccountContextProvider>
+    </AppContextProvider>
   )
 }

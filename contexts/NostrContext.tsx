@@ -16,15 +16,13 @@ import NDK, {
   NDKUser,
 } from '@nostr-dev-kit/ndk'
 import NDKCacheAdapterDexie from '@nostr-dev-kit/ndk-cache-dexie'
-import { nip19 } from 'nostr-tools'
+import { nip19, nip05 } from 'nostr-tools'
+import { nip5Regexp } from '@/constants/app'
 
 interface Nostr {
   ndk: NDK
   relaySet?: NDKRelaySet
-  getUser: (
-    hexpubkey?: string,
-    relayUrls?: string[],
-  ) => Promise<NDKUser | undefined>
+  getUser: (key?: string, relayUrls?: string[]) => Promise<NDKUser | undefined>
   getEvent: (id: string) => Promise<NDKEvent | null>
   updateRelaySet: (user?: NDKUser) => Promise<void>
 }
@@ -81,23 +79,27 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [])
 
   const getUser = useCallback(
-    async (hexpubkey?: string, relayUrls: string[] = defaultRelays) => {
-      if (!hexpubkey) return
+    async (key?: string, relayUrls: string[] = defaultRelays) => {
+      if (!key) return
       let user: NDKUser
       if (!relayUrls) {
         const relays = Array.from(relaySet?.relays.values() || [])
         relayUrls = relays.map((d) => d.url)
       }
-      if (hexpubkey.startsWith('npub')) {
+      if (nip5Regexp.test(key)) {
+        const profile = await nip05.queryProfile(key)
+        if (!profile?.pubkey) return
+        user = ndk.getUser({ hexpubkey: profile?.pubkey, relayUrls })
+      } else if (key.startsWith('npub')) {
         try {
-          const hex = nip19.decode(hexpubkey)
+          const hex = nip19.decode(key)
           if (hex.type !== 'npub') return
           user = ndk.getUser({ hexpubkey: hex.data, relayUrls })
         } catch (err) {
           return
         }
       } else {
-        user = ndk.getUser({ hexpubkey, relayUrls })
+        user = ndk.getUser({ hexpubkey: key, relayUrls })
       }
       try {
         const profile = await user.fetchProfile({
