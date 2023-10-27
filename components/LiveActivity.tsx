@@ -23,7 +23,7 @@ import { useFollowing, useUser } from '@/hooks/useAccount'
 import { StreamButton } from './StreamButton'
 import { useAction } from '@/hooks/useApp'
 import { DeleteButton } from './DeleteEventButton'
-import { nanoid } from 'nanoid'
+import { v4 as uuidv4 } from 'uuid'
 
 export interface LiveActivityItem {
   id: string
@@ -214,7 +214,7 @@ export const useLiveActivityItem = (event?: NDKEvent) => {
   const liveItem = useMemo<LiveActivityItem>(() => {
     if (!event)
       return {
-        id: nanoid(),
+        id: uuidv4(),
         author: '',
         pubkey: '',
         tags: [],

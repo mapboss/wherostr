@@ -22,7 +22,9 @@ export const NostrAddressComponent: FC<NostrAddressComponentProps> = ({
   }, [data])
   const relaySet = useStreamRelaySet()
   const [events] = useSubscribe(filter, true, relaySet)
-  const event = useMemo(() => events?.[0], [events])
+  const event = useMemo(() => {
+    return events?.[0]
+  }, [events])
 
   if (!event) {
     return <LinearProgress />

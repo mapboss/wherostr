@@ -20,11 +20,11 @@ import { unixNow } from '@/utils/time'
 import ReactPlayer from 'react-player'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
-import { nanoid } from 'nanoid'
 import { useAction } from '@/hooks/useApp'
 import { useUser } from '@/hooks/useAccount'
 import { nip19 } from 'nostr-tools'
 import { useRouter } from 'next/navigation'
+import { v4 as uuidv4 } from 'uuid'
 
 export interface StreamButtonProps {
   label: string
@@ -64,7 +64,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
           values.d = id
           event.tags.push(['d', id])
         } else {
-          event.tags.push(['d', nanoid()])
+          event.tags.push(['d', uuidv4()])
         }
 
         const starts = isNaN(values.starts)
@@ -123,7 +123,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
         setOpen(false)
         if (mode === 'add') {
           const addr = nip19.naddrEncode({
-            identifier: event.tagId(),
+            identifier: event.deduplicationKey(),
             kind: event.kind,
             pubkey: event.pubkey,
           })
