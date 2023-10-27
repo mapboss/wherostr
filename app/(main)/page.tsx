@@ -2,19 +2,34 @@
 import MainPane from '@/components/MainPane'
 import { MapView } from '@/components/MapView'
 import { MapContextProvider } from '@/contexts/MapContext'
-import { Box, useMediaQuery, useTheme } from '@mui/material'
+import {
+  Box,
+  Fab,
+  Hidden,
+  IconButton,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material'
 import classNames from 'classnames'
 import { RedirectType } from 'next/dist/client/components/redirect'
-import { redirect, useRouter, useSearchParams } from 'next/navigation'
+import {
+  redirect,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from 'next/navigation'
 import { useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
 import Geohash from 'latlon-geohash'
+import { ChevronLeftOutlined } from '@mui/icons-material'
 
 export default function Page() {
   const theme = useTheme()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const hasMap = searchParams.get('map') === '1'
+  const q = searchParams.get('q') || ''
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const hash =
     typeof window !== 'undefined' ? window.location.hash.slice(1) : ''
@@ -57,7 +72,18 @@ export default function Page() {
             'invisible -z-10': !mdUp && !hasMap,
             'md:visible': true,
           })}
-        />
+        >
+          <Hidden mdUp>
+            <Box className="absolute top-20 left-2">
+              <Fab
+                size="small"
+                onClick={() => router.replace(`${pathname}?q=${q}`)}
+              >
+                <ChevronLeftOutlined />
+              </Fab>
+            </Box>
+          </Hidden>
+        </MapView>
         <MainPane />
       </Box>
     </MapContextProvider>
