@@ -24,6 +24,7 @@ import { StreamButton } from './StreamButton'
 import { useAction } from '@/hooks/useApp'
 import { DeleteButton } from './DeleteEventButton'
 import { v4 as uuidv4 } from 'uuid'
+import TextNote from './TextNote'
 
 export interface LiveActivityItem {
   id: string
@@ -139,14 +140,11 @@ const LiveActivity = ({
             </Box>
           </Box>
           <Hidden lgDown>
-            <Typography
-              color="text.secondary"
-              overflow="hidden"
-              textOverflow="ellipsis"
-              maxHeight="3em"
-            >
-              {liveItem.summary}
-            </Typography>
+            <TextNote
+              textVariant="subtitle2"
+              skipEmbedLink
+              event={{ content: liveItem.summary }}
+            />
             <Box className="flex flex-wrap gap-2 mt-2 items-center">
               <StatusBadge status={liveItem.status} />
               {liveItem.status === 'live' && (

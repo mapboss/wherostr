@@ -187,6 +187,8 @@ export const StreamButton: FC<StreamButtonProps> = ({
             margin="dense"
             autoComplete="off"
             fullWidth
+            multiline
+            maxRows={4}
             InputLabelProps={{
               shrink: true,
             }}

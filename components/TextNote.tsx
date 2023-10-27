@@ -241,7 +241,10 @@ export const NostrAddressBox = ({
 
 const renderChunk = (
   { type, content, mimeType }: ParsedFragment,
-  { relatedNoteVariant }: { relatedNoteVariant: RelatedNoteVariant },
+  {
+    skipEmbedLink,
+    relatedNoteVariant,
+  }: { skipEmbedLink?: boolean; relatedNoteVariant: RelatedNoteVariant },
 ) => {
   switch (type) {
     case 'media':
@@ -276,7 +279,7 @@ const renderChunk = (
         )
       }
     case 'link':
-      if (ReactPlayer.canPlay(content)) {
+      if (!skipEmbedLink && ReactPlayer.canPlay(content)) {
         return (
           <Box className="border-none rounded-2xl overflow-hidden w-full aspect-video">
             <ReactPlayer
@@ -295,7 +298,10 @@ const renderChunk = (
         const url = new URL(content)
         protocol = url.protocol
       } catch (err) {}
-      if (protocol === 'nostr:' || protocol === 'web+nostr:') {
+      if (
+        !skipEmbedLink &&
+        (protocol === 'nostr:' || protocol === 'web+nostr:')
+      ) {
         const nostrLink = tryParseNostrLink(content)
         // const nostrLink2 = nip19.decode(content)
         // console.log('nostrLink2', nostrLink2)
@@ -366,10 +372,12 @@ const TextNote = ({
   event,
   relatedNoteVariant = 'fraction',
   textVariant = 'body1',
+  skipEmbedLink = false,
 }: {
   event: Partial<NDKEvent>
   relatedNoteVariant?: RelatedNoteVariant
   textVariant?: Variant
+  skipEmbedLink?: boolean
 }) => {
   const [show, setShow] = useState(false)
   const chunks = useMemo(() => {
@@ -412,6 +420,7 @@ const TextNote = ({
             <Fragment key={index}>
               {renderChunk(chunk, {
                 relatedNoteVariant,
+                skipEmbedLink,
               })}
             </Fragment>
           ))}
