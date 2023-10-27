@@ -180,6 +180,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     ndk.signer = undefined
     localStorage.removeItem('session')
     setUser(undefined)
+    setReadOnly(true)
     updateRelaySet()
   }, [ndk, updateRelaySet])
 
