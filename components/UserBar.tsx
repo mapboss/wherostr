@@ -18,6 +18,7 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  Link,
   TextField,
   Typography,
 } from '@mui/material'
@@ -112,11 +113,6 @@ const UserBar = ({ className }: { className?: string }) => {
         fullWidth
         maxWidth={'xs'}
         component="form"
-        // PaperProps={{
-        //   className: classNames('transition-all', {
-        //     '!bg-error-dark': loginType === 'nsec',
-        //   }),
-        // }}
         onSubmit={handleSubmit(_handleSubmit)}
       >
         {!!loginType && (
@@ -180,8 +176,10 @@ const UserBar = ({ className }: { className?: string }) => {
                   size="large"
                   color="inherit"
                   disabled={signing}
+                  href="https://nostrudel.ninja/#/signup"
+                  target="_blank"
                 >
-                  Create an account
+                  Create an account via noStrudel.ninja
                 </Button>
               </Box>
             </>
@@ -189,7 +187,24 @@ const UserBar = ({ className }: { className?: string }) => {
             <>
               <Alert severity="warning">
                 Using private keys is insecure You should use a browser
-                extension like Alby, nostr-keyx or Nos2x
+                extension like{' '}
+                <Link href="https://getalby.com/" target="_blank">
+                  Alby
+                </Link>
+                ,{' '}
+                <Link
+                  href="https://github.com/susumuota/nostr-keyx"
+                  target="_blank"
+                >
+                  nostr-keyx
+                </Link>{' '}
+                or{' '}
+                <Link
+                  href="https://chrome.google.com/webstore/detail/nos2x/kpgefcfmnafjgpblomihpgmejjdanjjp"
+                  target="_blank"
+                >
+                  Nos2x
+                </Link>
               </Alert>
               <Typography>Enter user private key (nsec)</Typography>
               <TextField
@@ -257,7 +272,7 @@ const UserBar = ({ className }: { className?: string }) => {
           ) : undefined}
         </DialogContent>
         {!!loginType && (
-          <DialogActions>
+          <DialogActions className="mx-4">
             <Button
               fullWidth
               disabled={signing}
