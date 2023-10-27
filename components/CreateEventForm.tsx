@@ -279,7 +279,12 @@ export const CreateEventForm = ({
 
         await ev.publish(relaySet)
         setEventAction(undefined)
-      } catch (err) {
+      } catch (err: any) {
+        showSnackbar(err.message, {
+          slotProps: {
+            alert: { severity: 'error' },
+          },
+        })
         console.log(err)
       } finally {
         setPosting(false)
@@ -292,8 +297,9 @@ export const CreateEventForm = ({
       positingOptions?.location,
       ndk,
       relaySet,
-      setEventAction,
       appendMapLink,
+      setEventAction,
+      showSnackbar,
     ],
   )
   const renderActionTypeIcon = useCallback(() => {

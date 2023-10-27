@@ -23,6 +23,8 @@ import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
 import { nanoid } from 'nanoid'
 import { useAction } from '@/hooks/useApp'
 import { useUser } from '@/hooks/useAccount'
+import { nip19 } from 'nostr-tools'
+import { useRouter } from 'next/navigation'
 
 export interface StreamButtonProps {
   label: string
@@ -38,6 +40,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
   mode = 'add',
   size,
 }) => {
+  const router = useRouter()
   const ndk = useNDK()
   const relaySet = useStreamRelaySet()
   const user = useUser()
@@ -118,6 +121,14 @@ export const StreamButton: FC<StreamButtonProps> = ({
         })
         await event.publish(relaySet)
         setOpen(false)
+        if (mode === 'add') {
+          const addr = nip19.naddrEncode({
+            identifier: event.tagId(),
+            kind: event.kind,
+            pubkey: event.pubkey,
+          })
+          return router.push('/a/?naddr=' + addr)
+        }
       } catch (err: any) {
         showSnackbar(err.message, {
           slotProps: {
@@ -128,7 +139,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
         setLoading(false)
       }
     },
-    [ndk, user, relaySet, showSnackbar],
+    [mode, router, ndk, user, relaySet, showSnackbar],
   )
   const status = watch('status', 'live')
   const tagsText = watch('tags', '')
