@@ -8,6 +8,7 @@ import {
   ListItemIcon,
   ListItemText,
   Paper,
+  Typography,
 } from '@mui/material'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -15,17 +16,16 @@ import { usePathname } from 'next/navigation'
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   return (
-    <Box className="flex mx-4 justify-center">
-      <List>
-        <ListItem>
-          <ListItemText
-            primaryTypographyProps={{
-              variant: 'h5',
-              fontWeight: 'bold',
-            }}
-            primary="Settings"
-          />
-        </ListItem>
+    <Box className="flex flex-col md:flex-row mx-4 justify-center items-start">
+      <List
+        disablePadding
+        subheader={
+          <Typography variant="h5" className="min-w-full">
+            Settings
+          </Typography>
+        }
+        className="flex flex-wrap md:list-item items-center"
+      >
         <ListItemButton
           disabled
           className="!rounded-2xl"
@@ -60,8 +60,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           />
         </ListItemButton>
       </List>
-      <Box mx={2} />
-      <Paper className="relative w-full !rounded-2xl max-w-2xl overflow-hidden">
+      <Box className="my-2 md:my-0 md:mx-4" />
+      <Paper className="relative w-full !rounded-2xl md:max-w-2xl overflow-hidden">
         {children}
       </Paper>
     </Box>

@@ -139,7 +139,13 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   )
   const showSnackbar = useCallback(
     (message: string, props?: Omit<AppSnackbarProps, 'message'>) => {
-      setSnackProps((prev) => ({ ...prev, ...props, open: true, message }))
+      setSnackProps((prev) => ({
+        ...prev,
+        autoHideDuration: 5000,
+        ...props,
+        open: true,
+        message,
+      }))
     },
     [],
   )
