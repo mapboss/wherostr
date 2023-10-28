@@ -45,7 +45,7 @@ export interface OSMReverseResult {
 export async function search(payload?: string) {
   const res = await axios.get<string, AxiosResponse<OSMSearchResult[]>>(
     'https://nominatim.openstreetmap.org/search',
-    { params: { q: payload, format: 'jsonv2' } },
+    { params: { q: payload, format: 'jsonv2', limit: 10 } },
   )
   return res.data
 }

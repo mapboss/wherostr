@@ -1,36 +1,13 @@
 'use client'
-import {
-  CircularProgress,
-  IconButton,
-  InputAdornment,
-  Box,
-  TextField,
-  BaseTextFieldProps,
-  TextFieldProps,
-  Chip,
-  Menu,
-  List,
-} from '@mui/material'
-import {
-  ChangeEvent,
-  FC,
-  KeyboardEvent,
-  MouseEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
-import { ArrowDownward, ArrowDropDown, Search } from '@mui/icons-material'
+import { Box, BaseTextFieldProps, TextFieldProps } from '@mui/material'
+import { FC, useCallback, useEffect, useMemo } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import bbox from '@turf/bbox'
 import bboxPolygon from '@turf/bbox-polygon'
 import buffer from '@turf/buffer'
 import { search } from '@/services/osm'
-import { useUser } from '@/hooks/useAccount'
 import _ from 'lodash'
-import PlacesSearch from './PlacesSearch'
+import SearchBox from './SearchBox'
 
 export interface FilterProps extends BaseTextFieldProps {
   feedType?: 'follows' | 'global'
@@ -54,23 +31,11 @@ const Filter: FC<FilterProps> = ({
   onSearch,
   ...props
 }) => {
-  const user = useUser()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const querySearch = searchParams.get('q') || ''
-  const [keyword, setKeyword] = useState<string>()
-  const [loading, setLoading] = useState(false)
-  const [anchorEl, setAnchorEl] = useState<null | HTMLFormElement>(null)
-  const open = Boolean(anchorEl)
-  const handleShowMenu = (elem: HTMLFormElement | null) => {
-    setAnchorEl(elem)
-  }
-  const handleCloseMenu = () => {
-    setAnchorEl(null)
-  }
-  // const [placeList, setPlaceList] = useState<any[]>(placeList)
-
+  const showMap = searchParams.get('map') || ''
   const fetchSearch = useCallback(async (querySearch: string) => {
     if (!querySearch) return {}
     const result = await search(querySearch)
@@ -123,127 +88,19 @@ const Filter: FC<FilterProps> = ({
         : [],
     [querySearch],
   )
-  const ref = useRef<HTMLFormElement>(null)
 
   return (
-    <Box
-      className={className}
-      component={'form'}
-      ref={ref}
-      // onSubmit={async (evt) => {
-      //   evt.preventDefault()
-      //   const q = evt.currentTarget['search'].value
-      //   setKeyword('')
-      //   router.push(`${pathname}?q=${q}`)
-      // }}
-    >
-      <PlacesSearch />
-      {/* <TextField
-        {...props}
-        fullWidth
-        value={keyword}
-        inputRef={ref}
-        onChange={async (evt) => {
-          try {
-            const text = evt.target.value
-            setKeyword(text)
-            if (!text) {
-              return handleCloseMenu()
-            }
-            // handleShowMenu(ref.current)
-            setLoading(true)
-            const result = await _.throttle(() => fetchSearch(text), 300)()
-            console.log('result', result)
-          } finally {
-            setLoading(false)
-          }
-        }}
+    <Box className={className}>
+      <SearchBox
+        placeholder="Search by hashtag or place"
         name="search"
         size="small"
         margin="dense"
-        placeholder="Search notes and places"
-        sx={{ my: 1 }}
-        autoComplete="off"
-        InputProps={{
-          ...props.InputProps,
-          sx: { pl: 0.5 },
-          startAdornment: (
-            <InputAdornment position="start">
-              {!!tags.length ? (
-                tags.map((d) => (
-                  <Chip
-                    key={d}
-                    label={`#${d}`}
-                    onDelete={() => {
-                      router.push(
-                        `${pathname}?q=${tags
-                          .filter((_d) => d !== _d)
-                          .join(' ')}`,
-                      )
-                    }}
-                  />
-                ))
-              ) : feedType === 'follows' ? (
-                <Chip
-                  label="Following"
-                  deleteIcon={<ArrowDropDown />}
-                  onClick={() => router.replace(`${pathname}?q=global`)}
-                  onDelete={() => router.replace(`${pathname}?q=global`)}
-                />
-              ) : (
-                <Chip
-                  label="Global"
-                  deleteIcon={<ArrowDropDown />}
-                  onClick={
-                    user
-                      ? () => router.replace(`${pathname}?q=follows`)
-                      : undefined
-                  }
-                  onDelete={
-                    user
-                      ? () => router.replace(`${pathname}?q=follows`)
-                      : undefined
-                  }
-                />
-              )}
-            </InputAdornment>
-          ),
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton type="submit">
-                <Search />
-              </IconButton>
-            </InputAdornment>
-          ),
+        onChange={(value) => {
+          router.push(`${pathname}?q=${value}&map=${showMap}`)
         }}
+        value={querySearch}
       />
-      <Menu
-        MenuListProps={{
-          'aria-labelledby': 'long-button',
-          disablePadding: true,
-        }}
-        transformOrigin={{
-          horizontal: 'left',
-          vertical: 'top',
-        }}
-        anchorOrigin={{
-          horizontal: 'left',
-          vertical: 'bottom',
-        }}
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleCloseMenu}
-        // slotProps={{
-        //   paper: {
-        //     style: {
-        //       width: '20ch',
-        //     },
-        //   },
-        // }}
-      >
-        <List disablePadding>
-        </List>
-      </Menu> */}
     </Box>
   )
 }

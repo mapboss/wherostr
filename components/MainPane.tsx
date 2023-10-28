@@ -2,34 +2,26 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import EventActionModal from '@/components/EventActionModal'
 import ProfileActionModal from '@/components/ProfileActionModal'
 import EventList from '@/components/EventList'
-import Filter, { SearchPayload } from '@/components/Filter'
+import Filter from '@/components/Filter'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { MapContext } from '@/contexts/MapContext'
 import Geohash from 'latlon-geohash'
 import {
-  Avatar,
   Box,
+  Chip,
   Divider,
   Fab,
-  Hidden,
-  IconButton,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemSecondaryAction,
-  ListItemText,
   Paper,
   Tab,
   Tabs,
   Toolbar,
-  Tooltip,
   useMediaQuery,
   useTheme,
   Zoom,
 } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
-import { Draw, Place, TravelExplore } from '@mui/icons-material'
+import { CropFree, Draw, Pin, Tag } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -38,6 +30,7 @@ import classNames from 'classnames'
 import { DAY, unixNow } from '@/utils/time'
 import { useAccount, useFollowing } from '@/hooks/useAccount'
 import DrawerMenu from './DrawerMenu'
+import { extractQuery } from '@/utils/extractQuery'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -52,7 +45,6 @@ const MainPane = () => {
   const { profileAction, events, eventAction, setEvents, setEventAction } =
     useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
-  const [payload, setPayload] = useState<SearchPayload>({})
   const theme = useTheme()
   const xlUp = useMediaQuery(theme.breakpoints.up('lg'))
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
@@ -70,24 +62,18 @@ const MainPane = () => {
     return 'global'
   }, [user, q])
 
+  const query = useMemo(() => extractQuery(q), [q])
+
   useEffect(() => {
     setEvents([])
-  }, [payload, setEvents])
+  }, [query, setEvents])
 
-  // useEffect(() => {
-  //   if (!events.length && !!payload.places?.length) {
-  //     setTabIndex(1)
-  //   } else {
-  //     setTabIndex(0)
-  //   }
-  // }, [events.length, payload.places?.length])
-
-  const bounds = useMemo(() => new LngLatBounds(payload.bbox), [payload.bbox])
+  const bounds = useMemo(() => new LngLatBounds(query?.bbox), [query?.bbox])
 
   const geohashFilter = useMemo(() => {
     if (signing) return
-    if (!payload.bbox) return
-    const bbox = payload.bbox
+    if (!query?.bbox) return
+    const bbox = query.bbox
     let geohashFilter: Set<string>
     const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 1)
     const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 1)
@@ -98,13 +84,12 @@ const MainPane = () => {
       kinds: [NDKKind.Text, NDKKind.Repost],
       '#g': Array.from(geohashFilter),
     }
-  }, [signing, payload.bbox])
+  }, [signing, query?.bbox])
 
   const authorsOrTags = useMemo(() => {
-    const tags =
-      q && q !== 'follows' && q !== 'global'
-        ? new Set(q.split(/\s|,/).map((d) => d.trim().toLowerCase()))
-        : undefined
+    const tags = query?.tags
+      ? new Set(query?.tags.map((d) => d.trim().toLowerCase()))
+      : undefined
 
     if (!!tags?.size) {
       return { '#t': Array.from(tags) }
@@ -112,17 +97,18 @@ const MainPane = () => {
     if (follows && feedType === 'follows') {
       return { authors: follows.map((d) => d.hexpubkey) }
     }
-  }, [follows, q, feedType])
+  }, [follows, query?.tags, feedType])
 
   const tagsFilter = useMemo<NDKFilter | undefined>(() => {
     if (signing) return
+    if (!authorsOrTags && query?.bbox) return
     return {
       ...authorsOrTags,
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - DAY,
       limit: 30,
     } as NDKFilter
-  }, [signing, authorsOrTags])
+  }, [signing, query?.bbox, authorsOrTags])
 
   const [subGeoFilter] = useSubscribe(geohashFilter)
   const [subTagFilter, fetchMore, newItems, showNewItems] =
@@ -311,10 +297,6 @@ const MainPane = () => {
     }
   }, [map, showPanel, mdUp, xlUp])
 
-  const onSearch = useCallback((payload: SearchPayload = {}) => {
-    setPayload(payload)
-  }, [])
-
   return (
     <Paper
       className={classNames(
@@ -331,10 +313,50 @@ const MainPane = () => {
         ) : (
           <UserBar />
         )}
-        <Filter feedType={feedType} className="grow" onSearch={onSearch} />
+        {!query ? (
+          <Filter className="grow" />
+        ) : (
+          <Box mx="auto">
+            {query.tags?.map((d) => (
+              <Chip
+                icon={<Tag />}
+                key={d}
+                label={d}
+                onDelete={() =>
+                  router.replace(
+                    `${pathname}?q=${query.tags
+                      ?.filter((tag) => tag !== d)
+                      .map((d) => `t:${d}`)
+                      .join(';')}&map=${showMap ? '1' : ''}`,
+                  )
+                }
+              />
+            ))}
+            {query.bhash ? (
+              <Chip
+                icon={<CropFree />}
+                key={query.bhash?.join(', ')}
+                label={query.bhash?.join(', ')}
+                onDelete={() =>
+                  router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
+                }
+              />
+            ) : undefined}
+            {query.geohash ? (
+              <Chip
+                icon={<Pin />}
+                key={query.geohash}
+                label={query.geohash}
+                onDelete={() =>
+                  router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
+                }
+              />
+            ) : undefined}
+          </Box>
+        )}
       </Toolbar>
       <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
-      <Tabs
+      {/* <Tabs
         variant="fullWidth"
         value={tabValue}
         onChange={(_, value) => {
@@ -344,14 +366,14 @@ const MainPane = () => {
       >
         <Tab label="Notes" value="notes" />
         <Tab label="Conversations" value="conversations" />
-      </Tabs>
+      </Tabs> */}
       <Divider />
       <EventList
         events={events}
         onFetchMore={fetchMore}
         newItems={newItems}
         onShowNewItems={showNewItems}
-        showComments={showComments}
+        showComments={!!query || showComments}
       />
       {eventAction ? (
         <Box
