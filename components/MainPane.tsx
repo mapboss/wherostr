@@ -12,8 +12,6 @@ import {
   Divider,
   Fab,
   Paper,
-  Tab,
-  Tabs,
   Toolbar,
   useMediaQuery,
   useTheme,
@@ -21,7 +19,7 @@ import {
 } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
-import { CropFree, Draw, Pin, Tag } from '@mui/icons-material'
+import { CropFree, Draw, LocationOn, Pin, Tag } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -31,6 +29,10 @@ import { DAY, unixNow } from '@/utils/time'
 import { useAccount, useFollowing } from '@/hooks/useAccount'
 import DrawerMenu from './DrawerMenu'
 import { extractQuery } from '@/utils/extractQuery'
+import buffer from '@turf/buffer'
+import bboxPolygon from '@turf/bbox-polygon'
+import bbox from '@turf/bbox'
+import FeedFilterMenu from './FeedFilterMenu'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
@@ -51,16 +53,17 @@ const MainPane = () => {
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const showMap = searchParams.get('map') === '1'
   const q = useMemo(() => searchParams.get('q') || '', [searchParams])
-  const [showComments, setShowComments] = useState(false)
   const [tabValue, setTabValue] = useState<'notes' | 'conversations'>('notes')
   const feedType = useMemo(() => {
     if (user) {
-      if (!q || q === 'follows') {
-        return 'follows'
+      if (!q || q === 'following' || q === 'conversation') {
+        return 'following'
       }
     }
     return 'global'
   }, [user, q])
+
+  const showComments = useMemo(() => q === 'conversation', [q])
 
   const query = useMemo(() => extractQuery(q), [q])
 
@@ -72,19 +75,28 @@ const MainPane = () => {
 
   const geohashFilter = useMemo(() => {
     if (signing) return
-    if (!query?.bbox) return
-    const bbox = query.bbox
-    let geohashFilter: Set<string>
-    const bboxhash1 = Geohash.encode(bbox[1], bbox[0], 1)
-    const bboxhash2 = Geohash.encode(bbox[3], bbox[2], 1)
-    const bboxhash3 = Geohash.encode(bbox[1], bbox[2], 1)
-    const bboxhash4 = Geohash.encode(bbox[3], bbox[0], 1)
-    geohashFilter = new Set([bboxhash1, bboxhash2, bboxhash3, bboxhash4])
+    if (!query?.bbox && !query?.geohash) return
+    let geohashFilter: string[] = []
+    if (query.bbox) {
+      const polygon = buffer(bboxPolygon(query.bbox), 5, {
+        units: 'kilometers',
+      })
+      const bounds = bbox(polygon)
+      const bboxhash1 = Geohash.encode(bounds[1], bounds[0], 1)
+      const bboxhash2 = Geohash.encode(bounds[3], bounds[2], 1)
+      const bboxhash3 = Geohash.encode(bounds[1], bounds[2], 1)
+      const bboxhash4 = Geohash.encode(bounds[3], bounds[0], 1)
+      geohashFilter = Array.from(
+        new Set([bboxhash1, bboxhash2, bboxhash3, bboxhash4]),
+      )
+    } else if (query?.geohash) {
+      geohashFilter = [query.geohash]
+    }
     return {
       kinds: [NDKKind.Text, NDKKind.Repost],
-      '#g': Array.from(geohashFilter),
+      '#g': geohashFilter,
     }
-  }, [signing, query?.bbox])
+  }, [signing, query?.bbox, query?.geohash])
 
   const authorsOrTags = useMemo(() => {
     const tags = query?.tags
@@ -94,21 +106,21 @@ const MainPane = () => {
     if (!!tags?.size) {
       return { '#t': Array.from(tags) }
     }
-    if (follows && feedType === 'follows') {
+    if (follows && feedType === 'following') {
       return { authors: follows.map((d) => d.hexpubkey) }
     }
   }, [follows, query?.tags, feedType])
 
   const tagsFilter = useMemo<NDKFilter | undefined>(() => {
     if (signing) return
-    if (!authorsOrTags && query?.bbox) return
+    if (!authorsOrTags && geohashFilter) return
     return {
       ...authorsOrTags,
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - DAY,
       limit: 30,
     } as NDKFilter
-  }, [signing, query?.bbox, authorsOrTags])
+  }, [signing, geohashFilter, authorsOrTags])
 
   const [subGeoFilter] = useSubscribe(geohashFilter)
   const [subTagFilter, fetchMore, newItems, showNewItems] =
@@ -313,8 +325,14 @@ const MainPane = () => {
         ) : (
           <UserBar />
         )}
+
         {!query ? (
-          <Filter className="grow" />
+          <>
+            <Box className="flex flex-1 justify-center">
+              <FeedFilterMenu user={user} />
+            </Box>
+            <Filter className="grow" />
+          </>
         ) : (
           <Box mx="auto">
             {query.tags?.map((d) => (
@@ -344,7 +362,7 @@ const MainPane = () => {
             ) : undefined}
             {query.geohash ? (
               <Chip
-                icon={<Pin />}
+                icon={<LocationOn />}
                 key={query.geohash}
                 label={query.geohash}
                 onDelete={() =>
@@ -394,7 +412,7 @@ const MainPane = () => {
       )}
       <Zoom in={!readOnly}>
         <Fab
-          className="!fixed !bg-gradient-primary !z-40 bottom-6 right-6 md:right-auto md:left-[648px]"
+          className="!absolute !bg-gradient-primary !z-40 bottom-6 right-6"
           size="medium"
           onClick={handleClickPost}
         >

@@ -1,6 +1,11 @@
 'use client'
-import { Box, BaseTextFieldProps, TextFieldProps } from '@mui/material'
-import { FC, useCallback, useEffect, useMemo } from 'react'
+import {
+  BaseTextFieldProps,
+  TextFieldProps,
+  IconButton,
+  Paper,
+} from '@mui/material'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import bbox from '@turf/bbox'
 import bboxPolygon from '@turf/bbox-polygon'
@@ -8,6 +13,8 @@ import buffer from '@turf/buffer'
 import { search } from '@/services/osm'
 import _ from 'lodash'
 import SearchBox from './SearchBox'
+import { Close, Search } from '@mui/icons-material'
+import classNames from 'classnames'
 
 export interface FilterProps extends BaseTextFieldProps {
   feedType?: 'follows' | 'global'
@@ -34,6 +41,7 @@ const Filter: FC<FilterProps> = ({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [showSearch, setShowSearch] = useState(false)
   const querySearch = searchParams.get('q') || ''
   const showMap = searchParams.get('map') || ''
   const fetchSearch = useCallback(async (querySearch: string) => {
@@ -90,18 +98,34 @@ const Filter: FC<FilterProps> = ({
   )
 
   return (
-    <Box className={className}>
-      <SearchBox
-        placeholder="Search by hashtag or place"
-        name="search"
-        size="small"
-        margin="dense"
-        onChange={(value) => {
-          router.push(`${pathname}?q=${value}&map=${showMap}`)
-        }}
-        value={querySearch}
-      />
-    </Box>
+    <Paper
+      className={classNames(
+        'flex !flex-none items-center justify-end !shadow-none',
+        className,
+        {
+          'absolute left-16 right-3 z-50 bg-[inherit]': showSearch,
+        },
+      )}
+    >
+      {showSearch && (
+        <SearchBox
+          placeholder="Search by hashtag or place"
+          name="search"
+          size="small"
+          margin="dense"
+          onChange={(value) => {
+            router.push(`${pathname}?q=${value}&map=${showMap}`)
+          }}
+          value={querySearch}
+        />
+      )}
+      <IconButton
+        className="min-w-[40px]"
+        onClick={() => setShowSearch((prev) => !prev)}
+      >
+        {showSearch ? <Close /> : <Search />}
+      </IconButton>
+    </Paper>
   )
 }
 
