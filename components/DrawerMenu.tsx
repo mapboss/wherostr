@@ -2,6 +2,7 @@
 import { FC, Fragment, useCallback, useState } from 'react'
 import {
   ArticleOutlined,
+  Close,
   ExitToApp,
   NotesOutlined,
   SensorsOutlined,
@@ -10,6 +11,7 @@ import {
 import {
   Box,
   Drawer,
+  IconButton,
   List,
   ListItemButton,
   ListItemIcon,
@@ -64,14 +66,14 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
           disableGutters
           className="px-2 w-[344px] !min-h-[0px] bg-inherit !sticky top-0 z-10"
           variant="regular"
+        />
+        <IconButton
+          size="small"
+          onClick={closeDrawer}
+          className="!absolute right-2 top-2 !bg-[#0000001f]"
         >
-          {/* <Avatar src={user.profile?.image} sx={{ width: 64, height: 64 }} />
-          <IconButton onClick={closeDrawer}>
-            <Close />
-          </IconButton>
-          <div className="mx-1" />
-          <Typography>Title</Typography> */}
-        </Toolbar>
+          <Close />
+        </IconButton>
         <ProfileCard
           hexpubkey={hexpubkey}
           showAbout={false}

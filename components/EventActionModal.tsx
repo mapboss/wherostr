@@ -75,12 +75,16 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
     [event, ndk, setEventAction, showSnackbar],
   )
   const amountValue = useMemo(
-    () => (_amountValue ? numeral(_amountValue).format(amountFormat) : '?'),
+    () =>
+      _amountValue
+        ? numeral(_amountValue).format(amountFormat).toUpperCase()
+        : '?',
     [_amountValue],
   )
   const amountOptions = useMemo(
     () => [
-      50, 100, 500, 1_000, 5_000, 10_000, 50_000, 100_000, 500_000, 1_000_000,
+      5, 20, 50, 100, 500, 1_000, 5_000, 10_000, 50_000, 100_000, 500_000,
+      1_000_000,
     ],
     [],
   )
@@ -110,6 +114,7 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
           placeholder="Comment"
           variant="outlined"
           fullWidth
+          autoComplete="off"
           {...register('comment')}
         />
         <Box className="flex gap-2 flex-wrap justify-center">
@@ -122,7 +127,7 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
               startIcon={<ElectricBolt className="!text-primary" />}
               onClick={handleClickAmount(amount)}
             >
-              {numeral(amount).format(amountFormat)}
+              {numeral(amount).format(amountFormat).toUpperCase()}
             </Button>
           ))}
         </Box>
@@ -133,6 +138,7 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
           type="number"
           fullWidth
           required
+          autoComplete="off"
           InputProps={{
             startAdornment: (
               <InputAdornment className="!text-primary" position="start">
