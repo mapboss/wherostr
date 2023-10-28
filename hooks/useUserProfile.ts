@@ -16,8 +16,20 @@ export const useUserProfile = (hexpubkey?: string) => {
     () => Array.from(relaySet?.relays.values() || []).map((d) => d.url),
     [relaySet],
   )
+
+  const pubkey = useMemo(() => {
+    if (!hexpubkey) return
+    try {
+      if (hexpubkey.startsWith('npub')) {
+        const hex = nip19.decode(hexpubkey)
+        return hex.type === 'npub' ? hex.data : undefined
+      }
+      return hexpubkey
+    } catch (err) {}
+  }, [hexpubkey])
+
   const [user, setUser] = useState<NDKUser | undefined>(
-    hexpubkey ? ndk.getUser({ hexpubkey, relayUrls }) : undefined,
+    pubkey ? ndk.getUser({ hexpubkey: pubkey, relayUrls }) : undefined,
   )
 
   const fetchProfile = useCallback(async (user: NDKUser) => {
@@ -41,24 +53,8 @@ export const useUserProfile = (hexpubkey?: string) => {
   }, [])
 
   useEffect(() => {
-    if (!hexpubkey) return
-    let user: NDKUser
-    try {
-      if (hexpubkey.startsWith('npub')) {
-        const hex = nip19.decode(hexpubkey)
-        if (hex.type !== 'npub') return
-        user = ndk.getUser({ hexpubkey: hex.data, relayUrls })
-      } else {
-        user = ndk.getUser({ hexpubkey, relayUrls })
-      }
-    } catch (err) {
-      return
-    }
-    try {
-      if (!user?.npub) return
-    } catch (err) {
-      return
-    }
+    if (!pubkey) return
+    const user = ndk.getUser({ hexpubkey: pubkey, relayUrls })
     setUser(user)
     fetchProfile(user).then(async (profile) => {
       if (!profile) return
@@ -93,7 +89,7 @@ export const useUserProfile = (hexpubkey?: string) => {
       })
       return user.profile
     })
-  }, [hexpubkey, ndk, relayUrls, fetchProfile])
+  }, [pubkey, ndk, relayUrls, fetchProfile])
 
   return user
 }
