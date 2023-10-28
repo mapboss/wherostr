@@ -8,8 +8,20 @@ import {
   BaseTextFieldProps,
   TextFieldProps,
   Chip,
+  Menu,
+  List,
 } from '@mui/material'
-import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  ChangeEvent,
+  FC,
+  KeyboardEvent,
+  MouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { ArrowDownward, ArrowDropDown, Search } from '@mui/icons-material'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import bbox from '@turf/bbox'
@@ -17,6 +29,8 @@ import bboxPolygon from '@turf/bbox-polygon'
 import buffer from '@turf/buffer'
 import { search } from '@/services/osm'
 import { useUser } from '@/hooks/useAccount'
+import _ from 'lodash'
+import PlacesSearch from './PlacesSearch'
 
 export interface FilterProps extends BaseTextFieldProps {
   feedType?: 'follows' | 'global'
@@ -47,51 +61,44 @@ const Filter: FC<FilterProps> = ({
   const querySearch = searchParams.get('q') || ''
   const [keyword, setKeyword] = useState<string>()
   const [loading, setLoading] = useState(false)
+  const [anchorEl, setAnchorEl] = useState<null | HTMLFormElement>(null)
+  const open = Boolean(anchorEl)
+  const handleShowMenu = (elem: HTMLFormElement | null) => {
+    setAnchorEl(elem)
+  }
+  const handleCloseMenu = () => {
+    setAnchorEl(null)
+  }
   // const [placeList, setPlaceList] = useState<any[]>(placeList)
 
-  const fetchSearch = useCallback(
-    async (querySearch: string) => {
-      if (!querySearch || !onSearch) return {}
-      try {
-        setLoading(true)
-        const result = await search(querySearch)
-        const place = result?.[0]
-        if (!place?.boundingbox) {
-          const data = { q: querySearch, places: [] }
-          onSearch(data)
-          return data
-        }
-        // const lat = Number(place.lat)
-        // const lon = Number(place.lon)
-        // const g = geohash.encode(lat, lon, precision)
-        const [y1, y2, x1, x2] = place.boundingbox.map((b: string) => Number(b))
-        const polygon = buffer(bboxPolygon([x1, y1, x2, y2]), 1, {
-          units: 'kilometers',
-        })
-        const bounds = bbox(polygon)
-        const data = {
-          bbox: bounds as SearchPayload['bbox'],
-          q: querySearch,
-          places: result,
-          // geohash: g,
-          // places: data,
-        }
-        onSearch(data)
-        return data
-      } catch (err) {
-      } finally {
-        setLoading(false)
-      }
-    },
-    [onSearch],
-  )
+  const fetchSearch = useCallback(async (querySearch: string) => {
+    if (!querySearch) return {}
+    const result = await search(querySearch)
+    const place = result?.[0]
+    if (!place?.boundingbox) {
+      const data = { q: querySearch, places: [] }
+      return data
+    }
+    // const lat = Number(place.lat)
+    // const lon = Number(place.lon)
+    // const g = geohash.encode(lat, lon, precision)
+    const [y1, y2, x1, x2] = place.boundingbox.map((b: string) => Number(b))
+    const polygon = buffer(bboxPolygon([x1, y1, x2, y2]), 1, {
+      units: 'kilometers',
+    })
+    const bounds = bbox(polygon)
+    const data = {
+      bbox: bounds as SearchPayload['bbox'],
+      q: querySearch,
+      places: result,
+      // geohash: g,
+      // places: data,
+    }
+    return data
+  }, [])
 
   useEffect(() => {
-    if (
-      querySearch &&
-      querySearch !== 'follows' &&
-      querySearch !== 'global'
-    ) {
+    if (querySearch && querySearch !== 'follows' && querySearch !== 'global') {
       fetchSearch(querySearch)
     } else {
       onSearch?.({ q: '', places: [] })
@@ -116,23 +123,41 @@ const Filter: FC<FilterProps> = ({
         : [],
     [querySearch],
   )
+  const ref = useRef<HTMLFormElement>(null)
 
   return (
     <Box
       className={className}
       component={'form'}
-      onSubmit={async (evt) => {
-        evt.preventDefault()
-        const q = evt.currentTarget['search'].value
-        setKeyword('')
-        router.push(`${pathname}?q=${q}`)
-      }}
+      ref={ref}
+      // onSubmit={async (evt) => {
+      //   evt.preventDefault()
+      //   const q = evt.currentTarget['search'].value
+      //   setKeyword('')
+      //   router.push(`${pathname}?q=${q}`)
+      // }}
     >
-      <TextField
+      <PlacesSearch />
+      {/* <TextField
         {...props}
         fullWidth
         value={keyword}
-        onChange={(evt) => setKeyword(evt.target.value)}
+        inputRef={ref}
+        onChange={async (evt) => {
+          try {
+            const text = evt.target.value
+            setKeyword(text)
+            if (!text) {
+              return handleCloseMenu()
+            }
+            // handleShowMenu(ref.current)
+            setLoading(true)
+            const result = await _.throttle(() => fetchSearch(text), 300)()
+            console.log('result', result)
+          } finally {
+            setLoading(false)
+          }
+        }}
         name="search"
         size="small"
         margin="dense"
@@ -170,10 +195,14 @@ const Filter: FC<FilterProps> = ({
                   label="Global"
                   deleteIcon={<ArrowDropDown />}
                   onClick={
-                    user ? () => router.replace(`${pathname}?q=follows`) : undefined
+                    user
+                      ? () => router.replace(`${pathname}?q=follows`)
+                      : undefined
                   }
                   onDelete={
-                    user ? () => router.replace(`${pathname}?q=follows`) : undefined
+                    user
+                      ? () => router.replace(`${pathname}?q=follows`)
+                      : undefined
                   }
                 />
               )}
@@ -181,9 +210,6 @@ const Filter: FC<FilterProps> = ({
           ),
           endAdornment: (
             <InputAdornment position="end">
-              {loading === true ? (
-                <CircularProgress color="inherit" size={20} />
-              ) : null}
               <IconButton type="submit">
                 <Search />
               </IconButton>
@@ -191,6 +217,33 @@ const Filter: FC<FilterProps> = ({
           ),
         }}
       />
+      <Menu
+        MenuListProps={{
+          'aria-labelledby': 'long-button',
+          disablePadding: true,
+        }}
+        transformOrigin={{
+          horizontal: 'left',
+          vertical: 'top',
+        }}
+        anchorOrigin={{
+          horizontal: 'left',
+          vertical: 'bottom',
+        }}
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleCloseMenu}
+        // slotProps={{
+        //   paper: {
+        //     style: {
+        //       width: '20ch',
+        //     },
+        //   },
+        // }}
+      >
+        <List disablePadding>
+        </List>
+      </Menu> */}
     </Box>
   )
 }
