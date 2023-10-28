@@ -1,7 +1,8 @@
 'use client'
 import { NostrNoteComponent } from '@/components/NostsNoteComponent'
+import { CommonEventLayout } from '@/components/PageLayout'
 import { NostrContext } from '@/contexts/NostrContext'
-import { Box, Paper } from '@mui/material'
+import { Paper } from '@mui/material'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
 import { RedirectType } from 'next/dist/client/components/redirect'
 import { redirect, useParams, useSearchParams } from 'next/navigation'
@@ -37,10 +38,10 @@ export default function Page() {
   if (!event) return
 
   return (
-    <Box mx={4}>
+    <CommonEventLayout>
       <Paper className="relative w-full !rounded-2xl max-w-2xl mx-auto overflow-hidden">
         <NostrNoteComponent data={naddrDesc.data} />
       </Paper>
-    </Box>
+    </CommonEventLayout>
   )
 }

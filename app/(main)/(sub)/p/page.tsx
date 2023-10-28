@@ -1,7 +1,7 @@
 'use client'
-import { Box, Paper, Typography } from '@mui/material'
+import { Typography } from '@mui/material'
 import { redirect, useParams } from 'next/navigation'
-import { FC, PropsWithChildren, useMemo } from 'react'
+import { useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
 import Geohash from 'latlon-geohash'
 import { NostrAddressComponent } from '@/components/NostrAddressComponent'
@@ -9,7 +9,7 @@ import { NostrNoteComponent } from '@/components/NostsNoteComponent'
 import { NostrPubkeyComponent } from '@/components/NostrPubkeyComponent'
 import { NostrEventComponent } from '@/components/NostrEventComponent'
 import { RedirectType } from 'next/dist/client/components/redirect'
-import classNames from 'classnames'
+import { CommonEventLayout, LiveEventLayout } from '@/components/PageLayout'
 
 export default function Page() {
   const { id } = useParams()
@@ -35,71 +35,42 @@ export default function Page() {
   const component = useMemo(() => {
     if (naddrDesc?.type === 'naddr') {
       return (
-        <Layout2>
+        <LiveEventLayout>
           <NostrAddressComponent data={naddrDesc.data} />
-        </Layout2>
+        </LiveEventLayout>
       )
     } else if (naddrDesc?.type === 'note') {
       return (
-        <Layout>
+        <CommonEventLayout>
           <NostrNoteComponent data={naddrDesc.data} />
-        </Layout>
+        </CommonEventLayout>
       )
     } else if (naddrDesc?.type === 'npub') {
       return (
-        <Layout>
+        <CommonEventLayout>
           <NostrPubkeyComponent data={naddrDesc.data} />
-        </Layout>
+        </CommonEventLayout>
       )
     } else if (naddrDesc?.type === 'nprofile') {
       return (
-        <Layout>
+        <CommonEventLayout>
           <NostrPubkeyComponent data={naddrDesc.data.pubkey} />
-        </Layout>
+        </CommonEventLayout>
       )
     } else if (naddrDesc?.type === 'nevent') {
       return (
-        <Layout>
+        <CommonEventLayout>
           <NostrEventComponent data={naddrDesc.data} />
-        </Layout>
+        </CommonEventLayout>
       )
     } else {
       return (
-        <Layout>
+        <CommonEventLayout>
           <Typography variant="h6">Invalid Nostr Address</Typography>
-        </Layout>
+        </CommonEventLayout>
       )
     }
   }, [naddrDesc])
 
   return component
-}
-
-const Layout: FC<PropsWithChildren & { className?: string }> = ({
-  children,
-  className,
-}) => {
-  return (
-    <Box className={classNames('mx-0 md:mx-4', className)}>
-      <Paper className="relative flex-auto w-full !rounded-2xl max-w-2xl mx-auto overflow-hidden">
-        {children}
-      </Paper>
-    </Box>
-  )
-}
-
-const Layout2: FC<PropsWithChildren & { className?: string }> = ({
-  children,
-  className,
-}) => {
-  return (
-    <Box
-      className={classNames(
-        'flex flex-1 mx-0 md:mx-4 overflow-hidden',
-        className,
-      )}
-    >
-      {children}
-    </Box>
-  )
 }

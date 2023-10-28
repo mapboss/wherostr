@@ -26,7 +26,7 @@ import { extractLngLat } from '@/utils/extractLngLat'
 import { MapContext } from '@/contexts/MapContext'
 import { LngLatBounds } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import MenuButton from './MenuButton'
+import NoteMenu from './NoteMenu'
 
 const ShortTextNoteCard = ({
   event,
@@ -156,7 +156,7 @@ const ShortTextNoteCard = ({
                 <TravelExploreOutlined className="text-contrast-secondary" />
               </IconButton>
             )}
-            <MenuButton event={event} />
+            <NoteMenu event={event} />
             <IconButton size="small" onClick={handleClickViewNote}>
               <ChevronRightOutlined className="text-contrast-secondary" />
             </IconButton>

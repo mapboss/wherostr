@@ -13,7 +13,7 @@ import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
 import Geohash from 'latlon-geohash'
 
-interface MenuItemProps {
+interface NoteMenuItemProps {
   id: string
   label: string
   icon?: React.ReactNode
@@ -22,11 +22,11 @@ interface MenuItemProps {
   hide?: (event: NDKEvent) => boolean
 }
 
-interface MenuOptionProps {
-  items: MenuItemProps[]
+interface NoteMenuOptionProps {
+  items: NoteMenuItemProps[]
 }
 
-const options: MenuOptionProps[] = [
+const options: NoteMenuOptionProps[] = [
   {
     items: [
       {
@@ -77,7 +77,7 @@ const options: MenuOptionProps[] = [
   },
 ]
 
-export default function MenuButton({ event }: { event: NDKEvent }) {
+export default function NoteMenu({ event }: { event: NDKEvent }) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {

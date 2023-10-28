@@ -1,5 +1,21 @@
 import axios, { AxiosResponse } from 'axios'
 
+export interface OSMSearchResult {
+  place_id: number
+  licence: string
+  osm_type: 'way'
+  osm_id: number
+  lat: string
+  lon: string
+  category: 'highway'
+  type: 'service'
+  place_rank: number
+  importance: number
+  addresstype: 'road'
+  name: string
+  display_name: string
+  boundingbox: [string, string, string, string]
+}
 export interface OSMReverseResult {
   place_id: number
   licence: string
@@ -26,8 +42,8 @@ export interface OSMReverseResult {
   boundingbox: [string, string, string, string]
 }
 
-export async function search<TOutput = any[]>(payload?: string) {
-  const res = await axios.get<string, AxiosResponse<TOutput>>(
+export async function search(payload?: string) {
+  const res = await axios.get<string, AxiosResponse<OSMSearchResult[]>>(
     'https://nominatim.openstreetmap.org/search',
     { params: { q: payload, format: 'jsonv2' } },
   )

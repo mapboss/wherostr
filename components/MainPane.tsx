@@ -60,9 +60,7 @@ const MainPane = () => {
   const showMap = searchParams.get('map') === '1'
   const q = useMemo(() => searchParams.get('q') || '', [searchParams])
   const [showComments, setShowComments] = useState(false)
-  const [tabValue, setTabValue] = useState<
-    'places' | 'notes' | 'conversations'
-  >('notes')
+  const [tabValue, setTabValue] = useState<'notes' | 'conversations'>('notes')
   const feedType = useMemo(() => {
     if (user) {
       if (!q || q === 'follows') {
@@ -344,63 +342,17 @@ const MainPane = () => {
           setTabValue(value)
         }}
       >
-        {!!payload.places?.length ? (
-          <Tab label="Places" value="places" />
-        ) : undefined}
         <Tab label="Notes" value="notes" />
         <Tab label="Conversations" value="conversations" />
       </Tabs>
       <Divider />
-      {tabValue !== 'places' ? (
-        <EventList
-          events={events}
-          onFetchMore={fetchMore}
-          newItems={newItems}
-          onShowNewItems={showNewItems}
-          showComments={showComments}
-        />
-      ) : (
-        <Box className="overflow-y-auto">
-          <List disablePadding>
-            {payload.places?.map((item) => {
-              return (
-                <ListItem key={item.place_id}>
-                  <ListItemAvatar>
-                    <Avatar>
-                      <Place />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={item.name}
-                    secondary={item.display_name}
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      onClick={() => {
-                        const [y1, y2, x1, x2] = item.boundingbox.map(
-                          (b: string) => Number(b),
-                        )
-                        const bounds: [number, number, number, number] = [
-                          x1,
-                          y1,
-                          x2,
-                          y2,
-                        ]
-                        map?.fitBounds(bounds, {
-                          maxZoom: 18,
-                          duration: 1000,
-                        })
-                      }}
-                    >
-                      <TravelExplore />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              )
-            })}
-          </List>
-        </Box>
-      )}
+      <EventList
+        events={events}
+        onFetchMore={fetchMore}
+        newItems={newItems}
+        onShowNewItems={showNewItems}
+        showComments={showComments}
+      />
       {eventAction ? (
         <Box
           className={classNames(
