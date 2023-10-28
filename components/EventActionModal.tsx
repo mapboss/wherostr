@@ -1,4 +1,5 @@
 'use client'
+import '@getalby/bitcoin-connect-react'
 import ProfileChip from '@/components/ProfileChip'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import {
