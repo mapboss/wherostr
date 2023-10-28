@@ -22,6 +22,7 @@ import Link from 'next/link'
 import { ProfileCard } from './ProfileCard'
 import { useAction } from '@/hooks/useApp'
 import { ProfileActionType } from '@/contexts/AppContext'
+import { usePathname } from 'next/navigation'
 
 export interface MenuButtonProps {
   hexpubkey: string
@@ -30,6 +31,7 @@ export interface MenuButtonProps {
   }
 }
 const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
+  const pathname = usePathname()
   const { setProfileAction } = useAction()
   const { readOnly, signOut } = useAccount()
   const [open, setOpen] = useState(false)
@@ -84,6 +86,7 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
         {/* <ProfileChip hexpubkey={hexpubkey} onClick={closeDrawer} size="large" /> */}
         <List>
           <ListItemButton
+            selected={pathname === '/'}
             LinkComponent={Link}
             href="/"
             onClick={async () => {
@@ -97,6 +100,7 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
           </ListItemButton>
 
           <ListItemButton
+            selected={pathname.startsWith('/articles')}
             disabled
             onClick={async () => {
               closeDrawer()
@@ -109,6 +113,7 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
           </ListItemButton>
 
           <ListItemButton
+            selected={pathname.startsWith('/live')}
             LinkComponent={Link}
             href="/live"
             onClick={async () => {
@@ -123,6 +128,7 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
 
           {!readOnly && (
             <ListItemButton
+              selected={pathname.startsWith('/settings')}
               LinkComponent={Link}
               href="/settings"
               onClick={async () => {
