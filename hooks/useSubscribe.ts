@@ -9,6 +9,7 @@ import {
 import { nanoid } from 'nanoid'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNDK, useRelaySet } from './useNostr'
+import { useAccount } from './useAccount'
 
 export type SubscribeResult = [
   NDKEvent[],
@@ -20,7 +21,9 @@ export type SubscribeResult = [
 const sortItems = (
   items: NDKEvent[] | Set<NDKEvent> | IterableIterator<NDKEvent>,
 ) => {
-  return Array.from(items).sort((a, b) => b.created_at! - a.created_at!)
+  return Array.from(items)
+    .slice()
+    .sort((a, b) => b.created_at! - a.created_at!)
 }
 
 export const useSubscribe = (
@@ -30,6 +33,7 @@ export const useSubscribe = (
 ) => {
   const ndk = useNDK()
   const defaultRelaySet = useRelaySet()
+  const { signing } = useAccount()
   const [sub, setSub] = useState<NDKSubscription>()
   const [items, setItems] = useState<NDKEvent[]>([])
   const [newItems, setNewItems] = useState<NDKEvent[]>([])
@@ -41,7 +45,7 @@ export const useSubscribe = (
   )
 
   useEffect(() => {
-    if (!ndk) return
+    if (signing || !ndk) return
     if (!filter || !relaySet) {
       setNewItems([])
       setItems([])
@@ -69,10 +73,10 @@ export const useSubscribe = (
       prev?.stop()
       return subscribe
     })
-  }, [ndk, relaySet, filter])
+  }, [signing, ndk, relaySet, filter])
 
   useEffect(() => {
-    if (!ndk || !sub) return
+    if (signing || !ndk || !sub) return
     console.log('sub:postCreate', sub)
     eos.current = false
     let evetns = new Map<string, NDKEvent>()
@@ -89,10 +93,13 @@ export const useSubscribe = (
 
     const onEventDup = (item: NDKEvent) => {
       const { existingEvent, dedupKey, event } = collectEvent(item)
+      console.log('onEventDup:event', { event, existingEvent })
       evetns.set(dedupKey, event)
       if (eos.current) {
         if (!existingEvent) {
           setNewItems((prev) => sortItems([event, ...prev]))
+        } else {
+          setItems(sortItems(evetns.values()))
         }
       } else {
         setItems(sortItems(evetns.values()))
@@ -100,16 +107,25 @@ export const useSubscribe = (
     }
     const onEvent = (item: NDKEvent) => {
       const { existingEvent, dedupKey, event } = collectEvent(item)
+      // console.log('onEvent:event', {
+      //   eos: eos.current,
+      //   event,
+      //   existingEvent,
+      //   dedupKey,
+      // })
       evetns.set(dedupKey, event)
       if (eos.current) {
         if (!existingEvent) {
           setNewItems((prev) => sortItems([event, ...prev]))
+        } else {
+          setItems(sortItems(evetns.values()))
         }
       } else {
         setItems(sortItems(evetns.values()))
       }
     }
     sub.on('show-new-items', (newItems: NDKEvent[]) => {
+      // console.log('newItems', newItems)
       newItems.forEach((ev) => {
         evetns.set(ev.deduplicationKey(), ev)
       })
@@ -117,7 +133,7 @@ export const useSubscribe = (
       setNewItems([])
     })
     sub.on('event', onEvent)
-    sub.on('event:dup', onEventDup)
+    // sub.on('event:dup', onEventDup)
     sub.once('eose', () => {
       eos.current = true
       // setItems(Array.from(items.values()))
@@ -127,7 +143,7 @@ export const useSubscribe = (
       sub.removeAllListeners()
       sub.stop()
     }
-  }, [sub, ndk])
+  }, [signing, sub, ndk])
 
   const oldestEvent = useMemo(() => items[items.length - 1], [items])
   const fetchMore = useCallback(async () => {

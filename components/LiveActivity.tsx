@@ -54,7 +54,6 @@ const LiveActivity = ({
   const [follows, follow] = useFollowing()
   const [loading, setLoading] = useState(false)
   const liveItem = useLiveActivityItem(event)
-
   const autoplay = useMemo(() => liveItem.status === 'live', [liveItem.status])
   const author = useUserProfile(liveItem.pubkey)
   const handleClickAction = useCallback(
@@ -140,11 +139,13 @@ const LiveActivity = ({
             </Box>
           </Box>
           <Hidden lgDown>
-            <TextNote
-              textVariant="subtitle2"
-              skipEmbedLink
-              event={{ content: liveItem.summary }}
-            />
+            {!!liveItem.summary && (
+              <TextNote
+                textVariant="subtitle2"
+                skipEmbedLink
+                event={{ content: liveItem.summary }}
+              />
+            )}
             <Box className="flex flex-wrap gap-2 mt-2 items-center">
               <StatusBadge status={liveItem.status} />
               {liveItem.status === 'live' && (

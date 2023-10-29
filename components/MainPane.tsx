@@ -331,7 +331,7 @@ const MainPane = () => {
             <Box className="flex flex-1 justify-center">
               <FeedFilterMenu user={user} />
             </Box>
-            <Filter className="grow" />
+            <Filter className="grow" user={user} />
           </>
         ) : (
           <Box mx="auto">

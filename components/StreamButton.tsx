@@ -123,7 +123,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
         setOpen(false)
         if (mode === 'add') {
           const addr = nip19.naddrEncode({
-            identifier: event.deduplicationKey(),
+            identifier: event.tagValue('d') || event.id,
             kind: event.kind,
             pubkey: event.pubkey,
           })
@@ -211,13 +211,18 @@ export const StreamButton: FC<StreamButtonProps> = ({
             margin="dense"
             autoComplete="off"
             fullWidth
+            helperText="Stream type should be HLS"
             InputLabelProps={{
               shrink: true,
             }}
             {...register('streaming', {
               required: true,
               validate: (val) => {
-                if (!val || !ReactPlayer.canPlay(val)) {
+                if (
+                  !val?.length ||
+                  val?.length < 5 ||
+                  !val?.match(/^https?:\/\/.*\.m3u8?$/i)
+                ) {
                   return 'Invalid URL'
                 }
                 return true
@@ -230,12 +235,12 @@ export const StreamButton: FC<StreamButtonProps> = ({
             </Typography>
             <Stack direction="row" spacing={1}>
               <Chip
-                label="Live"
+                label="LIVE"
                 variant={status === 'live' ? 'filled' : 'outlined'}
                 onClick={() => setValue('status', 'live')}
               />
               <Chip
-                label="Ended"
+                label="ENDED"
                 variant={status === 'ended' ? 'filled' : 'outlined'}
                 onClick={() => setValue('status', 'ended')}
               />
@@ -248,6 +253,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
               margin="dense"
               autoComplete="off"
               fullWidth
+              helperText="Video type should be open standard format eg: .mp4"
               InputLabelProps={{
                 shrink: true,
               }}
