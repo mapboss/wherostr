@@ -1,4 +1,11 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import EventActionModal from '@/components/EventActionModal'
 import ProfileActionModal from '@/components/ProfileActionModal'
 import EventList from '@/components/EventList'
@@ -53,6 +60,9 @@ const MainPane = () => {
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const showMap = searchParams.get('map') === '1'
   const q = useMemo(() => searchParams.get('q') || '', [searchParams])
+  const scrollRef = useRef<HTMLElement>(
+    typeof window !== 'undefined' ? window.document.body : null,
+  )
   const feedType = useMemo(() => {
     if (user) {
       if (!q || q === 'following' || q === 'conversation') {
@@ -311,68 +321,66 @@ const MainPane = () => {
   return (
     <Paper
       className={classNames(
-        'absolute left-0 top-0 w-full md:w-[640px] flex flex-col !rounded-none overflow-hidden',
-        {
-          'h-full': !showOnlyMap,
-          'h-[66px]': showOnlyMap,
-        },
+        'absolute left-0 top-0 bottom-0 w-full md:w-[640px] flex flex-col !rounded-none',
       )}
     >
-      <Toolbar className="gap-3 items-center !px-3 !min-h-[64px]">
-        {user?.hexpubkey ? (
-          <DrawerMenu hexpubkey={user.hexpubkey} />
-        ) : (
-          <UserBar />
-        )}
+      <Paper className="!sticky top-0 z-10">
+        <Toolbar className="gap-3 items-center !px-3 !min-h-[64px]">
+          {user?.hexpubkey ? (
+            <DrawerMenu hexpubkey={user.hexpubkey} />
+          ) : (
+            <UserBar />
+          )}
 
-        {!query ? (
-          <>
-            <Box className="flex flex-1 justify-center">
-              <FeedFilterMenu user={user} />
+          {!query ? (
+            <>
+              <Box className="flex flex-1 justify-center">
+                <FeedFilterMenu user={user} />
+              </Box>
+              <Filter className="grow" user={user} />
+            </>
+          ) : (
+            <Box mx="auto">
+              {query.tags?.map((d) => (
+                <Chip
+                  icon={<Tag />}
+                  key={d}
+                  label={d}
+                  onDelete={() =>
+                    router.replace(
+                      `${pathname}?q=${query.tags
+                        ?.filter((tag) => tag !== d)
+                        .map((d) => `t:${d}`)
+                        .join(';')}&map=${showMap ? '1' : ''}`,
+                    )
+                  }
+                />
+              ))}
+              {query.bhash ? (
+                <Chip
+                  icon={<CropFree />}
+                  key={query.bhash?.join(', ')}
+                  label={query.bhash?.join(', ')}
+                  onDelete={() =>
+                    router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
+                  }
+                />
+              ) : undefined}
+              {query.geohash ? (
+                <Chip
+                  icon={<LocationOn />}
+                  key={query.geohash}
+                  label={query.geohash}
+                  onDelete={() =>
+                    router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
+                  }
+                />
+              ) : undefined}
             </Box>
-            <Filter className="grow" user={user} />
-          </>
-        ) : (
-          <Box mx="auto">
-            {query.tags?.map((d) => (
-              <Chip
-                icon={<Tag />}
-                key={d}
-                label={d}
-                onDelete={() =>
-                  router.replace(
-                    `${pathname}?q=${query.tags
-                      ?.filter((tag) => tag !== d)
-                      .map((d) => `t:${d}`)
-                      .join(';')}&map=${showMap ? '1' : ''}`,
-                  )
-                }
-              />
-            ))}
-            {query.bhash ? (
-              <Chip
-                icon={<CropFree />}
-                key={query.bhash?.join(', ')}
-                label={query.bhash?.join(', ')}
-                onDelete={() =>
-                  router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
-                }
-              />
-            ) : undefined}
-            {query.geohash ? (
-              <Chip
-                icon={<LocationOn />}
-                key={query.geohash}
-                label={query.geohash}
-                onDelete={() =>
-                  router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
-                }
-              />
-            ) : undefined}
-          </Box>
-        )}
-      </Toolbar>
-      <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
+          )}
+        </Toolbar>
+        <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
+      </Paper>
       {/* <Tabs
         variant="fullWidth"
         value={tabValue}
@@ -386,6 +394,7 @@ const MainPane = () => {
       </Tabs> */}
       <Divider />
       <EventList
+        parentRef={scrollRef}
         events={events}
         onFetchMore={fetchMore}
         newItems={newItems}
@@ -411,7 +420,7 @@ const MainPane = () => {
       )}
       <Zoom in={!readOnly}>
         <Fab
-          className="!absolute !bg-gradient-primary !z-40 bottom-6 right-6"
+          className="!fixed !bg-gradient-primary !z-40 bottom-6 left-[576px]"
           size="medium"
           onClick={handleClickPost}
         >

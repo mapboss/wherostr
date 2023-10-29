@@ -131,7 +131,7 @@ const EventList: FC<EventListProps> = ({
     <>
       <Box
         ref={!parentRef ? noteRef : undefined}
-        className={classNames('overflow-y-auto relative', className)}
+        className={classNames('relative', className)}
       >
         <Slide in={!!newNotes.length} unmountOnExit>
           <Box className="sticky z-10 top-2 left-0 right-0 text-center opacity-80">

@@ -59,7 +59,7 @@ const MapLoad: React.FC<MapProps> = ({ children, className, onLoad }) => {
   }, [map, onLoad])
 
   return (
-    <Box className={classNames('absolute inset-0 flex', className)}>
+    <Box className={classNames('fixed inset-0 flex', className)}>
       <Box ref={mapContainer} className="flex-1">
         {children}
       </Box>

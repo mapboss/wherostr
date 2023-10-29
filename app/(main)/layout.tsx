@@ -11,7 +11,7 @@ export default function RootLayout({
   return (
     <AppContextProvider>
       <AccountContextProvider>
-        <main className="relative min-h-full h-full flex flex-col flex-1 overflow-y-auto">
+        <main className="relative min-h-full h-full flex flex-col flex-1">
           <NoSsr>{children}</NoSsr>
         </main>
       </AccountContextProvider>
