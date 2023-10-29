@@ -24,7 +24,7 @@ import Link from 'next/link'
 import { ProfileCard } from './ProfileCard'
 import { useAction } from '@/hooks/useApp'
 import { ProfileActionType } from '@/contexts/AppContext'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 export interface MenuButtonProps {
   hexpubkey: string
@@ -33,6 +33,7 @@ export interface MenuButtonProps {
   }
 }
 const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
+  const router = useRouter()
   const pathname = usePathname()
   const { setProfileAction } = useAction()
   const { readOnly, signOut } = useAccount()
@@ -165,6 +166,7 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
           <ListItemButton
             onClick={async () => {
               await signOut()
+              router.replace(`/?q=global&map=`)
               closeDrawer()
             }}
           >

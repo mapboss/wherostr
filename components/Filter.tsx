@@ -52,7 +52,7 @@ const Filter: FC<FilterProps> = ({ className, user, ...props }) => {
         />
       )}
       <IconButton
-        className="min-w-[40px]"
+        className="!ml-2 min-w-[40px]"
         onClick={() => setShowSearch((prev) => !prev)}
       >
         {showSearch ? <Close /> : <Search />}

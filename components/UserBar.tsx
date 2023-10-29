@@ -29,9 +29,10 @@ import { useAccount } from '@/hooks/useAccount'
 import { LoadingButton } from '@mui/lab'
 import { SignInType } from '@/contexts/AccountContext'
 import { useForm } from 'react-hook-form'
-// import { nip19 } from 'nostr-tools'
+import { useRouter } from 'next/navigation'
 
 const UserBar = ({ className }: { className?: string }) => {
+  const router = useRouter()
   const { register, handleSubmit, setValue, reset } = useForm()
   const { user, signing, signIn, signOut } = useAccount()
   const [open, setOpen] = useState(false)
@@ -53,9 +54,10 @@ const UserBar = ({ className }: { className?: string }) => {
     async (type: SignInType) => {
       const user = await signIn(type)
       if (!user) return
+      router.replace(`/?q=following&map=`)
       setOpen(false)
     },
-    [signIn],
+    [signIn, router],
   )
 
   const handleClickSignOut = useCallback(() => {
@@ -71,9 +73,10 @@ const UserBar = ({ className }: { className?: string }) => {
         user = await signIn(loginType, values.npub)
       }
       if (!user) return
+      router.replace(`/?q=following&map=`)
       setOpen(false)
     },
-    [handleClickSignIn, loginType],
+    [handleClickSignIn, router, loginType],
   )
 
   return (

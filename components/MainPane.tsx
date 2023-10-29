@@ -19,7 +19,7 @@ import {
 } from '@mui/material'
 import { LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
-import { CropFree, Draw, LocationOn, Pin, Tag } from '@mui/icons-material'
+import { CropFree, Draw, LocationOn, Tag } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -53,7 +53,6 @@ const MainPane = () => {
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const showMap = searchParams.get('map') === '1'
   const q = useMemo(() => searchParams.get('q') || '', [searchParams])
-  const [tabValue, setTabValue] = useState<'notes' | 'conversations'>('notes')
   const feedType = useMemo(() => {
     if (user) {
       if (!q || q === 'following' || q === 'conversation') {
