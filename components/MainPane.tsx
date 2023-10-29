@@ -24,7 +24,7 @@ import {
   useTheme,
   Zoom,
 } from '@mui/material'
-import { LngLatBounds } from 'maplibre-gl'
+import { LngLat, LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import { CropFree, Draw, LocationOn, Tag } from '@mui/icons-material'
 import pin from '@/public/pin.svg'
@@ -80,7 +80,13 @@ const MainPane = () => {
     setEvents([])
   }, [query, setEvents])
 
-  const bounds = useMemo(() => new LngLatBounds(query?.bbox), [query?.bbox])
+  const bounds = useMemo(() => {
+    if (query?.geohash) {
+      const { lat, lon } = Geohash.decode(query?.geohash)
+      return LngLatBounds.fromLngLat(new LngLat(lon, lat), 1000)
+    }
+    return new LngLatBounds(query?.bbox)
+  }, [query?.bbox, query?.geohash])
 
   const geohashFilter = useMemo(() => {
     if (signing) return
@@ -420,7 +426,10 @@ const MainPane = () => {
       )}
       <Zoom in={!readOnly}>
         <Fab
-          className="!fixed !bg-gradient-primary !z-40 bottom-6 left-[576px]"
+          className={classNames('!fixed !bg-gradient-primary !z-40 bottom-6', {
+            'left-[576px]': mdUp,
+            'right-6': mdDown,
+          })}
           size="medium"
           onClick={handleClickPost}
         >

@@ -215,8 +215,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       authors: [user?.hexpubkey],
     }
   }, [user?.hexpubkey])
-  const [muteListEvent] = useSubscribe(filter)
-
+  const [muteListEvent] = useSubscribe(filter, true)
   const muteList = useMemo(
     () =>
       muteListEvent[0]?.getMatchingTags('p').map(([tag, pubkey]) => {

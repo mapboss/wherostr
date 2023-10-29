@@ -12,6 +12,7 @@ import copy from 'copy-to-clipboard'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
 import Geohash from 'latlon-geohash'
+import { useMuting } from '@/hooks/useAccount'
 
 interface NoteMenuItemProps {
   id: string
@@ -70,7 +71,7 @@ const options: NoteMenuOptionProps[] = [
     items: [
       {
         id: 'mute',
-        label: 'Mute (coming soon)',
+        label: 'Mute',
         disabled: true,
       },
     ],
@@ -78,6 +79,7 @@ const options: NoteMenuOptionProps[] = [
 ]
 
 export default function NoteMenu({ event }: { event: NDKEvent }) {
+  // const [_, mute] = useMuting()
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -86,9 +88,12 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
   const handleClose = () => {
     setAnchorEl(null)
   }
-  const handleMenuClick = (menuId: string) => {
+  const handleMenuClick = async (menuId: string) => {
     handleClose()
     switch (menuId) {
+      // case 'mute':
+      //   await mute(event.author)
+      //   return
       case 'copy_text':
         copy(event.content)
         return
