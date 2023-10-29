@@ -321,10 +321,10 @@ const MainPane = () => {
   return (
     <Paper
       className={classNames(
-        'absolute left-0 top-0 bottom-0 w-full md:w-[640px] flex flex-col !rounded-none',
+        'absolute left-0 top-0 w-full md:w-[640px] flex flex-col !rounded-none',
       )}
     >
-      <Paper className="!sticky top-0 z-10">
+      <Paper className="!sticky top-[72px] z-10">
         <Toolbar className="gap-3 items-center !px-3 !min-h-[64px]">
           {user?.hexpubkey ? (
             <DrawerMenu hexpubkey={user.hexpubkey} />
