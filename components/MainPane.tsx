@@ -328,6 +328,10 @@ const MainPane = () => {
     <Paper
       className={classNames(
         'absolute left-0 top-0 w-full md:w-[640px] flex flex-col !rounded-none',
+        {
+          'min-h-full': !showOnlyMap,
+          'h-[66px] overflow-hidden': showOnlyMap,
+        },
       )}
     >
       <Paper className="!sticky top-0 z-10">
