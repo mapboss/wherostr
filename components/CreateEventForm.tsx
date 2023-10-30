@@ -169,7 +169,7 @@ export const CreateEventForm = ({
         ndk,
       )
       let content = `\n---`
-      content += `\nWherostr Map | https://wherostr.social/?q=g:${geohashValue.slice(
+      content += `\nWherostr | https://wherostr.social/?q=g:${geohashValue.slice(
         0,
         -1,
       )}`
@@ -258,7 +258,7 @@ export const CreateEventForm = ({
                 ndk,
               )
               noteContent += `\n---`
-              noteContent += `\nWherostr Map | https://wherostr.social/?q=g:${geohash.slice(
+              noteContent += `\nWherostr | https://wherostr.social/?q=g:${geohash.slice(
                 0,
                 -1,
               )}`

@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography'
 import { debounce } from '@mui/material/utils'
 import { OSMSearchResult, search } from '@/services/osm'
 import Geohash from 'latlon-geohash'
+import { Box, CircularProgress, Divider } from '@mui/material'
 
 interface MainTextMatchedSubstrings {
   offset: number
@@ -23,12 +24,9 @@ interface SearchBoxProps {
   value?: string
 }
 
-const SearchBox: React.FC<TextFieldProps & SearchBoxProps> = ({
-  placeholder,
-  onChange,
-  value,
-  ...props
-}) => {
+const SearchBox: React.FC<
+  Omit<TextFieldProps, 'onChange'> & SearchBoxProps
+> = ({ placeholder, onChange, value, ...props }) => {
   const [loading, setLoading] = React.useState(false)
   const [inputText, setInputText] = React.useState('')
   const [inputValue, setInputValue] = React.useState('')
@@ -109,6 +107,33 @@ const SearchBox: React.FC<TextFieldProps & SearchBoxProps> = ({
     }
   }, [inputValue, fetch])
 
+  const handleSelectValue = React.useCallback(
+    (event: any, newValue: Partial<OSMSearchResult> | null) => {
+      setInputText('')
+      if (newValue?.place_id === -1) {
+        onChange?.(newValue.name)
+      } else if (newValue?.boundingbox) {
+        const [y1, y2, x1, x2] = newValue.boundingbox.map((b: string) =>
+          Number(b),
+        )
+        const bbhash = `b:${Geohash.encode(y1, x1, 10)},${Geohash.encode(
+          y2,
+          x2,
+          10,
+        )}`
+        onChange?.(bbhash)
+      } else if (newValue?.lat && newValue?.lon) {
+        const ghash = `g:${Geohash.encode(
+          Number(newValue?.lat),
+          Number(newValue?.lon),
+          10,
+        )}`
+        onChange?.(ghash)
+      }
+    },
+    [onChange],
+  )
+
   return (
     <Autocomplete
       fullWidth
@@ -121,29 +146,13 @@ const SearchBox: React.FC<TextFieldProps & SearchBoxProps> = ({
       noOptionsText={placeholder}
       selectOnFocus
       handleHomeEndKeys={false}
-      onChange={(event: any, newValue: Partial<OSMSearchResult> | null) => {
-        setInputText('')
-        if (newValue?.place_id === -1) {
-          onChange?.(newValue.name)
-        } else if (newValue?.boundingbox) {
-          const [y1, y2, x1, x2] = newValue.boundingbox.map((b: string) =>
-            Number(b),
-          )
-          const bbhash = `b:${Geohash.encode(y1, x1, 10)},${Geohash.encode(
-            y2,
-            x2,
-            10,
-          )}`
-          onChange?.(bbhash)
-        } else if (newValue?.lat && newValue?.lon) {
-          const ghash = `g:${Geohash.encode(
-            Number(newValue?.lat),
-            Number(newValue?.lon),
-            10,
-          )}`
-          onChange?.(ghash)
+      onKeyDown={(evt) => {
+        if (evt.key === 'Enter') {
+          evt.defaultPrevented = true
+          handleSelectValue(evt, options[0])
         }
       }}
+      onChange={handleSelectValue}
       renderInput={(params) => (
         <TextField
           {...params}
@@ -171,15 +180,53 @@ const SearchBox: React.FC<TextFieldProps & SearchBoxProps> = ({
         //   ]),
         // )
 
+        if (option.place_id === -1) {
+          return (
+            <React.Fragment key={option.place_id}>
+              <li {...props}>
+                <Grid container alignItems="center">
+                  {/* <Grid item sx={{ display: 'flex', width: 44 }}>
+                    <Note sx={{ color: 'text.secondary' }} />
+                  </Grid> */}
+                  <Grid
+                    item
+                    sx={{ width: 'calc(100% - 44px)', wordWrap: 'break-word' }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      {option.display_name}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </li>
+              <Divider sx={{ my: 0.5 }} textAlign="left">
+                <Typography variant="subtitle2" color="text.secondary">
+                  Places
+                </Typography>
+              </Divider>
+              {loading ? (
+                <CircularProgress
+                  color="inherit"
+                  size={16}
+                  sx={{ display: 'block', mx: 'auto' }}
+                />
+              ) : options.length === 1 ? (
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  fontStyle="italic"
+                  ml={2}
+                >
+                  No places found
+                </Typography>
+              ) : undefined}
+            </React.Fragment>
+          )
+        }
+
         return (
           <li {...props} key={option.place_id}>
             <Grid container alignItems="center">
-              {option.place_id === -1 ? (
-                <div />
-              ) : // <Grid item sx={{ display: 'flex', width: 44 }}>
-              //   <Note sx={{ color: 'text.secondary' }} />
-              // </Grid>
-              option.place_id === -2 ? (
+              {option.place_id === -2 ? (
                 <div />
               ) : (
                 // <Grid item sx={{ display: 'flex', width: 44 }}>
@@ -193,15 +240,6 @@ const SearchBox: React.FC<TextFieldProps & SearchBoxProps> = ({
                 item
                 sx={{ width: 'calc(100% - 44px)', wordWrap: 'break-word' }}
               >
-                {/* {parts.map((part, index) => (
-                  <Box
-                    key={index}
-                    component="span"
-                    sx={{ fontWeight: part.highlight ? 'bold' : 'regular' }}
-                  >
-                    {part.text}
-                  </Box>
-                ))} */}
                 <Typography variant="body2" color="text.secondary">
                   {option.display_name}
                 </Typography>

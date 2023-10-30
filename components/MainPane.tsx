@@ -343,12 +343,9 @@ const MainPane = () => {
           )}
 
           {!query ? (
-            <>
-              <Box className="flex flex-1 justify-center">
-                <FeedFilterMenu user={user} />
-              </Box>
-              <Filter className="grow" user={user} />
-            </>
+            <Box className="flex flex-1 justify-center">
+              <FeedFilterMenu user={user} />
+            </Box>
           ) : (
             <Box mx="auto">
               {query.tags?.map((d) => (
@@ -388,6 +385,7 @@ const MainPane = () => {
               ) : undefined}
             </Box>
           )}
+          <Filter className="grow" user={user} />
         </Toolbar>
         <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
       </Paper>

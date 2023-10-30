@@ -45,7 +45,10 @@ const Filter: FC<FilterProps> = ({ className, user, ...props }) => {
           name="search"
           size="small"
           margin="dense"
-          onChange={(value) => {
+          onChange={(value?: string) => {
+            setShowSearch(false)
+            const showMap =
+              value?.startsWith('g:') || value?.startsWith('b:') ? 1 : ''
             router.push(`${pathname}?q=${value}&map=${showMap}`)
           }}
           value={querySearch}
