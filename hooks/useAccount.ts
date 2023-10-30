@@ -31,11 +31,10 @@ export const useMuting = () => {
     async (muteUser: NDKUser) => {
       const event = new NDKEvent(ndk)
       event.kind = NDKKind.MuteList
-      muteList.forEach((d) => {
+      muteList?.forEach((d) => {
         event.tag(ndk.getUser({ hexpubkey: d }))
       })
       event.tag(muteUser)
-      console.log('mute', event.rawEvent())
       // await event.publish()
     },
     [ndk, muteList],

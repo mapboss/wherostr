@@ -211,14 +211,14 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const filter = useMemo<NDKFilter | undefined>(() => {
     if (!user?.hexpubkey) return
     return {
-      kinds: [NDKKind.MuteList],
+      kinds: [NDKKind.MuteList, NDKKind.ChannelMuteUser],
       authors: [user?.hexpubkey],
     }
   }, [user?.hexpubkey])
   const [muteListEvent] = useSubscribe(filter, true)
   const muteList = useMemo(
     () =>
-      muteListEvent[0]?.getMatchingTags('p').map(([tag, pubkey]) => {
+      muteListEvent?.[0]?.getMatchingTags('p').map(([tag, pubkey]) => {
         return pubkey
       }),
     [muteListEvent],

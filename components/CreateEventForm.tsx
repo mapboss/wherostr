@@ -169,8 +169,11 @@ export const CreateEventForm = ({
         ndk,
       )
       let content = `\n---`
+      content += `\nWherostr Map | https://wherostr.social/?q=g:${geohashValue.slice(
+        0,
+        -1,
+      )}`
       content += `\nDuck Duck Go Maps | ${duckduck.url}`
-      content += `\nWherostr Map | https://wherostr.social/m/?q=${geohashValue}`
       content += `\nGoogle Maps | ${google.url}`
       return content
     }
@@ -255,7 +258,10 @@ export const CreateEventForm = ({
                 ndk,
               )
               noteContent += `\n---`
-              noteContent += `\nWherostr Map | https://wherostr.social/m/?q=${geohash}`
+              noteContent += `\nWherostr Map | https://wherostr.social/?q=g:${geohash.slice(
+                0,
+                -1,
+              )}`
               noteContent += `\nDuck Duck Go Maps | ${duckduck.url}`
               noteContent += `\nGoogle Maps | ${google.url}`
 
