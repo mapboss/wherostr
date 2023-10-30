@@ -5,8 +5,8 @@ import {
   NDKRelaySet,
   NDKSubscription,
   NDKSubscriptionCacheUsage,
+  NDKSubscriptionOptions,
 } from '@nostr-dev-kit/ndk'
-import { nanoid } from 'nanoid'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNDK, useRelaySet } from './useNostr'
 import { useAccount } from './useAccount'
@@ -30,6 +30,7 @@ export const useSubscribe = (
   filter?: NDKFilter<NDKKind>,
   alwaysShowNewItems: boolean = false,
   optRelaySet?: NDKRelaySet,
+  subOptions?: NDKSubscriptionOptions,
 ) => {
   const ndk = useNDK()
   const defaultRelaySet = useRelaySet()
@@ -62,9 +63,9 @@ export const useSubscribe = (
     setSub((prev) => {
       const subscribe = ndk.subscribe(
         filter,
-        {
+        subOptions || {
           closeOnEose: false,
-          cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+          cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
         },
         relaySet,
         false,
@@ -151,7 +152,7 @@ export const useSubscribe = (
     const { since, ...original } = filter
     const events = await ndk.fetchEvents(
       { ...original, until: oldestEvent.created_at, limit: 30 },
-      { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
+      { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
       relaySet,
     )
     const items = sortItems(events)

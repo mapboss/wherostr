@@ -36,7 +36,7 @@ export const useUserProfile = (hexpubkey?: string) => {
     try {
       const profile = await Promise.race<NDKUserProfile | null>([
         user.fetchProfile({
-          cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+          cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
         }),
         new Promise<null>((_, reject) => {
           setTimeout(() => reject('Timeout'), 5000)

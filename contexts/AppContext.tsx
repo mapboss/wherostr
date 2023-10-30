@@ -7,6 +7,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react'
@@ -86,10 +87,12 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const setProfileAction = useCallback(
     async (profileAction?: ProfileActionOptions) => {
       if (!profileAction) {
+        document.body.style.overflowY = ''
         _setProfileAction(undefined)
         return
       }
       try {
+        document.body.style.overflowY = 'hidden'
         _setProfileAction({
           ...profileAction,
           hexpubkey: profileAction.hexpubkey,
@@ -104,6 +107,7 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const setEventAction = useCallback(
     async (eventAction?: EventActionOptions) => {
       if (!eventAction) {
+        document.body.style.overflowY = ''
         _setEventAction(undefined)
         return
       }
@@ -116,6 +120,7 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
           }
           event = _event
         }
+        document.body.style.overflowY = 'hidden'
         _setEventAction({
           ...eventAction,
           event,
@@ -174,6 +179,42 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
     hideSnackbar,
   ])
 
+  useEffect(() => {
+    const wakeLockSwitch = document.querySelector('#wake-lock')
+
+    let wakeLock: WakeLockSentinel | undefined
+
+    const releaseHandle = () => {
+      console.log('Wake Lock was released')
+    }
+    const requestWakeLock = async () => {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen')
+        wakeLock.addEventListener('release', releaseHandle)
+        console.log('Wake Lock is active')
+      } catch (err: any) {
+        console.error(`${err.name}, ${err.message}`)
+      }
+    }
+
+    const releaseWakeLock = () => {
+      console.log('releasing wakeLock')
+
+      wakeLock?.release()
+      wakeLock = undefined
+    }
+
+    const checkWakeLockDetail = ({ detail }: any) => {
+      const { checked } = detail
+      checked ? requestWakeLock() : releaseWakeLock()
+    }
+
+    wakeLockSwitch?.addEventListener('change', checkWakeLockDetail)
+    return () => {
+      wakeLockSwitch?.removeEventListener('change', checkWakeLockDetail)
+      wakeLock?.removeEventListener('release', releaseHandle)
+    }
+  }, [])
   return (
     <AppContext.Provider value={value}>
       {children}
