@@ -22,9 +22,9 @@ import {
   NDKUser,
 } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
-import { useSubscribe } from '@/hooks/useSubscribe'
 import { useAction } from '@/hooks/useApp'
 import { nip19 } from 'nostr-tools'
+import usePromise from 'react-use-promise'
 
 export type SignInType = 'nip7' | 'nsec' | 'npub'
 export interface AccountProps {
@@ -36,6 +36,7 @@ export interface AccountProps {
   signIn: (type: SignInType, key?: string) => Promise<NDKUser | void>
   signOut: () => Promise<void>
   setFollows: Dispatch<SetStateAction<NDKUser[]>>
+  setMuteList: Dispatch<SetStateAction<string[]>>
   follow: (newFollow: NDKUser) => Promise<void>
   unfollow: (unfollowUser: NDKUser) => Promise<void>
 }
@@ -49,6 +50,7 @@ export const AccountContext = createContext<AccountProps>({
   signIn: async () => {},
   signOut: async () => {},
   setFollows: () => {},
+  setMuteList: () => {},
   follow: async () => {},
   unfollow: async () => {},
 })
@@ -60,6 +62,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [signing, setSigning] = useState<boolean>(true)
   const [user, setUser] = useState<NDKUser>()
   const [follows, setFollows] = useState<NDKUser[]>([])
+  const [muteList, setMuteList] = useState<string[]>([])
   const nostrRef = useRef<typeof window.nostr>(
     typeof window !== 'undefined' ? window.nostr : undefined,
   )
@@ -215,18 +218,19 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       authors: [user?.hexpubkey],
     }
   }, [user?.hexpubkey])
-  const [muteListEvent] = useSubscribe(filter, true, undefined, {
-    cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
-    closeOnEose: false,
-  })
 
-  const muteList = useMemo(
-    () =>
-      muteListEvent?.[0]?.getMatchingTags('p').map(([tag, pubkey]) => {
+  usePromise(async () => {
+    if (!filter) return setMuteList([])
+
+    const event = await ndk.fetchEvent(filter, {
+      cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+    })
+    const list =
+      event?.getMatchingTags('p').map(([tag, pubkey]) => {
         return pubkey
-      }) || [],
-    [muteListEvent],
-  )
+      }) || []
+    setMuteList(list)
+  }, [filter])
 
   const value = useMemo((): AccountProps => {
     return {
@@ -238,6 +242,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       signIn,
       signOut,
       setFollows,
+      setMuteList,
       follow,
       unfollow,
     }

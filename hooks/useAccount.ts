@@ -26,7 +26,7 @@ export const useFollowing = () => {
 
 export const useMuting = () => {
   const ndk = useNDK()
-  const { muteList } = useContext(AccountContext)
+  const { muteList, setMuteList } = useContext(AccountContext)
   const mute = useCallback(
     async (muteUser: NDKUser) => {
       const event = new NDKEvent(ndk)
@@ -35,7 +35,9 @@ export const useMuting = () => {
         event.tag(ndk.getUser({ hexpubkey: d }))
       })
       event.tag(muteUser)
-      // await event.publish()
+      const list = event.getMatchingTags('p').map(([tag, pubkey]) => pubkey)
+      await event.publish()
+      setMuteList(list)
     },
     [ndk, muteList],
   )

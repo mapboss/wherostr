@@ -94,7 +94,7 @@ export const useSubscribe = (
 
     const onEventDup = (item: NDKEvent) => {
       const { existingEvent, dedupKey, event } = collectEvent(item)
-      console.log('onEventDup:event', { event, existingEvent })
+      // console.log('onEventDup:event', { event, existingEvent })
       evetns.set(dedupKey, event)
       if (eos.current) {
         if (!existingEvent) {
