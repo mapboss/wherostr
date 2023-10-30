@@ -368,6 +368,17 @@ const MainPane = () => {
                   icon={<CropFree />}
                   key={query.bhash?.join(', ')}
                   label={query.bhash?.join(', ')}
+                  onClick={() => {
+                    if (!query.bbox) return
+                    const polygon = buffer(bboxPolygon(query.bbox), 5, {
+                      units: 'kilometers',
+                    })
+                    const [x1, y1, x2, y2] = bbox(polygon)
+                    map?.fitBounds([x1, y1, x2, y2], {
+                      duration: 1000,
+                      maxZoom: 16,
+                    })
+                  }}
                   onDelete={() =>
                     router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
                   }
@@ -378,6 +389,15 @@ const MainPane = () => {
                   icon={<LocationOn />}
                   key={query.geohash}
                   label={query.geohash}
+                  onClick={() => {
+                    if (!query.lnglat) return
+                    const [lng, lat] = query.lnglat
+                    const lnglat = new LngLat(lng, lat)
+                    map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
+                      duration: 1000,
+                      maxZoom: 16,
+                    })
+                  }}
                   onDelete={() =>
                     router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
                   }
