@@ -22,7 +22,7 @@ import { Fragment } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import {
-  Visibility,
+  PlayCircleOutline,
   FormatQuote,
   InfoOutlined,
   ZoomIn,
@@ -44,7 +44,7 @@ import { useEvent } from '@/hooks/useEvent'
 import { useStreamRelaySet } from '@/hooks/useNostr'
 import StatusBadge from './StatusBadge'
 import ReactTimeago from 'react-timeago'
-import { nip19 } from 'nostr-tools'
+// import { nip19 } from 'nostr-tools'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
@@ -171,57 +171,75 @@ export const NostrAddressBox = ({
 
   if (nostrLink.kind === 30311) {
     return (
-      <Box className="bg-gradient-primary w-full p-3 rounded-2xl drop-shadow">
-        {state === 'resolved' ? (
-          <Box className="flex flex-col gap-3">
-            <Box className="flex gap-3 items-start flex-col sm:flex-row">
-              {!!image && (
-                <Box className="sm:max-w-[40%] rounded-2xl overflow-hidden drop-shadow">
-                  <ButtonBase
-                    className="aspect-video hover:scale-110 transition-all"
-                    centerRipple
-                    LinkComponent={NextLink}
-                    href={`/a?naddr=${nostrLink.encode()}`}
-                    target="_blank"
+      <Box className="bg-gradient-primary w-full rounded-2xl shadow p-0.5">
+        <Paper className="p-3 !rounded-2xl">
+          {state === 'resolved' ? (
+            <Box className="flex flex-col gap-3">
+              <Box className="flex gap-3 items-start flex-col sm:flex-row">
+                {!!image && (
+                  <Box className="sm:max-w-[40%] rounded-2xl overflow-hidden shadow">
+                    <ButtonBase
+                      className="aspect-video hover:scale-110 transition-all"
+                      centerRipple
+                      LinkComponent={NextLink}
+                      href={`/a?naddr=${nostrLink.encode()}`}
+                      target="_blank"
+                    >
+                      <img src={image} alt="image" />
+                    </ButtonBase>
+                  </Box>
+                )}
+                <Box>
+                  <Box>
+                    <Link
+                      component="a"
+                      target="_blank"
+                      underline="hover"
+                      color="inherit"
+                      variant="h6"
+                      fontWeight="bold"
+                      href={`/a/?naddr=${naddr}`}
+                    >
+                      {title}
+                    </Link>
+                  </Box>
+                  <Typography
+                    className="text-contrast-secondary"
+                    variant="caption"
                   >
-                    <img src={image} alt="image" />
-                  </ButtonBase>
+                    {isLive && (
+                      <StatusBadge
+                        className="!mr-2 inline-block text-contrast-primary"
+                        status="live"
+                      />
+                    )}
+                    {!isLive && 'Streamed '}
+                    <ReactTimeago
+                      date={new Date((isLive ? starts : ends) * 1000)}
+                    />
+                  </Typography>
                 </Box>
-              )}
-              <Box>
-                <Typography variant="h6" fontWeight="bold">
-                  {title}
-                </Typography>
-                <Typography variant="caption">
-                  {isLive && (
-                    <StatusBadge className="!mr-2 inline-block" status="live" />
-                  )}
-                  {!isLive && 'Streamed '}
-                  <ReactTimeago
-                    date={new Date((isLive ? starts : ends) * 1000)}
-                  />
-                </Typography>
+              </Box>
+              <Box className="flex items-end gap-2">
+                <ProfileChip className="flex-1" hexpubkey={pubkey} />
+                <Button
+                  className="shrink-0"
+                  LinkComponent={NextLink}
+                  target="_blank"
+                  href={`/a/?naddr=${naddr}`}
+                  color="primary"
+                  variant="contained"
+                  sx={{ fontWeight: 'bold' }}
+                  startIcon={<PlayCircleOutline />}
+                >
+                  Watch
+                </Button>
               </Box>
             </Box>
-            <Box className="flex items-end gap-2">
-              <ProfileChip className="flex-1" hexpubkey={pubkey} />
-              <Button
-                className="shrink-0"
-                LinkComponent={NextLink}
-                target="_blank"
-                href={`/a/?naddr=${naddr}`}
-                color="primary"
-                variant="contained"
-                sx={{ fontWeight: 'bold' }}
-                endIcon={<Visibility />}
-              >
-                Watch
-              </Button>
-            </Box>
-          </Box>
-        ) : (
-          <CircularProgress color="inherit" />
-        )}
+          ) : (
+            <CircularProgress color="inherit" />
+          )}
+        </Paper>
       </Box>
     )
   }
@@ -252,7 +270,7 @@ const renderChunk = (
         return (
           <PhotoView src={content}>
             <img
-              className="mx-auto rounded-2xl overflow-hidden max-h-[50vh]"
+              className="mx-auto rounded-2xl overflow-hidden max-h-[50vh] border-[1px] border-solid border-disabled"
               alt="image"
               src={content}
             />
@@ -266,7 +284,7 @@ const renderChunk = (
         )
       } else if (mimeType?.startsWith('video/')) {
         return (
-          <Box className="border-none rounded-2xl overflow-hidden w-full aspect-video">
+          <Box className="rounded-2xl overflow-hidden w-full aspect-video border-[1px] border-solid border-disabled">
             <ReactPlayer
               url={content}
               width="100%"
@@ -426,33 +444,23 @@ const TextNote = ({
           ))}
         </PhotoProvider>
       ) : (
-        <Paper
-          elevation={4}
-          className="w-full flex items-center justify-center p-3"
-          onClick={() => setShow(true)}
-        >
-          <Box mr={1} mt={1} display="flex" alignSelf="flex-start">
-            <InfoOutlined className="text-primary" />
+        <Box className="bg-disabled flex w-full p-3 rounded-2xl shadow gap-2">
+          <InfoOutlined className="text-warning" />
+          <Box className="flex-1 text-contrast-secondary">
+            <Typography>
+              The author has marked this note as a{' '}
+              <span className="text-warning">sensitive topic</span>
+            </Typography>
+            <Typography>
+              Reason: <span className="text-warning">{nsfw}</span>
+            </Typography>
+            <Box className="w-full text-right">
+              <Button color="secondary" onClick={() => setShow(true)}>
+                Show
+              </Button>
+            </Box>
           </Box>
-          <Box>
-            <Typography display="inline" color="text.secondary">
-              The author has marked this note as a
-            </Typography>{' '}
-            <Typography display="inline" color="primary.main">
-              sensitive topic
-            </Typography>
-            <br />
-            <Typography display="inline" color="text.secondary">
-              Reason:
-            </Typography>{' '}
-            <Typography display="inline" color="primary.main">
-              {nsfw}
-            </Typography>
-            <Typography color="secondary.dark">
-              Click here to load anyway
-            </Typography>
-          </Box>
-        </Paper>
+        </Box>
       )}
     </Typography>
   )

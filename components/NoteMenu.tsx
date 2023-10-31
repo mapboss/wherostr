@@ -2,17 +2,16 @@ import * as React from 'react'
 import IconButton from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import {
-  Divider,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-} from '@mui/material'
+import { ListItemButton, ListItemIcon, ListItemText } from '@mui/material'
 import copy from 'copy-to-clipboard'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
 import Geohash from 'latlon-geohash'
-import { useMuting } from '@/hooks/useAccount'
+import { useFollowing, useMuting, useUser } from '@/hooks/useAccount'
+import { LoadingButton } from '@mui/lab'
+import { PersonAddOutlined, PersonRemoveOutlined } from '@mui/icons-material'
+import { useCallback, useMemo, useState } from 'react'
+import { useUserProfile } from '@/hooks/useUserProfile'
 
 interface NoteMenuItemProps {
   id: string
@@ -80,8 +79,38 @@ const options: NoteMenuOptionProps[] = [
 
 export default function NoteMenu({ event }: { event: NDKEvent }) {
   // const [_, mute] = useMuting()
+  const account = useUser()
+  const [follows, follow, unfollow] = useFollowing()
+  const user = useUserProfile(event.author.hexpubkey)
+  const [followLoading, setFollowLoading] = useState(false)
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
+  const itsYou = useMemo(
+    () => account?.hexpubkey === event.author.hexpubkey,
+    [account?.hexpubkey, event.author.hexpubkey],
+  )
+  const isFollowing = useMemo(
+    () => follows.find((d) => d.hexpubkey === event.author.hexpubkey),
+    [event.author.hexpubkey, follows],
+  )
+  const handleClickFollow = useCallback(async () => {
+    if (!user) return
+    try {
+      setFollowLoading(true)
+      await follow(user)
+    } finally {
+      setFollowLoading(false)
+    }
+  }, [follow, user])
+  const handleClickUnfollow = useCallback(async () => {
+    if (!user) return
+    try {
+      setFollowLoading(true)
+      await unfollow(user)
+    } finally {
+      setFollowLoading(false)
+    }
+  }, [unfollow, user])
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
   }
@@ -185,6 +214,30 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
               )
             })
         })}
+        {account &&
+          !itsYou &&
+          (isFollowing ? (
+            <LoadingButton
+              className="!rounded-none"
+              color="error"
+              loading={followLoading}
+              loadingPosition="start"
+              startIcon={<PersonRemoveOutlined />}
+              onClick={handleClickUnfollow}
+            >
+              Unfollow
+            </LoadingButton>
+          ) : (
+            <LoadingButton
+              color="inherit"
+              loading={followLoading}
+              loadingPosition="start"
+              startIcon={<PersonAddOutlined />}
+              onClick={handleClickFollow}
+            >
+              Follow
+            </LoadingButton>
+          ))}
       </Menu>
     </>
   )

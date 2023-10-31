@@ -53,7 +53,7 @@ const config: Config = {
         dark: 'rgb(154, 26, 30)',
       },
       disabled: {
-        DEFAULT: 'rgba(117, 117, 117, 0.7)',
+        DEFAULT: 'rgba(58, 58, 58, 0.7)',
         light: 'rgb(255, 255, 255, 0.7)',
         dark: 'rgba(0, 0, 0, 0.7)',
       },

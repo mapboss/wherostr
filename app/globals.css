@@ -21,6 +21,13 @@
   border-radius: 9999px !important;
 }
 
+.MuiList-root > .MuiLoadingButton-root {
+  border-radius: 0px !important;
+  width: 100%;
+  padding: 6px 16px;
+  justify-content: flex-start;
+}
+
 .MuiOutlinedInput-root {
   border-radius: 1rem !important;
 }

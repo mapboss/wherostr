@@ -63,6 +63,7 @@ export interface AppContextProps {
   setEventAction: (eventAction?: EventActionOptions) => void
   showSnackbar: (message: string, props?: AppSnackbarProps) => void
   hideSnackbar: () => void
+  backToPreviosEventAction: () => void
 }
 
 export const AppContext = createContext<AppContextProps>({
@@ -72,6 +73,7 @@ export const AppContext = createContext<AppContextProps>({
   setEventAction: () => {},
   showSnackbar: () => {},
   hideSnackbar: () => {},
+  backToPreviosEventAction: () => {},
 })
 
 export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -79,11 +81,18 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [profileAction, _setProfileAction] = useState<ProfileAction>()
   const [events, setEvents] = useState<NDKEvent[]>([])
   const [eventAction, _setEventAction] = useState<EventAction>()
+  const [eventActionHistory, setEventActionHistory] = useState<EventAction[]>(
+    [],
+  )
   const [{ slotProps, ...snackProps }, setSnackProps] =
     useState<AppSnackbarProps>({
       anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
     })
-
+  useEffect(() => {
+    if (!eventAction) {
+      setEventActionHistory([])
+    }
+  }, [eventAction])
   const setProfileAction = useCallback(
     async (profileAction?: ProfileActionOptions) => {
       if (!profileAction) {
@@ -125,12 +134,21 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
           ...eventAction,
           event,
         })
+        if (eventAction.type === EventActionType.View) {
+          setEventActionHistory([
+            ...eventActionHistory,
+            {
+              ...eventAction,
+              event,
+            },
+          ])
+        }
         _setProfileAction(undefined)
       } catch (error) {
         console.log('error', error)
       }
     },
-    [getEvent],
+    [eventActionHistory, getEvent],
   )
 
   const handleClose = useCallback(
@@ -157,6 +175,19 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const hideSnackbar = useCallback(() => {
     handleClose()
   }, [handleClose])
+  const backToPreviosEventAction = useCallback(() => {
+    const _eventActionHistory = [...eventActionHistory]
+    if (eventAction?.type === EventActionType.View) {
+      _eventActionHistory.pop()
+    }
+    if (_eventActionHistory.length) {
+      setEventActionHistory(_eventActionHistory)
+      _setEventAction(_eventActionHistory[_eventActionHistory.length - 1])
+    } else {
+      document.body.style.overflowY = ''
+      _setEventAction(undefined)
+    }
+  }, [eventAction?.type, eventActionHistory])
 
   const value = useMemo((): AppContextProps => {
     return {
@@ -168,6 +199,7 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
       setEventAction,
       showSnackbar,
       hideSnackbar,
+      backToPreviosEventAction,
     }
   }, [
     profileAction,
@@ -177,6 +209,7 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
     setEventAction,
     showSnackbar,
     hideSnackbar,
+    backToPreviosEventAction,
   ])
 
   useEffect(() => {

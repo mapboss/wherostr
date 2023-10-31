@@ -34,14 +34,11 @@ const StatusBadge = ({
   }, [status])
   return (
     <Typography
-      className={classNames(
-        className,
-        _className,
-        'rounded px-2 drop-shadow',
-      )}
+      className={classNames(className, _className, 'rounded px-2 shadow')}
       variant="subtitle2"
     >
-      {icon}{label}
+      {icon}
+      {label}
     </Typography>
   )
 }

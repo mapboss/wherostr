@@ -36,6 +36,7 @@ const ShortTextNoteCard = ({
   hideContent = false,
   indent = true,
   indentLine,
+  viewNoteButton = true,
 }: {
   event: NDKEvent
   action?: boolean
@@ -44,6 +45,7 @@ const ShortTextNoteCard = ({
   hideContent?: boolean
   indent?: boolean
   indentLine?: boolean
+  viewNoteButton?: boolean
 }) => {
   const pathname = usePathname()
   const query = useSearchParams()
@@ -157,9 +159,11 @@ const ShortTextNoteCard = ({
               </IconButton>
             )}
             <NoteMenu event={event} />
-            <IconButton size="small" onClick={handleClickViewNote}>
-              <ChevronRightOutlined className="text-contrast-secondary" />
-            </IconButton>
+            {viewNoteButton && (
+              <IconButton size="small" onClick={handleClickViewNote}>
+                <ChevronRightOutlined className="text-contrast-secondary" />
+              </IconButton>
+            )}
           </>
         )}
       </Box>

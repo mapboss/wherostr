@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 import { useCallback, useContext, useMemo, useState } from 'react'
 import {
+  ArrowBackOutlined,
   Close,
   Comment,
   ElectricBolt,
@@ -262,7 +263,7 @@ export const ShortTextNotePane = ({
   )
   return (
     <Box>
-      <ShortTextNoteCard event={event} indent={false} />
+      <ShortTextNoteCard event={event} indent={false} viewNoteButton={false} />
       {event.kind === NDKKind.Text && (
         <>
           <Box className="flex gap-3 p-3 justify-center">
@@ -318,7 +319,11 @@ export const ShortTextNotePane = ({
 
 const EventActionModal = () => {
   const { user } = useContext(AccountContext)
-  const { eventAction, setEventAction } = useContext(AppContext)
+  const { eventAction, setEventAction, backToPreviosEventAction } =
+    useContext(AppContext)
+  const handleClickBack = useCallback(() => {
+    backToPreviosEventAction()
+  }, [backToPreviosEventAction])
   const handleClickCloseModal = useCallback(() => {
     setEventAction(undefined)
   }, [setEventAction])
@@ -374,7 +379,10 @@ const EventActionModal = () => {
       <Box className="relative max-h-full flex rounded-2xl overflow-hidden p-0.5 bg-gradient-primary">
         <Paper className="w-full overflow-y-auto !rounded-2xl">
           <Paper className="sticky top-0 z-10">
-            <Box className="flex items-center p-3 drop-shadow">
+            <Box className="flex items-center p-3 shadow gap-2">
+              <IconButton size="small" onClick={handleClickBack}>
+                <ArrowBackOutlined />
+              </IconButton>
               <Typography className="flex-1" variant="h6">
                 {title}
               </Typography>
