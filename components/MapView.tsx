@@ -7,34 +7,36 @@ import { Box, Paper } from '@mui/material'
 import { useMapLibre } from '@/hooks/useMaplibre'
 
 const opts: Omit<maplibregl.MapOptions, 'container'> = {
-  style: {
-    version: 8,
-    name: 'Open Streets Map',
-    sources: {
-      osm: {
-        type: 'raster',
-        tiles: [
-          'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        ],
-        tileSize: 256,
-        attribution:
-          "<a href='https://www.openstreetmap.org/'>&copy; OpenStreetMap Contributors</a>",
-        maxzoom: 19,
-      },
-    },
-    layers: [
-      {
-        id: 'basemap',
-        type: 'raster',
-        source: 'osm',
-        layout: {
-          visibility: 'visible',
-        },
-      },
-    ],
-  },
+  style:
+    'https://api.maptiler.com/maps/streets-v2-dark/style.json?key=XY1JQQskEOjc3SA5YEma',
+  // style: {
+  //   version: 8,
+  //   name: 'Open Streets Map',
+  //   sources: {
+  //     osm: {
+  //       type: 'raster',
+  //       tiles: [
+  //         'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  //         'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  //         'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  //       ],
+  //       tileSize: 256,
+  //       attribution:
+  //         "<a href='https://www.openstreetmap.org/'>&copy; OpenStreetMap Contributors</a>",
+  //       maxzoom: 19,
+  //     },
+  //   },
+  //   layers: [
+  //     {
+  //       id: 'basemap',
+  //       type: 'raster',
+  //       source: 'osm',
+  //       layout: {
+  //         visibility: 'visible',
+  //       },
+  //     },
+  //   ],
+  // },
   // bounds: [97.3758964376, 5.69138418215, 105.589038527, 20.4178496363],
 }
 
