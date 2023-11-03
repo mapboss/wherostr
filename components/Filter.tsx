@@ -25,7 +25,6 @@ const Filter: FC<FilterProps> = ({ className, user, ...props }) => {
   const searchParams = useSearchParams()
   const [showSearch, setShowSearch] = useState(false)
   const querySearch = searchParams.get('q') || ''
-  const showMap = searchParams.get('map') || ''
 
   return (
     <Paper

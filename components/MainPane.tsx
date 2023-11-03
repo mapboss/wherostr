@@ -327,10 +327,10 @@ const MainPane = () => {
   return (
     <Paper
       className={classNames(
-        'absolute left-0 top-0 w-full md:w-[640px] flex flex-col !rounded-none',
+        'absolute left-0 top-0 w-full md:w-[640px] flex flex-col !rounded-none min-h-full',
         {
-          'min-h-full': !showOnlyMap,
-          'h-[66px] overflow-hidden': showOnlyMap,
+          // 'min-h-full': !showOnlyMap,
+          // 'h-[66px] overflow-hidden': showOnlyMap,
         },
       )}
     >
@@ -378,6 +378,9 @@ const MainPane = () => {
                       duration: 1000,
                       maxZoom: 16,
                     })
+                    router.replace(`${pathname}?q=${q}&map=1`, {
+                      scroll: false,
+                    })
                   }}
                   onDelete={() =>
                     router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
@@ -396,6 +399,9 @@ const MainPane = () => {
                     map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
                       duration: 1000,
                       maxZoom: 16,
+                    })
+                    router.replace(`${pathname}?q=${q}&map=1`, {
+                      scroll: false,
                     })
                   }}
                   onDelete={() =>
@@ -433,9 +439,9 @@ const MainPane = () => {
         <Box
           className={classNames(
             'fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-3 md:p-6 backdrop-blur z-50',
-            {
-              hidden: showMap && mdDown,
-            },
+            // {
+            //   hidden: showMap && mdDown,
+            // },
           )}
         >
           <EventActionModal />

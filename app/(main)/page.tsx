@@ -2,14 +2,7 @@
 import MainPane from '@/components/MainPane'
 import { MapView } from '@/components/MapView'
 import { MapContextProvider } from '@/contexts/MapContext'
-import {
-  Box,
-  Fab,
-  Hidden,
-  IconButton,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material'
+import { Box, Fab, Hidden, useMediaQuery, useTheme } from '@mui/material'
 import classNames from 'classnames'
 import { RedirectType } from 'next/dist/client/components/redirect'
 import {
@@ -69,8 +62,9 @@ export default function Page() {
       >
         <MapView
           className={classNames('flex-1', {
-            'invisible -z-10': !mdUp && !hasMap,
-            'md:visible': true,
+            '-z-10': !mdUp && !hasMap,
+            'z-10': hasMap && !mdUp,
+            // 'md:visible': true,
           })}
         >
           <Hidden mdUp>

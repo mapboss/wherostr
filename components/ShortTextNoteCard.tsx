@@ -145,14 +145,14 @@ const ShortTextNoteCard = ({
               <IconButton
                 size="small"
                 onClick={() => {
-                  const q = query.get('q') || ''
-                  router.replace(`${pathname}?q=${q}&map=1`)
                   setTimeout(() => {
                     map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
                       animate: false,
                       maxZoom: 15,
                     })
                   }, 300)
+                  const q = query.get('q') || ''
+                  router.replace(`${pathname}?q=${q}&map=1`, { scroll: false })
                 }}
               >
                 <TravelExploreOutlined className="text-contrast-secondary" />

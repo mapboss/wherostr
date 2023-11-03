@@ -133,7 +133,7 @@ export const CreateEventForm = ({
     if (show) {
       querystring.push('map=1')
     }
-    router.replace(`${pathname}?${querystring.join('&')}`)
+    router.replace(`${pathname}?${querystring.join('&')}`, { scroll: false })
   }
 
   useEffect(() => {
@@ -283,7 +283,7 @@ export const CreateEventForm = ({
         const ev = new NDKEvent(ndk, powEvent)
         // console.log('ev', ev)
 
-        await ev.publish(relaySet)
+        await ev.publish()
         setEventAction(undefined)
       } catch (err: any) {
         showSnackbar(err.message, {
@@ -302,7 +302,6 @@ export const CreateEventForm = ({
       relatedEvents,
       positingOptions?.location,
       ndk,
-      relaySet,
       appendMapLink,
       setEventAction,
       showSnackbar,
