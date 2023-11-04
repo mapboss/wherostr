@@ -71,7 +71,9 @@ export default function Page() {
             <Box className="absolute top-20 left-2">
               <Fab
                 size="small"
-                onClick={() => router.replace(`${pathname}?q=${q}`)}
+                onClick={() =>
+                  router.replace(`${pathname}?q=${q}`, { scroll: false })
+                }
               >
                 <ChevronLeftOutlined />
               </Fab>

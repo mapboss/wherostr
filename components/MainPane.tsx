@@ -374,17 +374,17 @@ const MainPane = () => {
                       units: 'kilometers',
                     })
                     const [x1, y1, x2, y2] = bbox(polygon)
-                    map?.fitBounds([x1, y1, x2, y2], {
-                      duration: 1000,
-                      maxZoom: 16,
-                    })
                     router.replace(`${pathname}?q=${q}&map=1`, {
                       scroll: false,
                     })
+                    setTimeout(() => {
+                      map?.fitBounds([x1, y1, x2, y2], {
+                        duration: 1000,
+                        maxZoom: 16,
+                      })
+                    }, 300)
                   }}
-                  onDelete={() =>
-                    router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
-                  }
+                  onDelete={() => router.replace(`${pathname}?q=`)}
                 />
               ) : undefined}
               {query.geohash ? (
@@ -396,17 +396,17 @@ const MainPane = () => {
                     if (!query.lnglat) return
                     const [lng, lat] = query.lnglat
                     const lnglat = new LngLat(lng, lat)
-                    map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
-                      duration: 1000,
-                      maxZoom: 16,
-                    })
                     router.replace(`${pathname}?q=${q}&map=1`, {
                       scroll: false,
                     })
+                    setTimeout(() => {
+                      map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
+                        duration: 1000,
+                        maxZoom: 16,
+                      })
+                    }, 300)
                   }}
-                  onDelete={() =>
-                    router.replace(`${pathname}?q=&map=${showMap ? '1' : ''}`)
-                  }
+                  onDelete={() => router.replace(`${pathname}?q=`)}
                 />
               ) : undefined}
             </Box>
@@ -452,7 +452,7 @@ const MainPane = () => {
           <ProfileActionModal />
         </Box>
       )}
-      <Zoom in={!readOnly}>
+      <Zoom in={!readOnly && !showOnlyMap}>
         <Fab
           className={classNames('!fixed !bg-gradient-primary !z-40 bottom-6', {
             'left-[576px]': mdUp,

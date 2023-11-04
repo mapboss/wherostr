@@ -79,11 +79,13 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
           hexpubkey={hexpubkey}
           showAbout={false}
           onClick={async () => {
-            setProfileAction({
-              hexpubkey: hexpubkey,
-              type: ProfileActionType.View,
-            })
             closeDrawer()
+            setTimeout(() => {
+              setProfileAction({
+                hexpubkey: hexpubkey,
+                type: ProfileActionType.View,
+              })
+            }, 100)
           }}
         />
         {/* <ProfileChip hexpubkey={hexpubkey} onClick={closeDrawer} size="large" /> */}
