@@ -2,7 +2,7 @@
 import { AccountContext, AccountProps } from '@/contexts/AccountContext'
 import { NDKEvent, NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
 import { useCallback, useContext, useMemo } from 'react'
-import { useNDK } from './useNostr'
+import { useNDK, useRelaySet } from './useNostr'
 
 export const useUser = () => {
   const { user } = useContext(AccountContext)
@@ -26,6 +26,7 @@ export const useFollowing = () => {
 
 export const useMuting = () => {
   const ndk = useNDK()
+  const relaySet = useRelaySet()
   const { muteList, setMuteList } = useContext(AccountContext)
   const mute = useCallback(
     async (muteUser: NDKUser) => {
@@ -36,10 +37,10 @@ export const useMuting = () => {
       })
       event.tag(muteUser)
       const list = event.getMatchingTags('p').map(([tag, pubkey]) => pubkey)
-      await event.publish()
+      await event.publish(relaySet)
       setMuteList(list)
     },
-    [ndk, muteList],
+    [ndk, muteList, relaySet],
   )
 
   return useMemo<[AccountProps['muteList'], typeof mute]>(() => {

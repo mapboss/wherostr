@@ -47,7 +47,6 @@ import {
   Skeleton,
   Stack,
   TextField,
-  Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
@@ -71,6 +70,7 @@ export const CreateEventForm = ({
   relatedEvents?: NDKEvent[]
 }) => {
   const ndk = useNDK()
+  const relaySet = useRelaySet()
   const map = useMap()
   const user = useUser()
   const theme = useTheme()
@@ -287,7 +287,7 @@ export const CreateEventForm = ({
         // console.log('powEvent', powEvent)
         // console.log('ev', { powId: publishEvent?.id, eventId: ev.id, pow })
 
-        await ev.publish()
+        await ev.publish(relaySet)
         setEventAction(undefined)
       } catch (err: any) {
         showSnackbar(err.message, {
@@ -302,6 +302,7 @@ export const CreateEventForm = ({
     },
     [
       user,
+      relaySet,
       type,
       relatedEvents,
       positingOptions?.location,

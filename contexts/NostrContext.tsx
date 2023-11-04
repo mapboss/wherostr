@@ -75,14 +75,14 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const updateRelaySet = useCallback(
     async (user?: NDKUser) => {
       try {
-        ndk.explicitRelayUrls?.map((d) => new NDKRelay(d).disconnect())
+        // ndk.explicitRelayUrls?.map((d) => new NDKRelay(d).disconnect())
         console.log('updateRelaySet:user', user)
         if (user) {
           const relayList = await user.relayList()
           console.log('updateRelaySet:relayList', relayList)
           if (relayList?.bothRelayUrls.length) {
-            ndk.explicitRelayUrls = relayList.bothRelayUrls
-            await ndk.connect()
+            // ndk.explicitRelayUrls = relayList.bothRelayUrls
+            // await ndk.connect()
             setRelaySet((prev) => {
               // prev?.relays.forEach((relay) => relay.disconnect())
               return NDKRelaySet.fromRelayUrls(relayList.bothRelayUrls, ndk)
@@ -90,8 +90,8 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
             return
           }
         }
-        ndk.explicitRelayUrls = defaultRelays
-        await ndk.connect()
+        // ndk.explicitRelayUrls = defaultRelays
+        // await ndk.connect()
         setRelaySet((prev) => {
           // prev?.relays.forEach((relay) => relay.disconnect())
           return NDKRelaySet.fromRelayUrls(defaultRelays, ndk)

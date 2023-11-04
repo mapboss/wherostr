@@ -88,6 +88,7 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
   const user = useUserProfile(event.author.hexpubkey)
   const [muteLoading, setMuteLoading] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const itsYou = useMemo(
@@ -101,12 +102,12 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
 
   const handleClickDelete = useCallback(async () => {
     if (!event.author) return
-    event.delete('')
+
     try {
-      setMuteLoading(true)
-      await mute(event.author)
+      setDeleteLoading(true)
+      await event.delete('Delete')
     } finally {
-      setMuteLoading(false)
+      setDeleteLoading(false)
     }
   }, [mute, event.author])
 
@@ -281,8 +282,8 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
               <LoadingButton
                 className="!rounded-none"
                 color="error"
-                // loading={deleteLoading}
-                // loadingPosition="start"
+                loading={deleteLoading}
+                loadingPosition="start"
                 startIcon={<DeleteOutline />}
                 onClick={handleClickDelete}
               >

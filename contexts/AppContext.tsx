@@ -230,10 +230,10 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
       }
     }
 
-    const releaseWakeLock = () => {
+    const releaseWakeLock = async () => {
       console.log('releasing wakeLock')
 
-      wakeLock?.release()
+      await wakeLock?.release()
       wakeLock = undefined
     }
 

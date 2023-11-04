@@ -71,23 +71,55 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     return !!nostrRef.current
   }, [nostrRef])
 
-  const updateFollows = useCallback(async (user: NDKUser) => {
-    const follows = await user.follows({
-      cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
-    })
-    setFollows(Array.from(follows))
-  }, [])
+  const updateFollows = useCallback(
+    async (user: NDKUser) => {
+      const follows: Set<NDKUser> = new Set()
+      const contactListEvent = await ndk.fetchEvent(
+        {
+          kinds: [3],
+          authors: [user.hexpubkey],
+        },
+        undefined,
+        relaySet,
+      )
+      if (contactListEvent) {
+        const pubkeys = new Set<string>()
+        contactListEvent.tags.forEach((tag) => {
+          if (tag[0] === 'p') {
+            try {
+              pubkeys.add(tag[1])
+            } catch (e) {}
+          }
+        })
+        pubkeys.forEach((pubkey) => {
+          const user = new NDKUser({ hexpubkey: pubkey })
+          user.ndk = ndk
+          follows.add(user)
+        })
+      }
+      setFollows(Array.from(follows))
+    },
+    [ndk, relaySet],
+  )
 
   const follow = useCallback(
     async (newFollow: NDKUser) => {
       if (!user) return
       const followsSet = new Set(follows)
       const followUser = ndk.getUser({ hexpubkey: newFollow.hexpubkey })
-      const isOK = await user.follow(followUser, followsSet)
-      if (!isOK) return
+      if (followsSet.has(followUser)) {
+        return
+      }
+      followsSet.add(followUser)
+      const event = new NDKEvent(ndk)
+      event.kind = 3
+      followsSet.forEach((follow) => {
+        event.tag(follow)
+      })
+      await event.publish(relaySet)
       setFollows(Array.from(followsSet))
     },
-    [user, follows, ndk],
+    [user, follows, ndk, relaySet],
   )
 
   const unfollow = useCallback(
@@ -101,10 +133,10 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       followsSet.forEach((d) => {
         event.tag(d)
       })
-      await event.publish()
+      await event.publish(relaySet)
       setFollows(Array.from(followsSet))
     },
-    [follows, ndk],
+    [follows, ndk, relaySet],
   )
 
   const signIn = useCallback(
@@ -235,17 +267,19 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [user?.hexpubkey])
 
   usePromise(async () => {
-    if (!filter) return setMuteList([])
+    if (!filter || !relaySet) return setMuteList([])
 
-    const event = await ndk.fetchEvent(filter, {
-      cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
-    })
+    const event = await ndk.fetchEvent(
+      filter,
+      { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
+      relaySet,
+    )
     const list =
       event?.getMatchingTags('p').map(([tag, pubkey]) => {
         return pubkey
       }) || []
     setMuteList(list)
-  }, [filter])
+  }, [filter, relaySet])
 
   const value = useMemo((): AccountProps => {
     return {

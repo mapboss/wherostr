@@ -100,7 +100,7 @@ export default function Page() {
         ndkEvent.tags.push(['current_participants', currentPaticipants])
         ev.removeTag('current_participants')
         ev.tags.push(['current_participants', currentPaticipants])
-        await ndkEvent.publish()
+        await ndkEvent.publish(relaySet)
       } catch (err) {
       } finally {
         timeoutHandler = setTimeout(() => {
@@ -108,7 +108,7 @@ export default function Page() {
         }, 30000)
       }
     },
-    [fetchStats, createEvent],
+    [fetchStats, createEvent, relaySet],
   )
 
   useEffect(() => {
@@ -137,9 +137,9 @@ export default function Page() {
       ev.tags.push([name, value])
       ndkEvent.removeTag(name)
       ndkEvent.tags.push([name, value])
-      await ndkEvent.publish()
+      await ndkEvent.publish(relaySet)
     },
-    [ev, createEvent],
+    [ev, createEvent, relaySet],
   )
 
   const isLive = useMemo(() => ev?.tagValue('status') === 'live', [ev])
