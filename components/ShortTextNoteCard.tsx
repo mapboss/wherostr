@@ -9,6 +9,7 @@ import {
   CardContent,
   Divider,
   IconButton,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { useCallback, useContext, useMemo } from 'react'
@@ -108,6 +109,11 @@ const ShortTextNoteCard = ({
       options: { comments: true },
     })
   }, [event, setEventAction])
+
+  const difficulty = useMemo(() => {
+    return event.getMatchingTags('nonce').at(0)?.[2]
+  }, [event, setEventAction])
+
   return (
     <Card className="!rounded-none">
       <Box className="px-3 pt-3 flex items-center gap-2 text-contrast-secondary">
@@ -115,6 +121,16 @@ const ShortTextNoteCard = ({
         {createdDate && (
           <Box className="grow flex flex-col items-end shrink-0">
             <Typography variant="caption">
+              {difficulty && (
+                <>
+                  <Tooltip title={event.id}>
+                    <Typography variant="caption" fontWeight="bold">
+                      PoW-{difficulty}
+                    </Typography>
+                  </Tooltip>
+                  <Box component="span" className="mx-1" />
+                </>
+              )}
               <TimeFromNow date={createdDate} />
             </Typography>
             {depth === 0 && fromNote && (

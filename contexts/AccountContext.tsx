@@ -73,7 +73,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const updateFollows = useCallback(async (user: NDKUser) => {
     const follows = await user.follows({
-      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
     })
     setFollows(Array.from(follows))
   }, [])
@@ -112,18 +112,23 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       try {
         let user: NDKUser | undefined
         setSigning(true)
+        let pubkey: string | undefined
+        let readOnly = true
         if (type === 'nip7') {
           if (!hasNip7Extension()) {
             return showSnackbar('Extension not found')
           }
+          readOnly = false
           ndk.signer = new NDKNip07Signer()
           const signerUser = await ndk.signer?.user()
           console.log('signIn:signerUser')
           if (signerUser) {
-            user = await getUser(signerUser.hexpubkey)
-            setReadOnly(false)
+            pubkey = signerUser.hexpubkey
+            // user = await getUser(signerUser.hexpubkey)
+            // setReadOnly(false)
           }
         } else if (type === 'nsec') {
+          readOnly = false
           let secret = key
           if (key?.startsWith('nsec')) {
             const nsecProfile = nip19.decode(key)
@@ -136,17 +141,21 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
           const signerUser = await ndk.signer?.user()
           console.log('signerUser', signerUser)
           if (signerUser) {
-            user = await getUser(signerUser.hexpubkey)
-            setReadOnly(false)
+            pubkey = signerUser.hexpubkey
+            // user = await getUser(signerUser.hexpubkey)
+            // setReadOnly(false)
+            readOnly = false
           }
-        } else if (type === 'npub') {
+        } else if (type === 'npub' && key) {
+          readOnly = true
+          pubkey = key
           ndk.signer = undefined
           user = await getUser(key)
-          setReadOnly(true)
+        }
+        if (pubkey) {
+          user = await getUser(pubkey)
         }
         if (user) {
-          await updateFollows(user)
-          console.log('signIn:fetchFollows')
           localStorage.setItem(
             'session',
             JSON.stringify({
@@ -155,9 +164,15 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
               ...(type === 'nsec' ? { nsec: key } : undefined),
             }),
           )
+          console.log('signIn:savedSession')
           await updateRelaySet(user)
           console.log('signIn:updateRelaySet')
+          await updateFollows(user)
+          console.log('signIn:fetchFollows')
           setUser(user)
+          console.log('signIn:setUser')
+          setReadOnly(readOnly)
+          console.log('signIn:setReadOnly')
           return user
         }
       } catch (err: any) {
@@ -223,7 +238,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     if (!filter) return setMuteList([])
 
     const event = await ndk.fetchEvent(filter, {
-      cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
+      cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
     })
     const list =
       event?.getMatchingTags('p').map(([tag, pubkey]) => {

@@ -33,16 +33,16 @@ export const defaultRelays = (process.env.NEXT_PUBLIC_RELAY_URLS || '')
   .filter((item) => !!item)
 
 const dexieAdapter = new NDKCacheAdapterDexie({ dbName: 'wherostr-cache' })
-const ndk =
-  typeof window !== 'undefined'
-    ? new NDK({
-        cacheAdapter: dexieAdapter as any,
-        explicitRelayUrls: defaultRelays,
-      })
-    : new NDK({ cacheAdapter: dexieAdapter as any })
+// const ndk =
+//   typeof window !== 'undefined'
+//     ? new NDK({
+//         cacheAdapter: dexieAdapter as any,
+//         explicitRelayUrls: defaultRelays,
+//       })
+//     : new NDK({ cacheAdapter: dexieAdapter as any })
 
 export const NostrContext = createContext<Nostr>({
-  ndk,
+  ndk: new NDK({ cacheAdapter: dexieAdapter as any }),
   relaySet: undefined,
   getUser: () => new Promise((resolve) => resolve(undefined)),
   getEvent: () => new Promise((resolve) => resolve(null)),
@@ -51,32 +51,57 @@ export const NostrContext = createContext<Nostr>({
 
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [relaySet, setRelaySet] = useState<NDKRelaySet>()
+  // const [connected, setConnected] = useState(false)
+
+  const ndk = useMemo(
+    () =>
+      new NDK({
+        cacheAdapter: dexieAdapter as any,
+        explicitRelayUrls: defaultRelays,
+      }),
+    [],
+  )
 
   useEffect(() => {
     ndk.connect()
-  }, [])
+    // return () => {
+    //   if (!ndk.explicitRelayUrls) return
+    //   NDKRelaySet.fromRelayUrls(ndk.explicitRelayUrls, ndk).relays.forEach(
+    //     (d) => d.disconnect(),
+    //   )
+    // }
+  }, [ndk])
 
-  const updateRelaySet = useCallback(async (user?: NDKUser) => {
-    ndk.explicitRelayUrls?.map((d) => new NDKRelay(d).disconnect())
-    if (user) {
-      const relayList = await user.relayList()
-      if (relayList?.bothRelayUrls.length) {
-        ndk.explicitRelayUrls = relayList.bothRelayUrls
+  const updateRelaySet = useCallback(
+    async (user?: NDKUser) => {
+      try {
+        ndk.explicitRelayUrls?.map((d) => new NDKRelay(d).disconnect())
+        console.log('updateRelaySet:user', user)
+        if (user) {
+          const relayList = await user.relayList()
+          console.log('updateRelaySet:relayList', relayList)
+          if (relayList?.bothRelayUrls.length) {
+            ndk.explicitRelayUrls = relayList.bothRelayUrls
+            await ndk.connect()
+            setRelaySet((prev) => {
+              // prev?.relays.forEach((relay) => relay.disconnect())
+              return NDKRelaySet.fromRelayUrls(relayList.bothRelayUrls, ndk)
+            })
+            return
+          }
+        }
+        ndk.explicitRelayUrls = defaultRelays
         await ndk.connect()
         setRelaySet((prev) => {
           // prev?.relays.forEach((relay) => relay.disconnect())
-          return NDKRelaySet.fromRelayUrls(relayList.bothRelayUrls, ndk)
+          return NDKRelaySet.fromRelayUrls(defaultRelays, ndk)
         })
-        return
+      } catch (err) {
+        console.error('updateRelaySet:error', err)
       }
-    }
-    ndk.explicitRelayUrls = defaultRelays
-    await ndk.connect()
-    setRelaySet((prev) => {
-      // prev?.relays.forEach((relay) => relay.disconnect())
-      return NDKRelaySet.fromRelayUrls(defaultRelays, ndk)
-    })
-  }, [])
+    },
+    [ndk],
+  )
 
   const getUser = useCallback(
     async (key?: string, relayUrls: string[] = defaultRelays) => {
@@ -103,7 +128,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
       }
       try {
         const profile = await user.fetchProfile({
-          cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+          cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
         })
         if (profile) {
           if (
@@ -122,10 +147,13 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
               : {}),
           }
         }
-      } catch (error) {}
+      } catch (error) {
+        console.log('getUser:error', error)
+        return getUser(key, relayUrls)
+      }
       return user
     },
-    [relaySet],
+    [ndk, relaySet],
   )
 
   const getEvent = useCallback(
@@ -136,7 +164,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
         relaySet,
       )
     },
-    [relaySet],
+    [ndk, relaySet],
   )
 
   const value = useMemo((): Nostr => {
@@ -147,6 +175,6 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
       getEvent,
       updateRelaySet,
     }
-  }, [relaySet, getUser, getEvent, updateRelaySet])
+  }, [ndk, relaySet, getUser, getEvent, updateRelaySet])
   return <NostrContext.Provider value={value}>{children}</NostrContext.Provider>
 }

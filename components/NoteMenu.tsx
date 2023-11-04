@@ -2,14 +2,24 @@ import * as React from 'react'
 import IconButton from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import { ListItemButton, ListItemIcon, ListItemText } from '@mui/material'
+import {
+  Divider,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from '@mui/material'
 import copy from 'copy-to-clipboard'
-import { NDKEvent } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
 import Geohash from 'latlon-geohash'
-import { useFollowing, useMuting, useUser } from '@/hooks/useAccount'
+import { useAccount, useFollowing, useMuting } from '@/hooks/useAccount'
 import { LoadingButton } from '@mui/lab'
-import { PersonAddOutlined, PersonRemoveOutlined } from '@mui/icons-material'
+import {
+  DeleteOutline,
+  PersonAddOutlined,
+  PersonOff,
+  PersonRemoveOutlined,
+} from '@mui/icons-material'
 import { useCallback, useMemo, useState } from 'react'
 import { useUserProfile } from '@/hooks/useUserProfile'
 
@@ -27,22 +37,25 @@ interface NoteMenuOptionProps {
 }
 
 const options: NoteMenuOptionProps[] = [
-  {
-    items: [
-      {
-        id: 'open_new_tab',
-        label: 'Open in new tab',
-        href: (event) => {
-          return `/n/?naddr=${nip19.noteEncode(event.id)}`
-        },
-      },
-    ],
-  },
+  // {
+  //   items: [
+  //     {
+  //       id: 'open_new_tab',
+  //       label: 'Open in new tab',
+  //       href: (event) => {
+  //         return `/n/?naddr=${nip19.noteEncode(event.id)}`
+  //       },
+  //     },
+  //   ],
+  // },
   {
     items: [
       {
         id: 'copy_text',
         label: 'Copy Text',
+        hide(event) {
+          return event.kind !== NDKKind.Text
+        },
       },
       {
         id: 'copy_user_id',
@@ -66,22 +79,14 @@ const options: NoteMenuOptionProps[] = [
       },
     ],
   },
-  {
-    items: [
-      {
-        id: 'mute',
-        label: 'Mute',
-        disabled: true,
-      },
-    ],
-  },
 ]
 
 export default function NoteMenu({ event }: { event: NDKEvent }) {
-  // const [_, mute] = useMuting()
-  const account = useUser()
+  const [_, mute] = useMuting()
+  const { user: account, readOnly } = useAccount()
   const [follows, follow, unfollow] = useFollowing()
   const user = useUserProfile(event.author.hexpubkey)
+  const [muteLoading, setMuteLoading] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
@@ -93,6 +98,28 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
     () => follows.find((d) => d.hexpubkey === event.author.hexpubkey),
     [event.author.hexpubkey, follows],
   )
+
+  const handleClickDelete = useCallback(async () => {
+    if (!event.author) return
+    event.delete('')
+    try {
+      setMuteLoading(true)
+      await mute(event.author)
+    } finally {
+      setMuteLoading(false)
+    }
+  }, [mute, event.author])
+
+  const handleClickMute = useCallback(async () => {
+    if (!event.author) return
+    try {
+      setMuteLoading(true)
+      await mute(event.author)
+    } finally {
+      setMuteLoading(false)
+    }
+  }, [mute, event.author])
+
   const handleClickFollow = useCallback(async () => {
     if (!user) return
     try {
@@ -120,9 +147,6 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
   const handleMenuClick = async (menuId: string) => {
     handleClose()
     switch (menuId) {
-      // case 'mute':
-      //   await mute(event.author)
-      //   return
       case 'copy_text':
         copy(event.content)
         return
@@ -130,7 +154,9 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
         copy(event.author.npub)
         return
       case 'copy_note_id':
-        copy(nip19.noteEncode(event.id))
+        const noteId =
+          event.kind === NDKKind.Repost ? event.tagValue('e') || '' : event.id
+        copy(nip19.noteEncode(noteId))
         return
       case 'copy_event_json':
         copy(JSON.stringify(event.rawEvent(), null, 4))
@@ -214,30 +240,57 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
               )
             })
         })}
-        {account &&
-          !itsYou &&
-          (isFollowing ? (
-            <LoadingButton
-              className="!rounded-none"
-              color="error"
-              loading={followLoading}
-              loadingPosition="start"
-              startIcon={<PersonRemoveOutlined />}
-              onClick={handleClickUnfollow}
-            >
-              Unfollow
-            </LoadingButton>
-          ) : (
-            <LoadingButton
-              color="inherit"
-              loading={followLoading}
-              loadingPosition="start"
-              startIcon={<PersonAddOutlined />}
-              onClick={handleClickFollow}
-            >
-              Follow
-            </LoadingButton>
-          ))}
+        {!readOnly ? (
+          <>
+            {!itsYou ? (
+              <>
+                {isFollowing ? (
+                  <LoadingButton
+                    className="!rounded-none"
+                    color="error"
+                    loading={followLoading}
+                    loadingPosition="start"
+                    startIcon={<PersonRemoveOutlined />}
+                    onClick={handleClickUnfollow}
+                  >
+                    Unfollow
+                  </LoadingButton>
+                ) : (
+                  <LoadingButton
+                    color="inherit"
+                    loading={followLoading}
+                    loadingPosition="start"
+                    startIcon={<PersonAddOutlined />}
+                    onClick={handleClickFollow}
+                  >
+                    Follow
+                  </LoadingButton>
+                )}
+                <LoadingButton
+                  className="!rounded-none"
+                  color="error"
+                  loading={muteLoading}
+                  loadingPosition="start"
+                  startIcon={<PersonOff />}
+                  onClick={handleClickMute}
+                >
+                  Mute
+                </LoadingButton>
+              </>
+            ) : (
+              <LoadingButton
+                className="!rounded-none"
+                color="error"
+                // loading={deleteLoading}
+                // loadingPosition="start"
+                startIcon={<DeleteOutline />}
+                onClick={handleClickDelete}
+              >
+                Delete
+              </LoadingButton>
+            )}
+          </>
+        ) : undefined}
       </Menu>
     </>
   )

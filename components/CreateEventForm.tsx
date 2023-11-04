@@ -27,6 +27,7 @@ import {
   Link,
   LinkOff,
   Map,
+  Memory,
   MyLocation,
   Place,
   Repeat,
@@ -72,7 +73,6 @@ export const CreateEventForm = ({
   const ndk = useNDK()
   const map = useMap()
   const user = useUser()
-  const relaySet = useRelaySet()
   const theme = useTheme()
   const router = useRouter()
   const pathname = usePathname()
@@ -143,6 +143,7 @@ export const CreateEventForm = ({
       setValue('geohash', Geohash.encode(lngLat.lat, lngLat.lng, 10))
       handleShowMap(false)
     }
+
     map.on('click', handleClickMap)
     return () => {
       map.off('click', handleClickMap)
@@ -157,7 +158,7 @@ export const CreateEventForm = ({
   )
 
   const previewGeohashUrl = useMemo(() => {
-    if (!appendMapLink || !positingOptions?.location || !geohashValue) return ''
+    if (!appendMapLink || !geohashValue) return ''
     const ll = Geohash.decode(geohashValue)
     if (ll?.lat && ll?.lon) {
       const duckduck = shortenUrl(
@@ -177,13 +178,13 @@ export const CreateEventForm = ({
       content += `\nGoogle Maps | ${google.url}`
       return content
     }
-  }, [ndk, geohashValue, positingOptions?.location, appendMapLink])
+  }, [ndk, geohashValue, appendMapLink])
 
   const _handleSubmit = useCallback(
     async (data: any) => {
       try {
         setPosting(true)
-        const { content, geohash } = data
+        const { content, geohash, pow } = data
         const newEvent = new EventBuilder()
         let noteContent = content
         newEvent.pubKey(user!.hexpubkey)
@@ -278,10 +279,13 @@ export const CreateEventForm = ({
           .processContent()
           .build()
 
-        const powEvent = await powRef.current?.minePow(nostrEvent, 11)
+        let publishEvent = nostrEvent
+        if (positingOptions?.pow && powRef.current) {
+          publishEvent = await powRef.current?.minePow(nostrEvent, pow || 21)
+        }
+        const ev = new NDKEvent(ndk, publishEvent)
         // console.log('powEvent', powEvent)
-        const ev = new NDKEvent(ndk, powEvent)
-        // console.log('ev', ev)
+        // console.log('ev', { powId: publishEvent?.id, eventId: ev.id, pow })
 
         await ev.publish()
         setEventAction(undefined)
@@ -301,6 +305,7 @@ export const CreateEventForm = ({
       type,
       relatedEvents,
       positingOptions?.location,
+      positingOptions?.pow,
       ndk,
       appendMapLink,
       setEventAction,
@@ -391,9 +396,12 @@ export const CreateEventForm = ({
       //   result.address.village
       // `${sub ? sub + ', ' : ''}${result.address.state}, ${result.address.country}`
       return {
-        name: `${result.address.state || result.address.province}, ${
-          result.address.country
-        }`,
+        name: `${
+          result.address.town ||
+          result.address.city ||
+          result.address.state ||
+          result.address.province
+        }, ${result.address.country}`,
         coordiantes: ll,
       }
     } catch (err) {
@@ -570,6 +578,28 @@ export const CreateEventForm = ({
                   disabled={disabled}
                 />
               </>
+            )}
+            {positingOptions?.pow === true && (
+              <TextField
+                {...register('pow', { valueAsNumber: true })}
+                label="Proof of work difficulty"
+                variant="outlined"
+                fullWidth
+                type="number"
+                placeholder="21"
+                InputProps={{
+                  inputProps: {
+                    min: 1,
+                    max: 24,
+                  },
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Memory />
+                    </InputAdornment>
+                  ),
+                }}
+                disabled={disabled}
+              />
             )}
           </>
         )}

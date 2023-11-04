@@ -1,5 +1,10 @@
 import { accept } from '@/utils/upload'
-import { AddPhotoAlternate, LocationOff, LocationOn } from '@mui/icons-material'
+import {
+  AddPhotoAlternate,
+  LocationOff,
+  LocationOn,
+  MemoryOutlined,
+} from '@mui/icons-material'
 import { IconButton, IconButtonProps } from '@mui/material'
 import { FC, useCallback, useState } from 'react'
 import { DropzoneProps, useDropzone } from 'react-dropzone'
@@ -7,6 +12,7 @@ import { DropzoneProps, useDropzone } from 'react-dropzone'
 export interface PostingOptionsValues {
   image?: File[]
   location: boolean
+  pow: boolean
 }
 
 export interface PostingOptionsProps {
@@ -15,6 +21,7 @@ export interface PostingOptionsProps {
     iconButton?: IconButtonProps
     imageButton?: IconButtonProps
     locationButton?: IconButtonProps
+    powButton?: IconButtonProps
     dropzone?: DropzoneProps
   }
   onChange?: (
@@ -29,6 +36,7 @@ export const PostingOptions: FC<PostingOptionsProps> = ({
 }) => {
   const [values, setValues] = useState<PostingOptionsValues>({
     location: false,
+    pow: false,
   })
 
   const handleClick = useCallback(
@@ -71,6 +79,19 @@ export const PostingOptions: FC<PostingOptionsProps> = ({
           <LocationOn />
         ) : (
           <LocationOff className="opacity-70" />
+        )}
+      </IconButton>
+      <IconButton
+        {...slotProps?.iconButton}
+        {...slotProps?.powButton}
+        disabled={disabled}
+        color={values.pow ? 'secondary' : 'default'}
+        onClick={handleClick('pow')}
+      >
+        {values.pow ? (
+          <MemoryOutlined />
+        ) : (
+          <MemoryOutlined className="opacity-70" />
         )}
       </IconButton>
     </>
